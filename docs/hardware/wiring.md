@@ -51,10 +51,20 @@ Motor plugs into the ULN2003's white JST socket (keyed, one way).
 - Hall sensor is a **HW-477 module** (marking HW477V02), not a bare A3144 chip:
   A3144 + onboard LED(s) (the red light = output-activated indicator, normal),
   often an LM393 comparator + sensitivity potentiometer. Use the **DO** (digital
-  out) pin → D8. Digital output confirmed as switch behavior (releases when
-  magnet removed — verified by the 60s pause-on-magnet demo), good for homing.
-- Hall reads **1 = clear, 0 = magnet present**. A3144 responds to one magnet
-  polarity only; the other face won't trigger (that's normal, not a fault).
+  out) pin → D8.
+- **LATCHING behavior confirmed** (2026-07-14, measured on D8): one magnet pole
+  latches output LOW and it HOLDS after the magnet leaves; the opposite pole
+  resets it HIGH. NOT a plain unipolar switch. (The 60s pause-demo *looked* like
+  a switch only because waving a disc magnet sweeps both poles through the field,
+  causing repeated set/reset.)
+- **Homing implication**: a single one-pole magnet on the drum will latch on the
+  first pass and never reset = broken homing. Use **two magnets at the home mark
+  with opposite poles side-by-side** (sensor sees SET-then-RESET = one clean
+  pulse/rev), or N and S 180° apart (toggle every half-rev). Latch index is
+  actually more noise-immune than a switch once set up right.
+- Alternative: test a bare FORIOT A3144 chip (have ×10) — MIGHT be a true
+  unipolar switch, but same-vendor part could also latch; verify before relying.
+- Hall reads **1 = clear, 0 = magnet present**.
 - If the module has a **potentiometer** (brass screw), it tunes trigger
   distance — useful for setting the magnet-to-sensor gap on the drum.
 - Motor shares ground with the board — required.
