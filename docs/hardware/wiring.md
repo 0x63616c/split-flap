@@ -62,8 +62,10 @@ Motor plugs into the ULN2003's white JST socket (keyed, one way).
   with opposite poles side-by-side** (sensor sees SET-then-RESET = one clean
   pulse/rev), or N and S 180° apart (toggle every half-rev). Latch index is
   actually more noise-immune than a switch once set up right.
-- Alternative: test a bare FORIOT A3144 chip (have ×10) — MIGHT be a true
-  unipolar switch, but same-vendor part could also latch; verify before relying.
+- All 10 FORIOT "A3144" units are these same HW-477 modules and all latch
+  (the "A3144" stamp is misleading — genuine A3144 is a switch; this is a latch
+  clone). Swapping units won't change behavior. For a true single-magnet switch,
+  buy a known-good unipolar part (Allegro A3144, US5881, AH1815, SS443).
 - Hall reads **1 = clear, 0 = magnet present**.
 - If the module has a **potentiometer** (brass screw), it tunes trigger
   distance — useful for setting the magnet-to-sensor gap on the drum.
