@@ -52,20 +52,18 @@ Motor plugs into the ULN2003's white JST socket (keyed, one way).
   A3144 + onboard LED(s) (the red light = output-activated indicator, normal),
   often an LM393 comparator + sensitivity potentiometer. Use the **DO** (digital
   out) pin → D8.
-- **LATCHING behavior confirmed** (2026-07-14, measured on D8): one magnet pole
-  latches output LOW and it HOLDS after the magnet leaves; the opposite pole
-  resets it HIGH. NOT a plain unipolar switch. (The 60s pause-demo *looked* like
-  a switch only because waving a disc magnet sweeps both poles through the field,
-  causing repeated set/reset.)
-- **Homing implication**: a single one-pole magnet on the drum will latch on the
-  first pass and never reset = broken homing. Use **two magnets at the home mark
-  with opposite poles side-by-side** (sensor sees SET-then-RESET = one clean
-  pulse/rev), or N and S 180° apart (toggle every half-rev). Latch index is
-  actually more noise-immune than a switch once set up right.
-- All 10 FORIOT "A3144" units are these same HW-477 modules and all latch
-  (the "A3144" stamp is misleading — genuine A3144 is a switch; this is a latch
-  clone). Swapping units won't change behavior. For a true single-magnet switch,
-  buy a known-good unipolar part (Allegro A3144, US5881, AH1815, SS443).
+- **Unipolar switch confirmed** (2026-07-14, measured on D8): output goes LOW
+  near one magnet pole and self-releases to HIGH when the magnet moves away —
+  verified by it reading 1 steadily with magnets removed. Behaves as a proper
+  switch; single-magnet homing works.
+- **Earlier "latch" scare was a magnet-size artifact**: a too-large/too-close
+  magnet keeps the field above the sensor's release threshold, so hand-pulling it
+  "away" never releases and flipping to the opposite pole is what trips it —
+  looks exactly like a latch but isn't. Also had runs stuck at 0 because a magnet
+  was still in range. Lesson: for homing, **don't oversize the home magnet and
+  keep a sensible air gap** so the field clears the release threshold between
+  passes. On a rotating drum the magnet sweeps away on its own = clean release
+  each rev.
 - Hall reads **1 = clear, 0 = magnet present**.
 - If the module has a **potentiometer** (brass screw), it tunes trigger
   distance — useful for setting the magnet-to-sensor gap on the drum.

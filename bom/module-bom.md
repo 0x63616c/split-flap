@@ -9,8 +9,8 @@ Starter BOM for one module. Status: **have** = on hand (see `docs/inventory.md`)
 | 1 | Seeed XIAO ESP32-C6 | 1 | have | Controller (prototype: one per module; multi-module topology TBD) |
 | 2 | 28BYJ-48 5V stepper | 1 | have | Drum drive |
 | 3 | ULN2003 driver board | 1 | have | Prototype uses breakout; final wiring TBD |
-| 4 | Hall sensor (FORIOT "A3144" = HW-477 module) | 1 | have | Homing. **Measured LATCHING, not a switch** (mislabeled clone) — see `docs/hardware/wiring.md`. Use DO pin, 5V VCC. Optional: buy true unipolar switch (A3144/US5881/AH1815) if single-magnet homing wanted |
-| 5 | 6×3 mm magnet (homing) | **2** | have | **Two, opposite poles side-by-side** at home mark — latch needs set-then-reset for 1 clean pulse/rev; a single magnet would latch and never reset. Was 1, corrected 2026-07-14 |
+| 4 | Hall sensor (FORIOT "A3144" = HW-477 module) | 1 | have | Homing; unipolar switch (self-releases when magnet moves away). Use DO pin, 5V VCC. See `docs/hardware/wiring.md` |
+| 5 | 6×3 mm magnet (homing) | 1 | have | Single magnet on drum, one pulse/rev. **Don't oversize / keep sensible air gap** — a too-strong/too-close magnet won't drop below the sensor's release threshold and looks stuck-on. On a rotating drum it releases fine as the magnet sweeps away |
 | 6 | 400-pt breadboard | 1 | have | Prototype wiring only |
 | 7 | Hookup wire / jumpers | — | need | Not confirmed in inventory |
 | 8 | 5V power supply | 1 | tbd | Prototype ran fine on USB **VBUS** (board + one 28BYJ-48 via ULN2003, no brownout) 2026-07-14. Actual stepper current still un-measured with MM420. Shared PSU sizing is a multi-module (out-of-map) question |
