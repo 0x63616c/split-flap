@@ -9,11 +9,11 @@ Starter BOM for one module. Status: **have** = on hand (see `docs/inventory.md`)
 | 1 | Seeed XIAO ESP32-C6 | 1 | have | Controller (prototype: one per module; multi-module topology TBD) |
 | 2 | 28BYJ-48 5V stepper | 1 | have | Drum drive |
 | 3 | ULN2003 driver board | 1 | have | Prototype uses breakout; final wiring TBD |
-| 4 | A3144 Hall-effect sensor | 1 | have | Homing; senses drum magnet once per rev |
-| 5 | 6×3 mm magnet (homing) | 1 | have | Mounts in/on drum |
+| 4 | Hall sensor (FORIOT "A3144" = HW-477 module) | 1 | have | Homing. **Measured LATCHING, not a switch** (mislabeled clone) — see `docs/hardware/wiring.md`. Use DO pin, 5V VCC. Optional: buy true unipolar switch (A3144/US5881/AH1815) if single-magnet homing wanted |
+| 5 | 6×3 mm magnet (homing) | **2** | have | **Two, opposite poles side-by-side** at home mark — latch needs set-then-reset for 1 clean pulse/rev; a single magnet would latch and never reset. Was 1, corrected 2026-07-14 |
 | 6 | 400-pt breadboard | 1 | have | Prototype wiring only |
 | 7 | Hookup wire / jumpers | — | need | Not confirmed in inventory |
-| 8 | 5V power supply | 1 | tbd | USB VBUS may suffice for one module; measure stepper current draw. Shared PSU sizing is a multi-module (out-of-map) question |
+| 8 | 5V power supply | 1 | tbd | Prototype ran fine on USB **VBUS** (board + one 28BYJ-48 via ULN2003, no brownout) 2026-07-14. Actual stepper current still un-measured with MM420. Shared PSU sizing is a multi-module (out-of-map) question |
 
 ## Fasteners
 
@@ -37,3 +37,11 @@ Starter BOM for one module. Status: **have** = on hand (see `docs/inventory.md`)
 - Module mechanism geometry — [#7](https://github.com/0x63616c/split-flap/issues/7): fixes printed-part list, fastener counts/lengths, flap count.
 - Charset artwork / glyph application — [#8](https://github.com/0x63616c/split-flap/issues/8): may add materials (stickers, second filament use).
 - Firmware stack — [#5](https://github.com/0x63616c/split-flap/issues/5): no BOM impact expected.
+
+## Bench-verified (2026-07-14)
+
+Breadboard bring-up (#9) proven: XIAO flashes over USB, 28BYJ-48 spins both dirs
+(~18–22 RPM clean unloaded, stalls ~29), hall homing signal reads on D8, closed
+loop demoed. Wiring + pinout in `docs/hardware/wiring.md`; spike firmware in
+`firmware/micropython-spike/`. Printer confirmed **P2S with AMS** → per-object
+multi-color flap inlays viable (affects #8 glyph method).
