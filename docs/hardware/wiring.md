@@ -48,10 +48,15 @@ Motor plugs into the ULN2003's white JST socket (keyed, one way).
 - Getting VCC on the `−` rail instead of `+` = silent sensor; the GPIO still
   reads 1 via pull-up (floating OUT looks like idle). Verify VCC↔GND ≈ 5V at the
   sensor legs with a multimeter before suspecting the pin or magnet.
-- Hall reads **1 = clear, 0 = magnet present**. Trigger polarity depends on
-  magnet pole vs the sensor's marked face. **TODO: confirm unipolar vs latching**
-  — if it only releases when shown the opposite pole, it's a latch, not a plain
-  A3144 switch.
+- Hall sensor is a **HW-477 module** (marking HW477V02), not a bare A3144 chip:
+  A3144 + onboard LED(s) (the red light = output-activated indicator, normal),
+  often an LM393 comparator + sensitivity potentiometer. Use the **DO** (digital
+  out) pin → D8. Digital output confirmed as switch behavior (releases when
+  magnet removed — verified by the 60s pause-on-magnet demo), good for homing.
+- Hall reads **1 = clear, 0 = magnet present**. A3144 responds to one magnet
+  polarity only; the other face won't trigger (that's normal, not a fault).
+- If the module has a **potentiometer** (brass screw), it tunes trigger
+  distance — useful for setting the magnet-to-sensor gap on the drum.
 - Motor shares ground with the board — required.
 - Pin D8 (SPI_SCK) choice is weak; revisit if SPI is needed for multi-module
   scaling. D0–D3 keep I2C/UART/other-SPI free.
