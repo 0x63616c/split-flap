@@ -1,0 +1,3 @@
+# per-module calibration, written at bench time — not source
+home_glyph.txt
+__pycache__/

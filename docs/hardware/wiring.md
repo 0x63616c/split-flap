@@ -72,4 +72,4 @@ Motor plugs into the ULN2003's white JST socket (keyed, one way).
   scaling. D0–D3 keep I2C/UART/other-SPI free.
 - Speed: 4096 half-steps/rev; clean to ~18–22 RPM unloaded, stalls ~29 RPM.
 
-See `firmware/micropython-spike/main.py` for the matching pin definitions.
+See `firmware/micropython-spike/bench_board.py` for the matching pin definitions.
