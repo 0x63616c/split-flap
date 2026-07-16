@@ -128,9 +128,13 @@ def _p_drum_outer():
 
 
 def _p_drum_inner():
+    from build123d import Rot
+
     from .drum import drum_inner
 
-    return drum_inner()
+    # drum_inner's own frame hangs hub/barrel/fins into -Z (below the bed).
+    # Flip so the web sits flat on the bed and the barrel points up.
+    return Rot(180, 0, 0) * drum_inner()
 
 
 PRINTABLE = {
