@@ -135,6 +135,17 @@ def unit_plate():
     guard = extrude(Polygon(*guard_pts, align=None), amount=P.unit_back_rise, dir=(0, 0, 1))
     guard = Pos(0, 0, P.unit_plate_thick) * guard
 
+    # Front lip: short wall on the front (+X) edge at the bottom (+Y)
+    # corner — the guard blade's counterpart at the other end of the
+    # flap opening, so the bottom flap shows framed.
+    lip = Pos(
+        P.unit_plate_w / 2 - P.unit_top_thick / 2,
+        P.unit_plate_h / 2 - P.unit_front_lip / 2,
+        P.unit_plate_thick,
+    ) * extrude(
+        Rectangle(P.unit_top_thick, P.unit_front_lip), amount=P.unit_back_rise
+    )
+
     # Top/bottom walls: close the -Y side (module top once standing) and
     # the +Y side. Full X width, same thickness as the guard's front
     # blade, plate top to wall top, two [][] windows each.
@@ -186,14 +197,60 @@ def unit_plate():
             P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_pilot_depth / 2
         ) * Cylinder(P.hall_pilot_d / 2, P.hall_pilot_depth)
 
-    return plate + wall + rod + pad + guard + top + bottom + hall
+    return plate + wall + rod + pad + guard + lip + top + bottom + hall
+
+
+# Interconnect tab holes, measured off the vendor STEP: 4 corner tabs
+# (3mm thick) outboard of the back wall, holes on the Z axis at the
+# mating faces z=0 (bottom pair) and z=53 (top pair).
+_TAB_HOLE_X = -51.89
+_TAB_HOLE_Y = 54.61
+_TAB_THICK = 3.0
+_TAB_FLOOR = 1.5  # pocket floor thickness behind the magnet
+
+
+def _tab_magnet_mods():
+    """(adds, cuts) turning the tabs' screw holes into magnet pockets:
+    boss thickens the tab inboard, blind pocket (same rhinocats 6x3
+    magnet + clearances as the drum) opens at the mating face, poke hole
+    through the floor to eject the magnet."""
+    boss_d = P.drum_magnet_d + P.drum_magnet_clear + 2.6
+    pocket_h = P.drum_magnet_t + 0.3
+    boss_len = pocket_h + _TAB_FLOOR - _TAB_THICK
+    adds, cuts = [], []
+    for y in (-_TAB_HOLE_Y, _TAB_HOLE_Y):
+        for z_face, s in ((0.0, +1), (P.unit_back_height, -1)):
+            # s points into the module from the mating face
+            at = Pos(_TAB_HOLE_X, y, 0)
+            adds.append(
+                at
+                * Pos(0, 0, z_face + s * (_TAB_THICK + boss_len / 2))
+                * Cylinder(boss_d / 2, boss_len)
+            )
+            cuts.append(
+                at
+                * Pos(0, 0, z_face + s * pocket_h / 2)
+                * Cylinder((P.drum_magnet_d + P.drum_magnet_clear) / 2, pocket_h)
+            )
+            cuts.append(
+                at
+                * Pos(0, 0, z_face + s * 4)
+                * Cylinder(P.drum_poke_d / 2, 10)
+            )
+    return adds, cuts
 
 
 def full_unit():
     """The printable unit: parametric body + verbatim vendor pieces
     (interconnect fins, motor screw towers). Plate lightening windows
-    are our own (plate_windows), cut in unit_plate. Needs the STEP on
-    disk."""
+    are our own (plate_windows), cut in unit_plate; the tabs' screw
+    holes become magnet pockets. Needs the STEP on disk."""
     from .vendor import vendor_fins, vendor_towers
 
-    return unit_plate() + vendor_fins() + vendor_towers()
+    unit = unit_plate() + vendor_fins() + vendor_towers()
+    adds, cuts = _tab_magnet_mods()
+    for a in adds:
+        unit += a
+    for c in cuts:
+        unit -= c
+    return unit

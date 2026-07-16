@@ -223,8 +223,10 @@ class Params:
     drum_fin_clear: float = 0.2    # fin-to-wall / notch clearance
     drum_fin_tip_fillet: float = 1.0  # fin tip corner round (dock lead-in)
     drum_fin_hub_fillet: float = 0.8  # fillet where fins meet the hub wall
-    drum_guide_len: float = 12.0   # guide ring length along the barrel,
-                                   # down from the butt joint
+    drum_guide_len: float = 3.0    # guide ring length along the barrel,
+                                   # down from the butt joint — just
+                                   # enough lip to block misalignment;
+                                   # the notches index the fins
     drum_guide_rib_h: float = 1.5  # guide ring protrusion off the wall
                                    # (radial); full lip, notched at the
                                    # fins — fins can ONLY enter at the
@@ -320,6 +322,11 @@ class Params:
         (-1.6, 19.0),      # inner end
         (0.0, 19.0),       # back to the +X edge
     )
+
+    # front lip: short wall on the front (+X) edge at the bottom (+Y)
+    # corner — mirrors the guard's front blade at the other end of the
+    # flap opening, frames the bottom flap. Same thickness as the blade.
+    unit_front_lip: float = 5.0    # lip run along the +Y edge
 
     @property
     def unit_top_thick(self) -> float:
