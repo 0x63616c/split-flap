@@ -255,11 +255,15 @@ class Params:
     # quadrant; sweeps over the hall sensor once per revolution.
     drum_magnet_d: float = 6.0     # magnet diameter (rhinocats 6x3mm)
     drum_magnet_t: float = 3.0     # magnet thickness
-    drum_magnet_r: float = 17.5    # boss centre radius; hall element
+    drum_magnet_r: float = 21.5    # boss centre radius; hall element
                                    # must sit at this radius
     drum_magnet_clear: float = 0.2  # hole diametral clearance
-    drum_magnet_standoff: float = 9.0  # boss under the web dropping the
-                                   # magnet toward the hall sensor
+    drum_magnet_standoff: float = 7.5  # boss under the web dropping the
+                                   # magnet toward the hall sensor. Capped
+                                   # ~7.7 at this radius: any longer and
+                                   # the boss bottom reaches the outer
+                                   # part's guide-ring band (face r 25.0,
+                                   # top at the butt joint)
     drum_poke_d: float = 2.2       # magnet eject hole (toothpick) through
                                    # the web into the pocket's blind end
     # First-slot indicator: debossed triangle next to flap slot 0 (the
