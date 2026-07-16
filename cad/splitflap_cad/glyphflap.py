@@ -37,6 +37,23 @@ from .params import P
 _FONT = Path(__file__).resolve().parent.parent / "fonts"
 _BIG = 1000.0  # half-plane rectangle size for the split booleans
 
+# The drum's character ring, in flip order. Position 0 = blank = homing
+# slot. len == P.drum_flap_count (asserted in tests). Character i is
+# displayed by flap i's front (top half) + flap i+1's back (bottom half).
+CHARSET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.-?!$£#%°'&/+,"
+
+# filename-safe slugs for the non-alphanumeric flaps
+_SLUG = {
+    " ": "blank", ":": "colon", ".": "period", "-": "hyphen", "?": "qmark",
+    "!": "bang", "$": "dollar", "£": "gbp", "#": "hash", "%": "pct",
+    "°": "deg", "'": "apos", "&": "amp", "/": "slash", "+": "plus",
+    ",": "comma",
+}
+
+
+def char_slug(ch: str) -> str:
+    return _SLUG.get(ch, ch)
+
 
 @lru_cache
 def _font_path() -> str:
@@ -81,6 +98,13 @@ def _glyph_halves(char: str):
     if bb.size.X > P.glyph_w_max:
         g = scale(g, by=(P.glyph_w_max / bb.size.X, 1, 1))
     split = cap / 2
+    # Descenders (Q , /) can reach past the keepout at the flap tip once
+    # flipped to the back — lift the whole glyph just enough, spending
+    # the top half's slack. Asserted to fit in tests.
+    budget = P.flap_h - P.glyph_top_keepout
+    lift = max(0.0, (split - bb.min.Y) - budget)
+    if lift:
+        g = Pos(0, lift, 0) * g
     top = g & Pos(0, split + _BIG / 2, 0) * Rectangle(_BIG, _BIG)
     bottom = g & Pos(0, split - _BIG / 2, 0) * Rectangle(_BIG, _BIG)
     # low glyphs (e.g. '.') can leave a half empty — return None for it
@@ -120,6 +144,39 @@ def glyph_flap(front_char: str, back_char: str):
         return card, None
     glyphs = Compound(children=[s for i in inlays for s in i.solids()])
     return card - glyphs, glyphs
+
+
+def flap_at(i: int):
+    """The i-th flap of the ring: front = top of CHARSET[i], back =
+    bottom of CHARSET[i+1] (wrapping)."""
+    return glyph_flap(CHARSET[i], CHARSET[(i + 1) % len(CHARSET)])
+
+
+def export_flaps(out_dir: Path) -> list[Path]:
+    """Write every flap as a two-body colored 3MF (black card + white
+    glyph inlays) into out_dir. Bambu Studio maps body colors to
+    filaments on import. Colors go on leaf Solids — Mesher drops colors
+    set on a Compound."""
+    from build123d import Color, Mesher
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for i, ch in enumerate(CHARSET):
+        card, glyphs = flap_at(i)
+        path = out_dir / f"flap_{i:02d}_{char_slug(ch)}.3mf"
+        m = Mesher()
+        for s in card.solids():
+            s.color = Color("black")
+            s.label = "card"
+            m.add_shape(s)
+        if glyphs is not None:
+            for s in glyphs.solids():
+                s.color = Color("white")
+                s.label = "glyph"
+                m.add_shape(s)
+        m.write(str(path))
+        written.append(path)
+    return written
 
 
 def glyph_flap_demo() -> dict:

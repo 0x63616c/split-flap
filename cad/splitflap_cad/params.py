@@ -32,7 +32,7 @@ class Params:
     # flush to the card's pivot edge; the physical hinge gap is what
     # separates the halves on the display. Gap/keepout are scottbez1
     # starting values — PLACEHOLDERS until drum geometry pins them (#7).
-    glyph_font: str = "Epilogue-Medium.ttf"  # file in cad/fonts/
+    glyph_font: str = "GeistMono-SemiBold.ttf"  # file in cad/fonts/
     glyph_half_h: float = 24.5     # half-character cap height per flap (0.7 * flap_h)
     glyph_w_max: float = 33.0      # max glyph width; wider glyphs squeeze to fit
     glyph_gap_comp: float = 1.0    # half the physical hinge gap (preview pose only;
@@ -228,7 +228,7 @@ class Params:
     # web dropping into a slotted guide ring inside the outer barrel.
     drum_ring_od: float = 69.3     # flap ring outer diameter (both rings)
     drum_ring_t: float = 1.6       # ring / web / lip thickness
-    drum_flap_count: int = 45      # flap pin slots per ring
+    drum_flap_count: int = 52      # flap pin slots per ring (scottbez1-v2-size charset)
     drum_slot_w: float = 1.9       # slot width (tangential)
     drum_slot_r_out: float = 33.35   # slot outer reach (both rings)
     drum_slot_r_in_inner: float = 31.3   # slot inner reach, inner ring
