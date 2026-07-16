@@ -250,7 +250,7 @@ def drum_inner():
     # magnet drum_magnet_standoff toward the hall sensor; blind pocket
     # opens at the boss's bottom face (magnet axis perpendicular to the
     # web), sweeping over the sensor once per revolution.
-    boss_d = P.drum_magnet_d + P.drum_magnet_clear + 3.0
+    boss_d = P.drum_magnet_d + P.drum_magnet_clear + 2 * P.drum_magnet_boss_wall
     boss = Pos(0, 0, -P.drum_magnet_standoff / 2) * Cylinder(
         boss_d / 2, P.drum_magnet_standoff
     )
