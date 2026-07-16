@@ -209,23 +209,6 @@ def drum_inner():
         fin = Pos(0, -fin_t / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=fin_t)
         body += Rot(0, 0, a * 360 / P.drum_fin_count) * fin
 
-    # Fillet the fin roots against the web underside: the long radial
-    # edges where each fin face meets the web carry the fin's bending
-    # load. Straight z=0 edges within a fin half-thickness of a
-    # diametral plane are exactly those junctions — the window borders
-    # run drum_web_window_fin_gap further out.
-    def _diam_dist(e):
-        c, d = e.center(), e.tangent_at(0)
-        return abs(c.X * d.Y - c.Y * d.X)
-
-    roots = [
-        e
-        for e in body.edges().filter_by(GeomType.LINE)
-        if abs(e.center().Z) < 0.1
-        and _diam_dist(e) < P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1
-    ]
-    body = fillet(roots, P.drum_fin_web_fillet)
-
     # Hub: down from the web, double-D bore opening at the bottom.
     hub = Pos(0, 0, -P.drum_hub_len / 2) * Cylinder(P.drum_hub_d / 2, P.drum_hub_len)
     # Double-D bore = cylinder clipped by a slab across the flats. Bore
@@ -253,8 +236,13 @@ def drum_inner():
     hub = chamfer(rim, P.drum_hub_edge_chamfer)
     body += hub
 
-    # Soften the hard corner where each fin plate meets the hub wall:
-    # fillet the vertical junction edges at the hub radius.
+    # Reinforce the fin junctions in ONE fillet call so OCC blends the
+    # shared corners (sequential fillets fail where they meet):
+    # - vertical edges where each fin plate meets the hub wall
+    # - the long radial roots where each fin face meets the web
+    #   underside (straight z=0 edges within a fin half-thickness of a
+    #   diametral plane are exactly those; window borders run
+    #   drum_web_window_fin_gap further out, the barrel ring is curved)
     hub_r = P.drum_hub_d / 2
     junction = [
         e
@@ -262,7 +250,18 @@ def drum_inner():
         if abs((e.center().X**2 + e.center().Y**2) ** 0.5 - hub_r) < 0.3
         and e.center().Z < -0.1
     ]
-    body = fillet(junction, P.drum_fin_hub_fillet)
+
+    def _diam_dist(e):
+        c, d = e.center(), e.tangent_at(0)
+        return abs(c.X * d.Y - c.Y * d.X)
+
+    roots = [
+        e
+        for e in body.edges().filter_by(GeomType.LINE)
+        if abs(e.center().Z) < 0.1
+        and _diam_dist(e) < P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1
+    ]
+    body = fillet(junction + roots, P.drum_fin_hub_fillet)
 
     # Homing magnet: boss under the web's solid 45-deg quadrant drops the
     # magnet drum_magnet_standoff toward the hall sensor; blind pocket

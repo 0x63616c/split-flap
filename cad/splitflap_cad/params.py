@@ -237,9 +237,11 @@ class Params:
                                    # edge slopes rim-deep to hub-shallow)
     drum_fin_clear: float = 0.2    # fin-to-wall / notch clearance
     drum_fin_tip_fillet: float = 1.0  # fin tip corner round (dock lead-in)
-    drum_fin_hub_fillet: float = 0.8  # fillet where fins meet the hub wall
-    drum_fin_web_fillet: float = 0.8  # fillet along the fin roots where
-                                   # the plates meet the web underside
+    drum_fin_hub_fillet: float = 0.8  # fillet where fins meet the hub
+                                   # wall AND along the fin roots at the
+                                   # web underside (one radius: OCC needs
+                                   # a single fillet call to blend the
+                                   # shared corners)
     drum_guide_ring_len: float = 3.0  # full guide ring (lip) length: just
                                    # enough to block an off-angle drum —
                                    # fins can ONLY enter at the notches,
