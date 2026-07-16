@@ -98,7 +98,6 @@ class Params:
     tower_flap_relief_r: float = 24.0  # flap-swing clearance arc radius,
                                    # centred on the shaft axis (vendor)
     tower_corner_fillet: float = 1.0
-    tower_top_chamfer: float = 0.8
     byj_insert_d: float = 4.2      # M3 heat-set insert bore
     byj_insert_depth: float = 8.0  # bore depth from the flange seat
 
@@ -154,7 +153,9 @@ class Params:
     hall_pcb_l: float = 15.0       # PCB size along Y (hole line side)
     hall_pcb_t: float = 1.6        # PCB thickness
     hall_hole_inset: float = 2.5   # edge -> hole centre, both axes
-    hall_near_gap: float = 11.0    # shaft axis -> nearest hole centre
+    hall_elem_hole_off: float = 6.5  # nearest hole centre -> hall element,
+                                   # along Y away from the shaft (element
+                                   # sat at r 17.5 when near gap was 11.0)
     hall_pilot_d: float = 1.6      # M2 self-tap pilot bore
     hall_pilot_depth: float = 8.0  # pilot depth from the pedestal top
     hall_post_chamfer: float = 1.0  # edge break on the pedestal
@@ -171,6 +172,12 @@ class Params:
     def hall_post_x(self) -> float:
         """Pedestal centre X: flush with the PCB's -X edge. Derived."""
         return self.hall_pcb_x - self.hall_pcb_w / 2 + self.hall_post_w / 2
+
+    @property
+    def hall_near_gap(self) -> float:
+        """Shaft axis -> nearest hole centre: places the hall element
+        under the magnet's sweep radius. Follows drum_magnet_r. Derived."""
+        return self.drum_magnet_r - self.hall_elem_hole_off
 
     @property
     def hall_hole_pitch(self) -> float:
