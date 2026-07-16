@@ -289,4 +289,4 @@ def posed_drum():
 
 def posed_drum_parts():
     """(outer, inner) posed separately in unit coords, for display."""
-    return _pose(drum_outer()), _pose(drum_inner_mated())
+    return _pose(Rot(0, 0, 180) * drum_outer()), _pose(Rot(0, 0, 180) * drum_inner_mated())
