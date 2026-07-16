@@ -7,7 +7,21 @@ hall mount get added incrementally.
 View it: `just cad unit` (see cad/splitflap_cad/catalog.py).
 """
 
-from build123d import Axis, Box, Cylinder, Plane, Polygon, Pos, Rectangle, Rot, chamfer, extrude, mirror
+from build123d import (
+    Axis,
+    Box,
+    Circle,
+    Cylinder,
+    Plane,
+    Polygon,
+    Pos,
+    Rectangle,
+    Rot,
+    chamfer,
+    extrude,
+    fillet,
+    mirror,
+)
 
 from .params import P
 
@@ -60,6 +74,36 @@ def plate_windows():
         )
         windows = cut if windows is None else windows + cut
     return windows
+
+
+def motor_towers():
+    """Motor screw towers, ours (replaces the vendored pair): one curved
+    arm per motor ear. Footprint = rectangular bound ∩ the flap-swing
+    clearance arc (about the shaft axis) − the can relief circle, corner
+    fillets; flat seat at the flange height with an M3 heat-set insert
+    bore at each ear hole (we heat-set instead of the vendor's trapped
+    nuts). Bounds measured off the vendor STEP."""
+    towers = None
+    for side in (-1, +1):
+        x_in = P.mount_x + side * P.tower_x_in_off
+        x_out = P.mount_x + side * P.tower_x_out_off
+        fp = Pos((x_in + x_out) / 2, (P.tower_y_lo + P.tower_y_hi) / 2) * Rectangle(
+            abs(x_out - x_in), P.tower_y_hi - P.tower_y_lo
+        )
+        fp &= Pos(P.byj_can_x, P.byj_shaft_y) * Circle(P.tower_flap_relief_r)
+        fp -= Pos(P.byj_can_x, P.byj_can_y) * Circle(P.byj_can_d / 2 + 0.3)
+        fp = fillet(fp.vertices(), P.tower_corner_fillet)
+        t = Pos(0, 0, P.unit_plate_thick) * extrude(
+            fp, amount=P.byj_flange_seat - P.unit_plate_thick
+        )
+        t = chamfer(t.edges().group_by(Axis.Z)[-1], P.tower_top_chamfer)
+        t -= Pos(
+            P.mount_x + side * P.byj_ear_pitch / 2,
+            P.mount_y,
+            P.byj_flange_seat - P.byj_insert_depth / 2,
+        ) * Cylinder(P.byj_insert_d / 2, P.byj_insert_depth)
+        towers = t if towers is None else towers + t
+    return towers
 
 
 def unit_plate():
@@ -120,10 +164,7 @@ def unit_plate():
     # Lightening windows through the plate, house style.
     plate -= plate_windows()
 
-    # Screw towers: imported verbatim from the vendor STEP (vendor.py) —
-    # their bridges, trapped-nut slots and drum-corner relief replace the
-    # plain boxes we had. Composed in full_unit(), not here, so this
-    # module stays importable without the STEP on disk.
+    # Screw towers: ours (motor_towers) — vendor's are no longer used.
 
     # Flap stop rod: full-height pillar at the front (+Y) edge, plate top
     # up to the wall-top height. Top flap rests against it.

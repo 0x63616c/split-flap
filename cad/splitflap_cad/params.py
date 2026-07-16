@@ -88,12 +88,19 @@ class Params:
     # to the -X edge, so the motor wires can leave the module flat.
     wire_chan_w: float = 8.0       # channel width
     wire_chan_d: float = 1.6       # channel depth into the underside
-    byj_tower_w: float = 7.5       # tower footprint X (vendor)
-    byj_tower_d: float = 8.4       # tower footprint Y (vendor)
-    # Deviation from vendor: M4 self-taps into a pilot hole instead of
-    # their trapped-nut slot (needs bridge structure we don't model).
-    byj_pilot_d: float = 3.6       # M4 self-tap pilot bore
-    byj_pilot_depth: float = 12.0  # pilot depth from the tower top
+    # Screw towers (ours, remodeled from the vendor STEP): one curved
+    # arm per motor ear. Footprint = rectangular bound ∩ the flap-swing
+    # arc (about the shaft axis) − the can relief circle.
+    tower_x_in_off: float = 12.5   # inner face |X - mount_x|
+    tower_x_out_off: float = 24.5  # outer bound |X - mount_x|
+    tower_y_lo: float = -11.9      # footprint Y bounds (absolute)
+    tower_y_hi: float = 13.6
+    tower_flap_relief_r: float = 24.0  # flap-swing clearance arc radius,
+                                   # centred on the shaft axis (vendor)
+    tower_corner_fillet: float = 1.0
+    tower_top_chamfer: float = 0.8
+    byj_insert_d: float = 4.2      # M3 heat-set insert bore
+    byj_insert_depth: float = 8.0  # bore depth from the flange seat
 
     @property
     def byj_can_x(self) -> float:
