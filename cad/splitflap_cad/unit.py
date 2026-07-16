@@ -215,10 +215,10 @@ def unit_plate():
     hall = Pos(P.hall_post_x, P.hall_y, P.unit_plate_thick + post_h / 2) * Box(
         P.hall_post_w, P.hall_post_l, post_h
     )
-    # chamfer the vertical + top edges (bottom stays square, it merges
-    # into the plate)
+    # chamfer the vertical edges only (bottom stays square, it merges
+    # into the plate; top left square)
     hall = chamfer(
-        hall.edges().filter_by(Axis.Z) + hall.edges().group_by(Axis.Z)[-1],
+        hall.edges().filter_by(Axis.Z),
         P.hall_post_chamfer,
     )
     for dy in (-P.hall_hole_pitch / 2, P.hall_hole_pitch / 2):

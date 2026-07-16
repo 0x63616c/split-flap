@@ -9,7 +9,7 @@ corner relief). If the surrounding parametric geometry moves, re-measure.
 
 from pathlib import Path
 
-from build123d import Box, Pos, import_step
+from build123d import Box, Cylinder, Pos, import_step
 
 from .params import P
 
@@ -54,4 +54,11 @@ def vendor_towers():
         ) * Box(x_hi - x_lo, 2 * P.tower_zone_half_y, P.byj_flange_seat - 2.95)
         t = reference() & region
         towers = t if towers is None else towers + t
+    # The vendor can-relief arc (r=14.3 about the can axis) only starts
+    # at z=7; below that the towers keep a straight-edged skirt poking
+    # into the pad zone. Extend the relief the full height so the flank
+    # is one clean arc.
+    towers -= Pos(P.byj_can_x, P.byj_can_y, (2.95 + P.byj_flange_seat) / 2) * Cylinder(
+        14.3, P.byj_flange_seat - 2.95
+    )
     return towers
