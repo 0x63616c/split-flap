@@ -4,7 +4,7 @@
 # `flash` / `ota` recipes from #5 land when that firmware exists.
 
 # Serial port of the board — auto-picks the first USB modem; override:
-#   just drive port=/dev/cu.usbmodem511RMQK2R3403
+#   just up port=/dev/cu.usbmodem511RMQK2R3403
 port := `ls /dev/cu.usbmodem* 2>/dev/null | head -1`
 
 # list recipes
@@ -25,23 +25,6 @@ free:
 up: free
     uv run --with mpremote python3 -m mpremote connect {{port}} cp firmware/micropython-spike/bench_board.py :main.py + reset
     uv run --with pyserial python3 tools/bench/bench_ui.py --serial {{port}}
-
-# just flash the command loop onto the board (no drive). uv pulls mpremote.
-board: free
-    uv run --with mpremote python3 -m mpremote connect {{port}} cp firmware/micropython-spike/bench_board.py :main.py + reset
-    @echo "board running standalone. now: just drive"
-
-# drive an already-flashed board over serial. uv pulls pyserial.
-drive: free
-    uv run --with pyserial python3 tools/bench/bench_ui.py --serial {{port}}
-
-# remove the boot program -> board returns to a bare REPL
-unboard:
-    uv run --with mpremote python3 -m mpremote connect {{port}} rm :main.py reset
-
-# open a raw REPL on the board (Ctrl-] to exit) — needs the port free
-repl:
-    uv run --with mpremote python3 -m mpremote connect {{port}} repl
 
 # --- CAD (build123d, in cad/) ---
 

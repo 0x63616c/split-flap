@@ -18,35 +18,33 @@ Run:
     python tools/bench/bench_ui.py                 # sim
     python tools/bench/bench_ui.py --serial /dev/tty.usbmodem1101
 
-Type at the prompt:
+Type at the prompt (commands start with /; anything else is glyphs to display):
     A  1  m           -> drive to one glyph (lowercase auto-caps)
     HELLO  123123     -> drive through a STRING, 1s dwell per glyph
     (empty / _)       -> blank slot
     up-arrow          -> recall previous input (readline history)
-    .home             -> re-home on the hall magnet, then settle on blank
-    .homecal          -> re-home but STOP on the home flap (to read + calibrate it)
-    .zero             -> declare here = home, no seek (no magnet mounted)
-    .pos              -> re-query position
-    .hall             -> read hall DO pin (0 = magnet present, 1 = clear)
-    .speed <1-16>     -> set motor RPM (firmware cap 16)
-    .nudge <±n>       -> calibrate home: move n half-steps, bake into saved offset
-    .sethome <g>      -> declare which glyph the home flap shows (rotates the map)
-    .reset            -> wipe calibration: offset 0 + home glyph blank
-    .quit  /  q       -> exit
+    /help             -> full help screen
+    /home             -> re-home on the hall magnet, then settle on blank
+    /homecal          -> re-home but STOP on the home flap (to read + calibrate it)
+    /zero             -> declare here = home, no seek (no magnet mounted)
+    /pos              -> re-query position
+    /hall             -> read hall DO pin (0 = magnet present, 1 = clear)
+    /speed <1-16>     -> set motor RPM (firmware cap 16)
+    /nudge <±n>       -> calibrate home: move n half-steps (min ±10), into offset
+    /sethome <g>      -> declare which glyph the home flap shows (rotates the map)
+    /reset            -> wipe calibration: offset 0 + home glyph blank
+    /quit  /  q       -> exit
 
 Calibrating a module once (do it in this order):
-    .reset            offset 0, home glyph blank
-    .home             seek the magnet; uncalibrated home == blank, so it STAYS on
-                      the home flap (no settle move) — that's what you calibrate
-    .nudge 20         centre the char in the window (may roll onto the next flap)
-    .sethome 2        READ the flap and declare it — whatever it physically shows
-Now typing 'C' drives to C; .home re-homes and settles on blank. Nudge lives on
+    /reset            offset 0, home glyph blank
+    /homecal          seek the magnet and STOP on the home flap
+    /nudge 20         centre the char in the window (may roll onto the next flap)
+    /sethome 2        READ the flap and declare it — whatever it physically shows
+Now typing 'C' drives to C; /home re-homes and settles on blank. Nudge lives on
 the board (survives reboot/reflash); the home glyph is saved beside this script.
-(Recalibrating later, once home glyph is set? .home settles to blank, so use
-.homecal to stop on the home flap again.)
 
 The UI glyph is a MODEL (home glyph + step count), not a camera — if it disagrees
-with the real drum, the home glyph is set wrong. Fix with .home/.homecal + .sethome.
+with the real drum, the home glyph is set wrong. Fix with /homecal + /sethome.
 """
 
 import os
@@ -62,6 +60,8 @@ import slotplan as sp
 
 PAUSE_S = 1.0    # dwell between glyphs when a whole string is typed
 MAX_RPM = 16     # firmware cap (bench-measured stall margin); integer RPM only
+MIN_NUDGE = 10   # smallest nudge that reliably moves the drum; below this the
+                 # 28BYJ backlash eats it, so we reject it rather than pretend
 
 # The home glyph (which flap the magnet sits opposite) is a per-module fact set
 # at calibration. It's pure planning maths, so we keep it host-side (unlike the
@@ -137,10 +137,10 @@ class SimTransport:
         self.offset = 0
         self.log.append(f"{GRN}reset{RST}: offset -> 0")
 
-    def goto(self, tgt_step, steps_forward, crosses_home):
+    def goto(self, tgt_step, steps_forward, crosses_home, slow=False):
         # Deterministic 'slip': each time the drum sweeps past the hall magnet
         # without stopping to re-home, assume the geartrain lost a step. Watch it
-        # build across moves, and see .home wipe it. (No RNG — must replay same.)
+        # build across moves, and see /home wipe it. (No RNG — must replay same.)
         if crosses_home:
             self.homes_missed += 1
             self.slip += 1
@@ -197,7 +197,7 @@ class SerialTransport:
             time.sleep(0.5)
         else:
             sys.exit(f"no response from board on {port}. "
-                     "Did you run `just board` first? Is the port right "
+                     "Use `just up` (flashes + drives). Is the port right "
                      "(`just ports`)?")
 
     def _cmd(self, line):
@@ -245,8 +245,9 @@ class SerialTransport:
             if tok.startswith("offset="):
                 self.offset = int(tok[7:])
 
-    def goto(self, tgt_step, steps_forward, crosses_home):
-        self.cur_step = self._parse_step(self._cmd(f"GOTO {tgt_step}"))
+    def goto(self, tgt_step, steps_forward, crosses_home, slow=False):
+        cmd = f"GOTO {tgt_step} slow" if slow else f"GOTO {tgt_step}"
+        self.cur_step = self._parse_step(self._cmd(cmd))
         return self.cur_step, self.slip
 
     def pos(self):
@@ -264,7 +265,7 @@ class SerialTransport:
 # --------------------------------------------------------------------------
 # Shell
 # --------------------------------------------------------------------------
-def render(t):
+def render(t, queue=None):
     cur_step, slip = t.pos()
     slot = sp.nearest_slot(cur_step)
     glyph = sp.slot_to_glyph(slot)
@@ -274,6 +275,12 @@ def render(t):
     out = [CLEAR]
     out.append(f"{BOLD}split-flap bench UI{RST}  {DIM}[{t.name}]{RST}")
     out.append("")
+    # queue: glyphs still to drive when a whole string is playing (only if >1 left)
+    if queue and len(queue) > 1:
+        upcoming = "".join(g if g != " " else "␣" for g in queue)
+        out.append(f"  {BOLD}queue{RST}       {YEL}{upcoming[0]}{RST}"
+                   f"{DIM}{upcoming[1:]}{RST}   {DIM}({len(queue)} left){RST}")
+        out.append("")
     blank_tag = f"   {DIM}(blank){RST}" if glyph == sp.BLANK else ""
     out.append(f"  {BOLD}showing{RST}     {GRN}{BOLD} {shown} {RST}"
                f"   {DIM}(slot {slot}/{sp.N_SLOTS}){RST}{blank_tag}")
@@ -283,23 +290,26 @@ def render(t):
     out.append(f"  {BOLD}homed{RST}       {homed_txt}")
     rpm = getattr(t, "rpm", None)
     if rpm is not None:
-        out.append(f"  {BOLD}speed{RST}       {rpm} RPM   {DIM}(.speed 1-{MAX_RPM}){RST}")
+        out.append(f"  {BOLD}speed{RST}       {rpm} RPM   {DIM}(/speed 1-{MAX_RPM}){RST}")
     offset = getattr(t, "offset", None)
     if offset is not None:
         out.append(f"  {BOLD}home offset{RST}  {offset} steps   "
-                   f"{DIM}(.nudge ±n; ~10 min visible, backlash eats less){RST}")
+                   f"{DIM}(/nudge ±n; min ±{MIN_NUDGE}, backlash eats less){RST}")
     out.append(f"  {BOLD}home glyph{RST}   '{sp.home_glyph()}'   "
-               f"{DIM}(.sethome <g> = the flap at home; saved){RST}")
+               f"{DIM}(/sethome <g> = the flap at home; saved){RST}")
     missed = getattr(t, "homes_missed", 0)
     if slip:
         drift = f"{RED}{slip} steps{RST}  {DIM}over {missed} missed home(s){RST}"
     else:
         drift = f"{DIM}0{RST}"
-    out.append(f"  {BOLD}slip{RST}        {drift}   {DIM}(cleared by .home){RST}")
+    out.append(f"  {BOLD}slip{RST}        {drift}   {DIM}(cleared by /home){RST}")
     out.append("")
-    # slot ring
+    # slot ring — GLYPHS is the physical drum order, so highlight the glyph now
+    # in the window: index (slot + HOME_INDEX), NOT the raw slot (which is
+    # slots-from-home and only equals the index when home glyph is blank).
+    here = (slot + sp.HOME_INDEX) % sp.N_SLOTS
     ring = "".join(
-        (f"{GRN}{BOLD}{sp.GLYPHS[i]}{RST}" if i == slot else f"{DIM}{sp.GLYPHS[i]}{RST}")
+        (f"{GRN}{BOLD}{sp.GLYPHS[i]}{RST}" if i == here else f"{DIM}{sp.GLYPHS[i]}{RST}")
         for i in range(sp.N_SLOTS)
     )
     out.append(f"  {ring}")
@@ -311,9 +321,47 @@ def render(t):
         out.append("")
     out.append(f"  {DIM}type glyphs (A-Z 0-9, e.g. HELLO or 123123 — "
                f"{PAUSE_S:g}s each)   ↑ history{RST}")
-    out.append(f"  {DIM}.home  .homecal  .zero  .pos  .hall  .speed <1-{MAX_RPM}>  "
-               f".nudge <±n>  .sethome <g>  .reset  .quit/q{RST}")
+    out.append(f"  {DIM}/home  /homecal  /zero  /pos  /hall  /speed <1-{MAX_RPM}>  "
+               f"/nudge <±n>  /sethome <g>  /reset  /help  /quit{RST}")
     print("\n".join(out))
+
+
+def print_help():
+    """A full, friendly help screen. Printed WITHOUT a render() clear so it stays
+    on screen until the next command."""
+    h = f"""
+{BOLD}split-flap bench UI — help{RST}
+
+{BOLD}Drive the drum{RST}
+  {GRN}A{RST}  {GRN}7{RST}  {GRN}m{RST}        one glyph (lower-case auto-caps)
+  {GRN}HELLO{RST}         a whole string — steps through it, {PAUSE_S:g}s per glyph
+  {DIM}(empty){RST} / {GRN}_{RST}    a blank flap
+  {DIM}↑{RST}             recall previous input (history)
+
+{BOLD}Home & rest{RST}
+  {GRN}/home{RST}         seek the hall magnet, then settle on blank. one slow speed.
+  {GRN}/homecal{RST}      seek but STOP on the home flap — to read + calibrate it
+  {GRN}/zero{RST}         declare 'here = home' with no seek (for a magnet-less bench)
+
+{BOLD}Calibrate a module (once), in order{RST}
+  1. {GRN}/reset{RST}                offset 0, home glyph blank
+  2. {GRN}/homecal{RST}              land on the home flap and stay
+  3. {GRN}/nudge{RST} {DIM}±n{RST}             centre it in the window (min ±{MIN_NUDGE}; may roll to next flap)
+  4. {GRN}/sethome{RST} {DIM}<glyph>{RST}      READ the flap, declare what it physically shows
+  Then {GRN}/home{RST} rests on blank and typed glyphs land right.
+  {DIM}nudge offset lives on the board; home glyph is saved beside this script.{RST}
+
+{BOLD}Inspect{RST}
+  {GRN}/pos{RST}          re-query position       {GRN}/hall{RST}   read the hall pin (0 = magnet)
+  {GRN}/speed{RST} {DIM}<1-{MAX_RPM}>{RST}  set motor RPM (not persisted; resets on reboot)
+
+{BOLD}Other{RST}
+  {GRN}/reset{RST}  wipe calibration    {GRN}/help{RST}  this screen    {GRN}/quit{RST} (or {GRN}q{RST})  exit
+
+{DIM}The 'showing' glyph is a MODEL (home glyph + step count), not a camera. If it
+disagrees with the real drum, the home glyph is wrong — fix with /homecal + /sethome.{RST}
+"""
+    print(h)
 
 
 def main():
@@ -338,42 +386,45 @@ def main():
             return
 
         cmd = raw.lower()
-        if cmd in (".quit", "q"):
+        if cmd in ("/quit", "q"):
             return
+        if cmd == "/help":
+            print_help()          # NO render() — leave help on screen till next cmd
+            continue
         # Transport calls can raise on a serial ERR (e.g. ERR no-magnet, or a
         # board flashed before SPEED existed -> ERR bad-cmd). Surface it in the
-        # log instead of crashing the whole UI. `just board` reflashes.
-        if cmd in (".home", ".homecal"):
+        # log instead of crashing the whole UI. `just up` reflashes.
+        if cmd in ("/home", "/homecal"):
             try:
                 t.home()
-                # .homecal STOPS on the home flap so you can read what's physically
-                # there and declare it with .sethome. Normal .home then settles to
+                # /homecal STOPS on the home flap so you can read what's physically
+                # there and declare it with /sethome. Normal /home then settles to
                 # blank (the home flap is only a calibration anchor, not rest state).
-                if cmd == ".homecal":
+                if cmd == "/homecal":
                     t.log.append(f"{YEL}homed on the home flap{RST} — read it, "
-                                 f"then {BOLD}.sethome <that glyph>{RST}")
+                                 f"then {BOLD}/sethome <that glyph>{RST}")
                 else:
                     cur_step, _ = t.pos()
                     slot, tgt, fwd, crosses = sp.plan(cur_step, sp.BLANK)
                     if fwd:
                         t.log.append(f"{DIM}homed on '{sp.home_glyph()}', "
-                                     f"settling to blank (+{fwd}){RST}")
-                        t.goto(tgt, fwd, crosses)
+                                     f"settling to blank (+{fwd}, slow){RST}")
+                        t.goto(tgt, fwd, crosses, slow=True)   # keep /home one speed
             except Exception as e:
                 t.log.append(f"{RED}error{RST}: {e}")
             render(t)
             continue
-        if cmd == ".zero":
+        if cmd == "/zero":
             try:
                 t.zero()
             except Exception as e:
                 t.log.append(f"{RED}error{RST}: {e}")
             render(t)
             continue
-        if cmd == ".pos":
+        if cmd == "/pos":
             render(t)
             continue
-        if cmd == ".hall":
+        if cmd == "/hall":
             try:
                 v = t.hall()
                 state = (f"{GRN}magnet present{RST}" if v == 0
@@ -383,28 +434,31 @@ def main():
                 t.log.append(f"{RED}error{RST}: {e}")
             render(t)
             continue
-        if cmd.startswith(".nudge"):
+        if cmd.startswith("/nudge"):
             bits = raw.split()
             try:
                 n = int(bits[1])
             except (IndexError, ValueError):
-                t.log.append(f"{RED}usage{RST}: .nudge <±n half-steps>   "
-                             f"{DIM}(~10 = smallest visible; backlash eats less){RST}")
+                t.log.append(f"{RED}usage{RST}: /nudge <±n half-steps>   "
+                             f"{DIM}(min ±{MIN_NUDGE}; smaller gets eaten by backlash){RST}")
+                render(t); continue
+            if abs(n) < MIN_NUDGE:
+                t.log.append(f"{RED}refused{RST}: /nudge min ±{MIN_NUDGE} "
+                             f"{DIM}({n:+d} is sub-visible — backlash eats it){RST}")
                 render(t); continue
             if not getattr(t, "homed", True):
-                t.log.append(f"{RED}refused{RST}: not homed — .home/.zero first")
+                t.log.append(f"{RED}refused{RST}: not homed — /home or /zero first")
                 render(t); continue
             try:
                 t.nudge(n)
                 deg = abs(n) * 360 / sp.STEPS_PER_REV
                 flap = abs(n) * sp.N_SLOTS / sp.STEPS_PER_REV
-                t.log.append(f"{DIM}  {n:+d} steps = {deg:.2f}° = {flap:.2f} flap"
-                             f"{'  (<~10: may not move — backlash)' if abs(n) < 10 else ''}{RST}")
+                t.log.append(f"{DIM}  {n:+d} steps = {deg:.2f}° = {flap:.2f} flap{RST}")
             except Exception as e:
                 t.log.append(f"{RED}error{RST}: {e}   "
-                             f"{DIM}(board may need `just board` reflash){RST}")
+                             f"{DIM}(board may need `just up` reflash){RST}")
             render(t); continue
-        if cmd == ".reset":
+        if cmd == "/reset":
             try:
                 t.reset()                       # offset -> 0 (board or sim)
                 sp.set_home_glyph(" ")          # home glyph -> blank
@@ -417,10 +471,10 @@ def main():
             except Exception as e:
                 t.log.append(f"{RED}error{RST}: {e}")
             render(t); continue
-        if cmd.startswith(".sethome") or cmd.startswith(".homeglyph"):
+        if cmd.startswith("/sethome"):
             bits = raw.split()
             if len(bits) != 2:
-                t.log.append(f"{RED}usage{RST}: .sethome <glyph>   "
+                t.log.append(f"{RED}usage{RST}: /sethome <glyph>   "
                              f"{DIM}(the flap showing at home right now){RST}")
                 render(t); continue
             try:
@@ -430,16 +484,20 @@ def main():
             except sp.NotOnDrum:
                 t.log.append(f"{YEL}'{bits[1]}' not on the drum{RST}")
             render(t); continue
-        if cmd.startswith(".speed"):
+        if cmd.startswith("/speed"):
             bits = cmd.split()
             if len(bits) == 2 and bits[1].isdigit() and 1 <= int(bits[1]) <= MAX_RPM:
                 try:
                     t.speed(int(bits[1]))
                 except Exception as e:
                     t.log.append(f"{RED}error{RST}: {e}   "
-                                 f"{DIM}(board may need `just board` reflash){RST}")
+                                 f"{DIM}(board may need `just up` reflash){RST}")
             else:
-                t.log.append(f"{RED}usage{RST}: .speed <integer 1-{MAX_RPM}>")
+                t.log.append(f"{RED}usage{RST}: /speed <integer 1-{MAX_RPM}>")
+            render(t)
+            continue
+        if cmd.startswith("/"):
+            t.log.append(f"{RED}unknown command{RST}: {raw}   {DIM}(/help){RST}")
             render(t)
             continue
 
@@ -447,7 +505,7 @@ def main():
         # through them one at a time, dwelling PAUSE_S between each — so
         # "123123" drives 1, pause, 2, pause, 3, pause, 1, ...
         if not getattr(t, "homed", True):
-            t.log.append(f"{RED}refused{RST}: not homed — run .home/.zero first")
+            t.log.append(f"{RED}refused{RST}: not homed — run /home or /zero first")
             render(t)
             continue
         seq = list(raw) if raw else [" "]   # bare Enter = one blank
@@ -467,7 +525,7 @@ def main():
                 )
             except Exception as e:  # serial hiccup etc — prototype, surface it
                 t.log.append(f"{RED}error{RST}: {e}")
-            render(t)
+            render(t, queue=seq[idx:])   # current + everything still to come
             if idx < len(seq) - 1:
                 time.sleep(PAUSE_S)
 
