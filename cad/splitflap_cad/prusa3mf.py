@@ -47,24 +47,35 @@ _CONTENT_TYPES = (
     "</Types>"
 )
 
-_TESS_TOL = 0.02  # mm chord tolerance — keeps glyph curves crisp
+_LIN_TOL = 0.02  # mm chord tolerance — keeps glyph curves crisp
+_ANG_TOL = 0.2   # radians
+_WELD_TOL = 1e-5  # mm — merge coincident tessellation vertices
 
 
 def _f(x: float) -> str:
     return f"{x:.6f}".rstrip("0").rstrip(".")
 
 
-def _tessellate(solids, center):
-    """(vertices, triangles) for a set of solids, offset so `center` maps
-    to the origin, triangle indices continuous across the solids.
-    vertices are (x,y,z) tuples; triangles are (i,j,k) index tuples."""
+def _mesh_part(shape, center):
+    """(vertices, triangles) for one part (a Compound of solids), meshed
+    as a whole so shared edges tessellate consistently, then welded by
+    position into a manifold mesh. Uses build123d's Mesher pipeline
+    (BRepMesh + orientation-aware winding) — raw Shape.tessellate leaves
+    reversed faces mis-wound and the mesh non-manifold. vertices are
+    (x,y,z) tuples offset so `center` maps to the origin; triangles are
+    (i,j,k) index tuples."""
+    from build123d.mesher import Mesher
+
     cx, cy, cz = center
-    verts, tris, off = [], [], 0
-    for s in solids:
-        vv, tt = s.tessellate(_TESS_TOL)
-        verts.extend((v.X - cx, v.Y - cy, v.Z - cz) for v in vv)
-        tris.extend((a + off, b + off, c + off) for a, b, c in tt)
-        off += len(vv)
+    raw_v, raw_t = Mesher._mesh_shape(shape, _LIN_TOL, _ANG_TOL)
+    idx, verts, remap = {}, [], {}
+    for i, (x, y, z) in enumerate(raw_v):
+        key = (round(x / _WELD_TOL), round(y / _WELD_TOL), round(z / _WELD_TOL))
+        if key not in idx:
+            idx[key] = len(verts)
+            verts.append((x - cx, y - cy, z - cz))
+        remap[i] = idx[key]
+    tris = [(remap[a], remap[b], remap[c]) for a, b, c in raw_t]
     return verts, tris
 
 
@@ -74,16 +85,16 @@ def _flap_object(obj_id: int, i: int, center):
     card, glyphs = flap_at(i)
     name = f"flap_{i:02d}_{char_slug(CHARSET[i])}"
 
-    # Merge card + glyph solids into ONE mesh; record each part's
-    # inclusive triangle-index range for the config file.
-    solid_groups = [("card", card.solids(), 1)]
+    # Merge card + glyph into ONE mesh (each a manifold shell); record
+    # each part's inclusive triangle-index range for the config file.
+    parts = [("card", card, 1)]
     if glyphs is not None:
-        solid_groups.append(("glyph", glyphs.solids(), 2))
+        parts.append(("glyph", glyphs, 2))
 
     verts, tris, volumes = [], [], []
-    for pname, solids, ext in solid_groups:
+    for pname, shape, ext in parts:
         vbase, tbase = len(verts), len(tris)
-        vv, tt = _tessellate(solids, center)
+        vv, tt = _mesh_part(shape, center)
         verts.extend(vv)
         tris.extend((a + vbase, b + vbase, c + vbase) for a, b, c in tt)
         volumes.append((tbase, len(tris) - 1, pname, ext))
