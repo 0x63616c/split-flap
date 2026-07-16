@@ -96,7 +96,6 @@ def motor_towers():
         t = Pos(0, 0, P.unit_plate_thick) * extrude(
             fp, amount=P.byj_flange_seat - P.unit_plate_thick
         )
-        t = chamfer(t.edges().group_by(Axis.Z)[-1], P.tower_top_chamfer)
         t -= Pos(
             P.mount_x + side * P.byj_ear_pitch / 2,
             P.mount_y,
