@@ -61,6 +61,12 @@ def _flap():
     return dict(objects=[flap()], names=["flap"])
 
 
+def _flap_glyph():
+    from .glyphflap import glyph_flap_demo
+
+    return glyph_flap_demo()
+
+
 def _motor_byj():
     from .stepper28byj import stepper28byj
 
@@ -93,6 +99,11 @@ MODELS = {
     "plate": Model("side plate only — no vendor fins/towers", "unit", _plate),
     "drum": Model("drum outer + inner, side by side", "drum", _drum),
     "flap": Model("single flap card", "flap", _flap),
+    "flap-glyph": Model(
+        "PROTOTYPE two-tone glyph flaps: assembled A + W/M + Q/? demos",
+        "glyphflap",
+        _flap_glyph,
+    ),
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj", _motor_byj),
     "motor-nema": Model("NEMA 14 reference (possible later swap)", "motor", _motor_nema),
     "vendor": Model("vendor unit STEP, aligned to our frame", "vendor", _vendor),

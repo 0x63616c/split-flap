@@ -26,6 +26,19 @@ class Params:
     flap_pin_h: float = 1.2       # pin tab height
     flap_wide_y0: float = 18.0    # top wide section starts here
 
+    # --- flap glyphs (two-tone AMS inlay; docs/research/charset-artwork.md) ---
+    # A character spans two flaps: top half on the FRONT of flap N, bottom
+    # half on the BACK of flap N+1 rotated 180° about X. Halves are pushed
+    # apart by glyph_gap_comp each so the letter reads continuous across
+    # the physical hinge gap. Gap/keepout are scottbez1 starting values —
+    # PLACEHOLDERS until our drum geometry pins them down (issue #7).
+    glyph_font: str = "Epilogue-Medium.ttf"  # file in cad/fonts/
+    glyph_half_h: float = 24.5     # half-character cap height per flap (0.7 * flap_h)
+    glyph_w_max: float = 33.0      # max glyph width; wider glyphs squeeze to fit
+    glyph_gap_comp: float = 1.0    # rigid push of each half away from the split line
+    glyph_top_keepout: float = 3.7  # flap tip hidden behind the resting stack
+    glyph_inlay_depth: float = 0.4  # white inlay depth per face (2 layers @ 0.2)
+
     # --- unit side plate (holds motor, wires, drum, hall sensor) ---
     # Module is assembled lying on its left side; this plate is the base.
     unit_plate_w: float = 95.0    # plate width
