@@ -7,11 +7,12 @@ renders them in the browser. No mouse modeling — edit Python, save, look.
 ## Quickstart
 
 ```sh
-just cad-install   # once: uv env, python 3.12, build123d
-just cad           # the dev loop — leave it running
+just cad install   # once: uv env, python 3.12, build123d
+just cad dev       # the dev loop — leave it running
 ```
 
-`just cad` is idempotent and starts everything:
+`just cad` alone prints the command menu. `just cad dev` is idempotent and
+starts everything:
 
 - viewer **:3939** — always the **full assembly** (top cmux pane)
 - viewer **:3940** — the **focus model** (bottom pane), auto-follows
@@ -21,16 +22,17 @@ just cad           # the dev loop — leave it running
 
 ```sh
 just cad list        # what models exist (the menu)
-just cad drum        # pin the focus pane to one model
-just cad             # unpin — back to follow-my-saves
+just cad dev drum    # pin the focus pane to one model
+just cad dev         # unpin — back to follow-my-saves
 just cad down        # stop watcher + viewers
-just export flap     # STL -> cad/export/
-just cad-test        # dimensional tests
+just cad export      # every printable STL -> cad/export/
+just cad export flap # just one
+just cad test        # dimensional tests
 ```
 
 No panes / blank page? Pushes are live-streamed, never replayed — a
 reloaded page shows the OCP splash until the next push. Save any file or
-re-run `just cad`.
+re-run `just cad dev`.
 
 ## Layout
 
@@ -41,7 +43,7 @@ re-run `just cad`.
 | `splitflap_cad/<part>.py` | geometry only (`flap`, `drum`, `unit`, `motor`, `stepper28byj`) — no `__main__` blocks |
 | `splitflap_cad/assembly.py` | full-unit compose + posed bought-parts |
 | `splitflap_cad/vendor.py` | verbatim geometry lifted from the vendor STEP |
-| `splitflap_cad/__main__.py` | the CLI behind `just cad` (`list/show/pin/sync/export`) |
+| `splitflap_cad/__main__.py` | the CLI behind `just cad` (`list/show/pin/sync/export`) — `export` with no name writes every printable |
 | `tools/cad/up.sh` (repo root) | orchestrator: viewers + cmux panes + watcher |
 | `reference/Unit.stp` | vendor unit (Printables #805853) — gitignored, download yourself; assembly ghost + measurement source |
 
