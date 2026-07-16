@@ -272,7 +272,7 @@ class Params:
     drum_magnet_boss_wall: float = 1.0  # boss wall around the pocket,
                                    # per side; thin so the boss squeezes
                                    # under the guide ring
-    drum_magnet_standoff: float = 11.0  # boss under the web dropping the
+    drum_magnet_standoff: float = 13.0  # boss under the web dropping the
                                    # magnet toward the hall sensor
     drum_poke_d: float = 2.2       # magnet eject hole (toothpick) through
                                    # the web into the pocket's blind end
@@ -364,8 +364,8 @@ class Params:
     unit_window_chamfer: float = 3.75  # 45° corner cut on window outlines
     plate_web: float = 4.0  # min web between a plate window and any feature
 
-    # vendor screw-tower complex Y extent (measured off the STEP; also
-    # crops the tower regions in vendor.vendor_towers)
+    # screw-tower complex Y extent (bounds the plate windows around the
+    # tower zone; the towers themselves are motor_towers in unit.py)
     tower_zone_y: float = 0.8        # zone centre
     tower_zone_half_y: float = 13.25  # zone half-extent
 
