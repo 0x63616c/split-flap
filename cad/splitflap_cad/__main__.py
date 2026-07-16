@@ -5,6 +5,8 @@
     python -m splitflap_cad sync [FILE]         # assembly -> :3939, focus -> :3940
     python -m splitflap_cad pin [NAME|--clear]  # pin/unpin the focus model
     python -m splitflap_cad export [NAME]       # write STL(s); no NAME = all
+                                                # + flap 3MFs/Bambu plates;
+                                                # NAME "flaps" = artwork only
 
 Normally driven by `just cad` (viewers + cmux panes + save watcher); see
 tools/cad/up.sh. Two viewers: :3939 always shows the full assembly, :3940
@@ -92,9 +94,24 @@ def cmd_sync(args):
     _push(focus, FOCUS_PORT)
 
 
+def _export_flap_artwork():
+    """The flap set: per-flap colored 3MFs + Bambu-native plate projects."""
+    from .bambu3mf import export_bambu_plates
+    from .glyphflap import export_flaps
+
+    for out in export_flaps(EXPORT_DIR / "flaps"):
+        print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+    for out in export_bambu_plates(EXPORT_DIR / "plates"):
+        print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+
+
 def cmd_export(args):
     from build123d import export_stl
 
+    # "flaps" = the glyph card set (3MFs, not a PRINTABLE STL entry)
+    if args.name == "flaps":
+        _export_flap_artwork()
+        return
     names = [args.name] if args.name else list(PRINTABLE)
     for name in names:
         _check(name, PRINTABLE)
@@ -103,6 +120,8 @@ def cmd_export(args):
         out = EXPORT_DIR / f"{name}.stl"
         export_stl(PRINTABLE[name](), str(out))
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+    if not args.name:
+        _export_flap_artwork()
 
 
 def main():
@@ -122,7 +141,10 @@ def main():
     s = sub.add_parser("sync", help="push assembly + focus (watcher entrypoint)")
     s.add_argument("file", nargs="?")
 
-    s = sub.add_parser("export", help="write STLs to cad/export/ (no NAME = all)")
+    s = sub.add_parser(
+        "export",
+        help="write STLs to cad/export/ (no NAME = all + flap 3MFs/plates; 'flaps' = artwork only)",
+    )
     s.add_argument("name", nargs="?")
 
     args = p.parse_args()
