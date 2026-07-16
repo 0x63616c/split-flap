@@ -98,10 +98,17 @@ class Params:
     byj_flange_seat: float = 25.0  # ear underside, from plate bottom (vendor)
     byj_can_clear: float = 0.4     # radial clearance scooped around the can
     byj_pad_hole_r: float = 8.0    # hole through the pad centre
-    # wire channel: groove in the plate UNDERSIDE, from the pad hole out
-    # to the -X edge, so the motor wires can leave the module flat.
-    wire_chan_w: float = 8.0       # channel width
-    wire_chan_d: float = 1.6       # channel depth into the underside
+    # wire channel: enclosed tunnel INSIDE the plate, from the pad hole
+    # out to the -X edge, so the motor wires leave the module flat.
+    # Kingsman-style: skin-thick roof and floor (two print layers each)
+    # with the cavity between, plus a narrower slit through the floor —
+    # wires push in past the slit and the floor lips hold them there.
+    wire_chan_w: float = 8.0       # cavity width
+    wire_chan_skin: float = 0.4    # roof/floor thickness (2 x 0.2 layers)
+    wire_chan_slit_w: float = 3.2  # push-in slit width through the floor
+    wire_chan_flare: float = 3.0   # 45-deg mouth flare at the -X exit,
+                                   # per side — opens the outlet so the
+                                   # wires leave without a sharp corner
     byj_pad_slot_chamfer: float = 1.0  # edge break on the pad's wire-slot cuts
     # Screw towers (ours, remodeled from the vendor STEP): one curved
     # arm per motor ear. Footprint = rectangular bound ∩ the flap-swing
@@ -156,48 +163,55 @@ class Params:
         """M3 clearance hole diameter. Derived."""
         return self.motor_screw_d + 2 * self.screw_clearance
 
-    # --- hall sensor mount (Kingsman-style) ---
-    # Sensor PCB screws flat onto a pedestal whose top is level with the
-    # motor ear seat. Two M2 self-tap holes share the same X, 10mm apart
-    # along Y. Position anchored near the vendor ghost's bracket.
-    # Sensor PCB (measured): 19 x 15, holes along the 15 side inset 2.5
-    # from each end (-> 10 pitch), hole line inset 2.5 from one long edge
-    # (-> 7 off the PCB centreline). PCB centre sits on the shaft X line;
-    # the hole line is therefore off-centre from the shaft.
-    hall_pcb_w: float = 19.0       # PCB size across X
-    hall_pcb_l: float = 15.0       # PCB size along Y (hole line side)
+    # --- hall sensor mount ---
+    # Sensor breakout (KY-003 style, measured off listing photos):
+    # 18.83 x 15.0, two Ø3 mount holes on one 15.0 edge — 10.21 pitch,
+    # hole line inset 2.53 from that edge. The TO-92 hall element hangs
+    # off the SAME (hole-line) edge on bent legs, face up, its centre
+    # ~4mm past the edge; the 3-pin header exits past that edge too, so
+    # wires leave toward the back (-X) wall.
+    # Pose: PCB flat in the free crescent between the motor can
+    # (r 14.4 about the can axis) and the flap swing circle
+    # (tower_flap_relief_r about the shaft) — long side across X,
+    # centred on the shaft X line (best corner margins), hole/element
+    # edge at -X. The element's legs bend sideways along the edge so the
+    # element centre lands on the magnet sweep circle (drum_magnet_r).
+    # The crescent is 17.6 deep for a 15-wide board: corner/can margins
+    # are a few tenths — check both when touching anything here.
+    # Support: one narrow post block spans both screw holes (M2
+    # self-tap); the board cantilevers from it over the pad's wire-slot
+    # corridor (wire_chan_w about mount_x, toward -Y), which must stay
+    # open so the motor wires can slide under the board into the pad
+    # hole.
+    # Height cap: the outer drum's guide-rail bottoms sweep at
+    # z = drum_z0 + ring_t + barrel_len_outer - guide_len ≈ 26.3 down to
+    # r 22, so hall_seat + PCB must stay below that.
+    hall_pcb_w: float = 18.83      # PCB size across X (long side)
+    hall_pcb_l: float = 15.0       # PCB size along Y (hole-line side)
     hall_pcb_t: float = 1.6        # PCB thickness
-    hall_hole_inset: float = 2.5   # edge -> hole centre, both axes
-    hall_elem_hole_off: float = 6.5  # nearest hole centre -> hall element,
-                                   # along Y away from the shaft (element
-                                   # sat at r 17.5 when near gap was 11.0)
+    hall_hole_pitch: float = 10.21  # Ø3 mount holes, along Y
+    hall_hole_inset: float = 2.53  # hole-line (-X) edge -> hole centres
+    hall_hole_d: float = 3.0       # PCB mount hole (M3 screw)
+    hall_elem_overhang: float = 4.0  # -X edge -> element centre (legs
+                                   # bent to suit)
+    hall_y: float = -20.4          # PCB centre Y: bottom corners inside
+                                   # the flap circle, top edge off the can
+    hall_seat: float = 23.5        # PCB seat height (raw; capped by the
+                                   # guide rails, see note above)
+    # element mock (TO-92 flat pack on bent legs, face up to the magnet)
+    hall_elem_w: float = 4.0       # element body width (along Y)
+    hall_elem_l: float = 3.0       # element body length (along legs, X)
+    hall_elem_t: float = 1.5       # element body thickness
+    hall_post_chamfer: float = 1.0  # edge break on the posts
+    hall_post_w: float = 7.5       # screw post width across X
     hall_pilot_d: float = 1.6      # M2 self-tap pilot bore
-    hall_pilot_depth: float = 8.0  # pilot depth from the pedestal top
-    hall_post_chamfer: float = 1.0  # edge break on the pedestal
-    hall_post_frac: float = 0.75   # fraction of PCB width the pedestal backs
-    hall_post_l: float = 16.0      # pedestal footprint Y (pitch + edge meat)
+    hall_pilot_depth: float = 8.0  # pilot depth from the post top
 
     @property
-    def hall_post_w(self) -> float:
-        """Pedestal footprint X: backs hall_post_frac of the PCB width,
-        growing from the PCB's -X (hole line) edge inward. Derived."""
-        return self.hall_post_frac * self.hall_pcb_w
-
-    @property
-    def hall_post_x(self) -> float:
-        """Pedestal centre X: flush with the PCB's -X edge. Derived."""
-        return self.hall_pcb_x - self.hall_pcb_w / 2 + self.hall_post_w / 2
-
-    @property
-    def hall_near_gap(self) -> float:
-        """Shaft axis -> nearest hole centre: places the hall element
-        under the magnet's sweep radius. Follows drum_magnet_r. Derived."""
-        return self.drum_magnet_r - self.hall_elem_hole_off
-
-    @property
-    def hall_hole_pitch(self) -> float:
-        """M2 hole spacing along Y: PCB length minus an inset each end."""
-        return self.hall_pcb_l - 2 * self.hall_hole_inset
+    def hall_post_l(self) -> float:
+        """Screw post length along Y: one block spanning both holes plus
+        post-width meat past each. Derived."""
+        return self.hall_hole_pitch + self.hall_post_w
 
     @property
     def hall_pcb_x(self) -> float:
@@ -207,18 +221,21 @@ class Params:
     @property
     def hall_x(self) -> float:
         """Hole line X: inset from the PCB's -X long edge. Derived."""
-        return self.hall_pcb_x - (self.hall_pcb_w / 2 - self.hall_hole_inset)
+        return self.hall_pcb_x - self.hall_pcb_w / 2 + self.hall_hole_inset
 
     @property
-    def hall_y(self) -> float:
-        """PCB centre Y = midpoint between the two holes: nearest hole sits
-        hall_near_gap below the shaft axis (toward -Y)."""
-        return self.byj_shaft_y - self.hall_near_gap - self.hall_hole_pitch / 2
+    def hall_elem_x(self) -> float:
+        """Hall element centre X: hall_elem_overhang past the -X edge.
+        Derived."""
+        return self.hall_pcb_x - self.hall_pcb_w / 2 - self.hall_elem_overhang
 
     @property
-    def hall_seat(self) -> float:
-        """Hall PCB seat height: same as the motor ear seat. Derived."""
-        return self.byj_flange_seat
+    def hall_elem_y(self) -> float:
+        """Hall element centre Y: legs bend along the edge until the
+        element sits on the magnet sweep circle (-Y branch). Follows
+        drum_magnet_r. Derived."""
+        dx = self.mount_x - self.hall_elem_x
+        return self.byj_shaft_y - (self.drum_magnet_r**2 - dx**2) ** 0.5
 
     # --- drum (two parts: outer can + inner disc, measured off the
     # Kingsman FlapDrum{Outer,Inner}.stl) ---
@@ -302,6 +319,37 @@ class Params:
                                    # magnet toward the hall sensor
     drum_poke_d: float = 2.2       # magnet eject hole (toothpick) through
                                    # the web into the pocket's blind end
+    # Lock screw: one M3 down from the drum's outer (web) face clamps
+    # the two parts together so they can't pull apart. Boss hangs off
+    # the inner web (solid quadrant, beside the 90-deg fin's rails) and
+    # lands on a rib inside the outer wall at the butt joint; the screw
+    # drops through a clearance bore in web + boss into an M3x3
+    # heat-set insert pressed into the rib's top face. Head sits in a
+    # recess in the web's outer face — the recess is narrower than the
+    # boss, so the seat is backed by the full boss and the web isn't
+    # effectively thinned. Rib top is flush with the butt plane (user
+    # pick over a preload gap), so the boss bears directly on it.
+    # Clearance box (screw sits between magnet boss @45 and the key
+    # fin @0; exact centre 22.5 kisses the magnet boss, so it's nudged
+    # 1.5 deg finward): rib flank -> magnet boss 0.5, screw boss ->
+    # magnet boss ~1.3, rib corner clears the key-fin rails by ~1mm,
+    # rib base ≈ drum z 22.9 clears the hall board sweep (board top
+    # unit z 25.1 ≈ drum z 20.4, and the board sits at ~270 deg anyway).
+    drum_screw_ang: float = 21.0   # bore axis angle from the key fin
+    drum_screw_r: float = 22.75    # bore axis radius
+    drum_screw_boss_d: float = 7.0  # boss dia (edge r 26.25 clears the
+                                   # wall face by 0.25)
+    drum_screw_boss_w: float = 7.5  # rib width (tangential)
+    drum_screw_rib_r_in: float = 16.0  # rib inner radius: deep enough
+                                   # that the insert bore keeps a full
+                                   # wall above the 45-deg base ramp
+    drum_screw_len: float = 12.0   # M3x12 button head
+    drum_screw_recess_d: float = 6.2  # head recess dia (button head
+                                   # Ø5.7); head sits 1.2 deep, 0.45
+                                   # proud of the web face
+    drum_screw_recess_t: float = 1.2  # head recess depth into the web
+    drum_screw_insert_h: float = 3.2  # insert bore depth in the rib
+                                   # (M3x3 insert + press slack)
     # First-slot indicator: debossed triangle next to flap slot 0 (the
     # slot on the key fin / key notch line) on both parts' outside faces.
     drum_mark_depth: float = 0.6

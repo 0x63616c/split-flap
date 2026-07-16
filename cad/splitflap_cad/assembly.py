@@ -23,12 +23,30 @@ def posed_motor():
 
 
 def posed_hall_pcb():
-    """The hall sensor PCB posed flat on the pedestal top: centre on the
-    shaft X line, screw holes off-centre on the hall hole line."""
+    """The hall sensor PCB posed flat on its posts, in the crescent
+    between the motor can and the flap circle. Screw holes on the hall
+    hole line (-X edge); the hall element hangs off that same edge on
+    bent legs, its centre on the magnet sweep circle, face up."""
     pcb = Box(P.hall_pcb_w, P.hall_pcb_l, P.hall_pcb_t)
     for dy in (-P.hall_hole_pitch / 2, P.hall_hole_pitch / 2):
-        pcb -= Pos(P.hall_x - P.hall_pcb_x, dy, 0) * Cylinder(1.1, P.hall_pcb_t * 2)
-    return Pos(P.hall_pcb_x, P.hall_y, P.hall_seat + P.hall_pcb_t / 2) * pcb
+        pcb -= Pos(P.hall_x - P.hall_pcb_x, dy, 0) * Cylinder(
+            P.hall_hole_d / 2, P.hall_pcb_t * 2
+        )
+    # element body past the -X edge, top face level with the PCB top
+    elem_dx = P.hall_elem_x - P.hall_pcb_x
+    elem_dy = P.hall_elem_y - P.hall_y
+    elem = Pos(elem_dx, elem_dy, P.hall_pcb_t / 2 - P.hall_elem_t / 2) * Box(
+        P.hall_elem_l, P.hall_elem_w, P.hall_elem_t
+    )
+    # legs: thin ribbon bridging the -X edge to the element body
+    edge = -P.hall_pcb_w / 2
+    span = edge - (elem_dx + P.hall_elem_l / 2)
+    legs = Pos(edge - span / 2, elem_dy, P.hall_pcb_t / 2 - 0.2) * Box(
+        span, P.hall_elem_w, 0.4
+    )
+    return Pos(P.hall_pcb_x, P.hall_y, P.hall_seat + P.hall_pcb_t / 2) * (
+        pcb + elem + legs
+    )
 
 
 def assembly_show_args():

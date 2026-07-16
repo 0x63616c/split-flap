@@ -4,7 +4,7 @@ from collections import Counter
 
 from splitflap_cad.glyphflap import CHARSET, _glyph_halves, char_slug, flap_at
 from splitflap_cad.params import P
-from splitflap_cad.prusa3mf import _mesh_part
+from splitflap_cad.flap3mf import _mesh_part
 
 
 def test_charset_matches_drum():

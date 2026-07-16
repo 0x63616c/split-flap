@@ -145,6 +145,43 @@ def drum_outer():
                 0, side * (gap + P.drum_guide_rib_w / 2), 0
             ) * rib
 
+    # Lock-screw rib: a wide rib inside the wall (solid web quadrant,
+    # beside the 90-deg fin's rails), top flush with the butt joint —
+    # the inner part's boss lands on it. An M3x3 heat-set insert
+    # presses into the rib's top face; the screw drops in from the
+    # drum's outer (web) face through the inner part and threads in.
+    z_rib = z_butt  # flush with the lip / butt plane
+    r_rib_in = P.drum_screw_rib_r_in
+    rib_prof = Polygon(
+        (r_rib_in, z_rib),
+        (r_embed, z_rib),
+        (r_embed, z_rib - (r_embed - r_rib_in)),
+        align=None,
+    )
+    # (winds opposite to _lip_profile, so it extrudes +Y and needs the
+    # opposite recentring shift to the rails')
+    screw_rib = Pos(0, -P.drum_screw_boss_w / 2, 0) * Rot(90, 0, 0) * extrude(
+        rib_prof, amount=P.drum_screw_boss_w
+    )
+    # Break the sharp corner jutting into the drum: the top-inner edge
+    # only. The two outer-face edges must stay sharp — they sit just
+    # 0.2 into the wall, so a 0.6 chamfer cuts past the embed and opens
+    # a slit between the rib and the wall face.
+    screw_rib = chamfer(screw_rib.edges().filter_by(Axis.Y).sort_by(Axis.X)[:1], 0.6)
+    body += Rot(0, 0, P.drum_screw_ang) * screw_rib
+    # Insert bore in the rib top, plus screw-tip clearance below it:
+    # the tip runs drum_screw_len minus the inner-part stack past the
+    # butt plane. Both bores open upward — no overhangs, no membrane.
+    tip_depth = P.drum_screw_len + 0.5 - (
+        P.drum_ring_t - P.drum_screw_recess_t + P.drum_barrel_len_inner
+    )
+    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
+        P.drum_screw_r, 0, z_rib - P.drum_screw_insert_h / 2
+    ) * Cylinder(P.byj_insert_d / 2, P.drum_screw_insert_h)
+    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
+        P.drum_screw_r, 0, z_rib - tip_depth / 2
+    ) * Cylinder(P.screw_hole_d / 2, tip_depth)
+
     # First-slot indicator: triangle debossed into the ring's outside
     # (bottom) face, on the key-notch line pointing at slot 0.
     body -= _slot0_marker(0, +1)
@@ -286,6 +323,25 @@ def drum_inner():
     body -= Rot(0, 0, 45) * Pos(P.drum_magnet_r, 0, 0) * Cylinder(
         P.drum_poke_d / 2, 4 * P.drum_magnet_standoff
     )
+    # Lock-screw boss: hangs off the web underside (solid quadrant,
+    # beside the 90-deg fin), lands on the outer part's rib at the
+    # butt joint. The M3 drops from the web's outer face: head recess
+    # there (narrower than the boss, so the seat is fully backed),
+    # clearance bore straight through web + boss, threads into the
+    # rib's heat-set insert to clamp the parts shut.
+    sboss = Pos(0, 0, -P.drum_barrel_len_inner / 2) * Cylinder(
+        P.drum_screw_boss_d / 2, P.drum_barrel_len_inner
+    )
+    # rim break at the bottom face
+    sboss = chamfer(sboss.edges().group_by(Axis.Z)[0], 0.5)
+    body += Rot(0, 0, P.drum_screw_ang) * Pos(P.drum_screw_r, 0, 0) * sboss
+    bore_l = P.drum_ring_t + P.drum_barrel_len_inner + 1
+    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
+        P.drum_screw_r, 0, P.drum_ring_t + 0.5 - bore_l / 2
+    ) * Cylinder(P.screw_hole_d / 2, bore_l)
+    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
+        P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t / 2
+    ) * Cylinder(P.drum_screw_recess_d / 2, P.drum_screw_recess_t)
     return body
 
 

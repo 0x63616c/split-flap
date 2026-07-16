@@ -57,8 +57,8 @@ def plate_windows():
     # pedestal; the right window also stops short of the guard corner
     lo2 = -y_cap
     hi2 = min(P.tower_zone_y - P.tower_zone_half_y, P.byj_can_y - P.byj_can_d / 2) - g
-    hall_lo = P.hall_post_x - P.hall_post_w / 2 - g
-    hall_hi = P.hall_post_x + P.hall_post_w / 2 + g
+    hall_lo = P.hall_x - P.hall_post_w / 2 - g
+    hall_hi = P.hall_x + P.hall_post_w / 2 + g
     # the guard side runs to the standard edge margin — the guard foot
     # only grazes the band's bottom corner, which the chamfer clears
     right_hi = x_hi
@@ -157,12 +157,35 @@ def unit_plate():
     # inner/outer cylinder walls
     pad = chamfer(pad.edges().filter_by(Axis.Z), P.byj_pad_slot_chamfer)
 
-    # Wire channel: groove in the plate underside from the pad hole to the
-    # -X edge (z=0 up to wire_chan_d).
+    # Wire channel: enclosed tunnel inside the plate from the pad hole
+    # to the -X edge — skin-thick roof and floor with the cavity
+    # between, and a narrower push-in slit through the floor so the
+    # wires snap in and stay held.
     chan_len = P.byj_can_x + P.unit_plate_w / 2
-    plate -= Pos(
-        P.byj_can_x - chan_len / 2, P.byj_can_y, P.wire_chan_d / 2
-    ) * Box(chan_len, P.wire_chan_w, P.wire_chan_d)
+    cavity_h = P.unit_plate_thick - 2 * P.wire_chan_skin
+    chan_pos = (P.byj_can_x - chan_len / 2, P.byj_can_y)
+    plate -= Pos(*chan_pos, P.unit_plate_thick / 2) * Box(
+        chan_len, P.wire_chan_w, cavity_h
+    )
+    # slit hugs the cavity's +Y wall — one wide floor lip instead of two
+    slit_y = P.byj_can_y + (P.wire_chan_w - P.wire_chan_slit_w) / 2
+    plate -= Pos(chan_pos[0], slit_y, 0) * Box(
+        chan_len, P.wire_chan_slit_w, P.wire_chan_skin * 2
+    )
+    # flare the -X mouth 45 deg per side so the wires exit without a
+    # sharp corner; open from the plate bottom up to the cavity roof
+    # (full channel depth — only the roof skin runs to the edge)
+    x_edge = -P.unit_plate_w / 2
+    f = P.wire_chan_flare
+    hw = P.wire_chan_w / 2
+    mouth = Polygon(
+        (x_edge, P.byj_can_y - hw - f),
+        (x_edge, P.byj_can_y + hw + f),
+        (x_edge + f, P.byj_can_y + hw),
+        (x_edge + f, P.byj_can_y - hw),
+        align=None,
+    )
+    plate -= extrude(mouth, amount=P.wire_chan_skin + cavity_h, dir=(0, 0, 1))
 
     # Lightening windows through the plate, house style.
     plate -= plate_windows()
@@ -252,19 +275,21 @@ def unit_plate():
         + wedge(P.unit_plate_h / 2 - P.unit_top_thick, P.unit_plate_w, -90)  # +Y
     )
 
-    # Hall sensor mount (Kingsman-style): pedestal level with the motor
-    # ear seat, sensor PCB screws flat on top — two M2 pilots on the same
-    # X line, hall_hole_pitch apart in Y.
+    # Hall sensor mount: the PCB screws flat onto one narrow post block
+    # spanning both holes on the hole line (-X edge, M2 self-tap
+    # pilots); the rest of the board cantilevers over the pad's
+    # wire-slot corridor, which stays open so the motor wires slide
+    # under the board into the pad hole. The hall element hangs off the
+    # -X edge on bent legs, under the magnet sweep; header wires leave
+    # the same edge toward the back wall.
     post_h = P.hall_seat - P.unit_plate_thick
-    hall = Pos(P.hall_post_x, P.hall_y, P.unit_plate_thick + post_h / 2) * Box(
-        P.hall_post_w, P.hall_post_l, post_h
-    )
-    # chamfer the vertical edges only (bottom stays square, it merges
-    # into the plate; top left square)
-    hall = chamfer(
-        hall.edges().filter_by(Axis.Z),
-        P.hall_post_chamfer,
-    )
+
+    def _post(x, y, w, l):
+        b = Pos(x, y, P.unit_plate_thick + post_h / 2) * Box(w, l, post_h)
+        # vertical edges only (bottom merges into the plate; top square)
+        return chamfer(b.edges().filter_by(Axis.Z), P.hall_post_chamfer)
+
+    hall = _post(P.hall_x, P.hall_y, P.hall_post_w, P.hall_post_l)
     for dy in (-P.hall_hole_pitch / 2, P.hall_hole_pitch / 2):
         hall -= Pos(
             P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_pilot_depth / 2

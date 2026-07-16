@@ -97,12 +97,12 @@ def cmd_sync(args):
 def _export_flap_artwork():
     """The flap set: per-flap colored 3MFs + plate projects that drag
     into Bambu Studio already two-coloured (PrusaSlicer format)."""
+    from .flap3mf import export_plates
     from .glyphflap import export_flaps
-    from .prusa3mf import export_prusa_plates
 
     for out in export_flaps(EXPORT_DIR / "flaps"):
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
-    for out in export_prusa_plates(EXPORT_DIR / "plates"):
+    for out in export_plates(EXPORT_DIR / "plates"):
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
 
 
