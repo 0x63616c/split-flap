@@ -28,14 +28,15 @@ class Params:
 
     # --- flap glyphs (two-tone AMS inlay; docs/research/charset-artwork.md) ---
     # A character spans two flaps: top half on the FRONT of flap N, bottom
-    # half on the BACK of flap N+1 rotated 180° about X. Halves are pushed
-    # apart by glyph_gap_comp each so the letter reads continuous across
-    # the physical hinge gap. Gap/keepout are scottbez1 starting values —
-    # PLACEHOLDERS until our drum geometry pins them down (issue #7).
+    # half on the BACK of flap N+1 rotated 180° about X. Artwork runs
+    # flush to the card's pivot edge; the physical hinge gap is what
+    # separates the halves on the display. Gap/keepout are scottbez1
+    # starting values — PLACEHOLDERS until drum geometry pins them (#7).
     glyph_font: str = "Epilogue-Medium.ttf"  # file in cad/fonts/
     glyph_half_h: float = 24.5     # half-character cap height per flap (0.7 * flap_h)
     glyph_w_max: float = 33.0      # max glyph width; wider glyphs squeeze to fit
-    glyph_gap_comp: float = 1.0    # rigid push of each half away from the split line
+    glyph_gap_comp: float = 1.0    # half the physical hinge gap (preview pose only;
+                                   # artwork always runs flush to the card edge)
     glyph_top_keepout: float = 3.7  # flap tip hidden behind the resting stack
     glyph_inlay_depth: float = 0.4  # white inlay depth per face (2 layers @ 0.2)
 

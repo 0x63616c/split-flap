@@ -68,8 +68,9 @@ def _glyph_halves(char: str):
     """(top, bottom) faces of `char` in display coords, or (None, None).
 
     Drawn at cap height 2*glyph_half_h, x-centred (squeezed to
-    glyph_w_max if wider), split at cap/2 which lands on y=0, each half
-    pushed glyph_gap_comp away from the split line.
+    glyph_w_max if wider), split at cap/2 which lands exactly on y=0 —
+    flush with the card's pivot edge. The letter's halves end up pushed
+    apart by the *physical* hinge gap when displayed; no artwork offset.
     """
     if not char.strip():
         return None, None
@@ -82,9 +83,16 @@ def _glyph_halves(char: str):
     split = cap / 2
     top = g & Pos(0, split + _BIG / 2, 0) * Rectangle(_BIG, _BIG)
     bottom = g & Pos(0, split - _BIG / 2, 0) * Rectangle(_BIG, _BIG)
-    top = Pos(0, -split + P.glyph_gap_comp, 0) * top
-    bottom = Pos(0, -split - P.glyph_gap_comp, 0) * bottom
-    return top, bottom
+    # low glyphs (e.g. '.') can leave a half empty — return None for it
+    def place(half):
+        try:
+            if not half.faces():
+                return None
+            return Pos(0, -split, 0) * half
+        except AssertionError:  # empty boolean result has no wrapped shape
+            return None
+
+    return place(top), place(bottom)
 
 
 def _inlay(face, z0: float):
@@ -130,8 +138,13 @@ def glyph_flap_demo() -> dict:
             names.append(f"{name}_glyphs")
             colors.append("white")
 
-    add(glyph_flap("A", "B"), "top_A")                       # standing, front visible
-    add(glyph_flap("B", "A"), "bottom_A", Location(Rot(180, 0, 0)))  # flipped down, back visible
+    add(glyph_flap("A", "B"), "top_A")  # standing, front visible
+    # flipped down, back visible, dropped by the physical hinge gap
+    add(
+        glyph_flap("B", "A"),
+        "bottom_A",
+        Location(Pos(0, -2 * P.glyph_gap_comp, 0)) * Location(Rot(180, 0, 0)),
+    )
     add(glyph_flap("W", "M"), "wide_WM", Location(Pos(55, 0, 0)))
     add(glyph_flap("Q", "?"), "multi_Q?", Location(Pos(110, 0, 0)))
     return dict(objects=objects, names=names, colors=colors)
