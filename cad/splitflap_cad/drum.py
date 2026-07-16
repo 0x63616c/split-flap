@@ -209,6 +209,23 @@ def drum_inner():
         fin = Pos(0, -fin_t / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=fin_t)
         body += Rot(0, 0, a * 360 / P.drum_fin_count) * fin
 
+    # Fillet the fin roots against the web underside: the long radial
+    # edges where each fin face meets the web carry the fin's bending
+    # load. Straight z=0 edges within a fin half-thickness of a
+    # diametral plane are exactly those junctions — the window borders
+    # run drum_web_window_fin_gap further out.
+    def _diam_dist(e):
+        c, d = e.center(), e.tangent_at(0)
+        return abs(c.X * d.Y - c.Y * d.X)
+
+    roots = [
+        e
+        for e in body.edges().filter_by(GeomType.LINE)
+        if abs(e.center().Z) < 0.1
+        and _diam_dist(e) < P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1
+    ]
+    body = fillet(roots, P.drum_fin_web_fillet)
+
     # Hub: down from the web, double-D bore opening at the bottom.
     hub = Pos(0, 0, -P.drum_hub_len / 2) * Cylinder(P.drum_hub_d / 2, P.drum_hub_len)
     # Double-D bore = cylinder clipped by a slab across the flats. Bore

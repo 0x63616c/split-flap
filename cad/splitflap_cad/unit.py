@@ -152,6 +152,10 @@ def unit_plate():
     pad -= Pos(P.byj_can_x, P.byj_can_y, P.unit_plate_thick + P.byj_pad_h / 2) * Box(
         P.wire_chan_w, P.byj_can_d * 2, P.byj_pad_h * 2
     )
+    # break the slot's cut edges so wires don't rub sharp corners — the
+    # only vertical edges on the pad are the slot faces meeting the
+    # inner/outer cylinder walls
+    pad = chamfer(pad.edges().filter_by(Axis.Z), P.byj_pad_slot_chamfer)
 
     # Wire channel: groove in the plate underside from the pad hole to the
     # -X edge (z=0 up to wire_chan_d).
