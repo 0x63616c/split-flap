@@ -179,6 +179,33 @@ def export_flaps(out_dir: Path) -> list[Path]:
     return written
 
 
+def flap_set_demo() -> dict:
+    """Contact sheet of the whole ring: all 52 fronts in a grid, then
+    all 52 backs below, each back physically flipped about X exactly as
+    the display flips it (so its glyph must read correctly)."""
+    cols, dx, dy = 13, 48.0, 42.0
+    cards, glyphs = [], []
+
+    def place(loc, pair):
+        card, g = pair
+        cards.extend((loc * card).solids())
+        if g is not None:
+            glyphs.extend((loc * g).solids())
+
+    n_rows = (len(CHARSET) + cols - 1) // cols
+    for i in range(len(CHARSET)):
+        r, c = divmod(i, cols)
+        pair = flap_at(i)
+        place(Location(Pos(c * dx, -r * dy, 0)), pair)
+        back_y = -(n_rows + r) * dy - 20 + P.flap_h  # flipped card spans [y-35, y]
+        place(Location(Pos(c * dx, back_y, 0)) * Location(Rot(180, 0, 0)), pair)
+    return dict(
+        objects=[Compound(children=cards), Compound(children=glyphs)],
+        names=["cards", "glyphs"],
+        colors=["dimgray", "white"],
+    )
+
+
 def glyph_flap_demo() -> dict:
     """show() kwargs: assembled 'A' (top flap + flipped-down next flap)
     plus loose demo flaps — W/M (width squeeze) and Q/? (multi-solid,

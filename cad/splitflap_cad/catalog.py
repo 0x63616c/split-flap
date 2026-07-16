@@ -67,6 +67,12 @@ def _flap_glyph():
     return glyph_flap_demo()
 
 
+def _flap_set():
+    from .glyphflap import flap_set_demo
+
+    return flap_set_demo()
+
+
 def _motor_byj():
     from .stepper28byj import stepper28byj
 
@@ -99,6 +105,11 @@ MODELS = {
     "plate": Model("side plate only — no vendor fins/towers", "unit", _plate),
     "drum": Model("drum outer + inner, side by side", "drum", _drum),
     "flap": Model("single flap card", "flap", _flap),
+    "flap-set": Model(
+        "contact sheet: all 52 flap fronts + backs (backs flipped as displayed)",
+        "glyphflap",
+        _flap_set,
+    ),
     "flap-glyph": Model(
         "PROTOTYPE two-tone glyph flaps: assembled A + W/M + Q/? demos",
         "glyphflap",
