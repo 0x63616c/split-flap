@@ -223,16 +223,17 @@ class Params:
     drum_fin_clear: float = 0.2    # fin-to-wall / notch clearance
     drum_fin_tip_fillet: float = 1.0  # fin tip corner round (dock lead-in)
     drum_fin_hub_fillet: float = 0.8  # fillet where fins meet the hub wall
-    drum_guide_len: float = 3.0    # guide ring length along the barrel,
-                                   # down from the butt joint — just
-                                   # enough lip to block misalignment;
-                                   # the notches index the fins
-    drum_guide_rib_h: float = 1.5  # guide ring protrusion off the wall
-                                   # (radial); full lip, notched at the
-                                   # fins — fins can ONLY enter at the
-                                   # notches, so rotation is indexed at
-                                   # any angle (discrete rail pairs let
-                                   # an off-angle drum close unindexed)
+    drum_guide_ring_len: float = 3.0  # full guide ring (lip) length: just
+                                   # enough to block an off-angle drum —
+                                   # fins can ONLY enter at the notches,
+                                   # so rotation is indexed at any angle
+    drum_guide_len: float = 12.0   # total fin support length down from
+                                   # the butt joint: below the ring,
+                                   # rail pairs flank each notch so the
+                                   # fins stay side-supported
+    drum_guide_rib_w: float = 1.5  # rail width (tangential)
+    drum_guide_rib_h: float = 1.5  # ring/rail protrusion off the wall
+                                   # (radial)
     drum_hub_d: float = 16.8       # shaft hub outer diameter
     drum_hub_len: float = 15.8     # hub length below the web underside
     drum_bore_depth: float = 9.0   # double-D shaft bore depth
@@ -328,6 +329,9 @@ class Params:
     # flap opening, frames the bottom flap. Same thickness as the blade.
     unit_front_lip: float = 5.0    # lip run along the +Y edge
 
+    unit_base_chamfer: float = 2.0  # 45° wedge where the plate top meets
+                                    # the wall inner faces (inside corners)
+
     @property
     def unit_top_thick(self) -> float:
         """Top (-Y) wall thickness: matches the guard's front blade,
@@ -337,7 +341,7 @@ class Params:
     # two rectangular windows cut into the back wall, [][] side by side,
     # 5mm frame left at every edge and between them
     unit_window_margin: float = 8.0
-    unit_window_chamfer: float = 3.0  # 45° corner cut on window outlines
+    unit_window_chamfer: float = 3.75  # 45° corner cut on window outlines
     plate_web: float = 4.0  # min web between a plate window and any feature
 
     # vendor screw-tower complex Y extent (measured off the STEP; also

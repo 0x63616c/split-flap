@@ -90,31 +90,58 @@ def drum_outer():
     orientation."""
     body = _ring() + Pos(0, 0, P.drum_ring_t) * _barrel(P.drum_barrel_len_outer)
 
-    # Guide ring runs down the wall from the butt joint; the lower end
-    # ramps back into the wall at 45 deg so the lip prints without
-    # overhangs (part prints flap-ring-down, axis vertical).
+    # Short full guide ring at the butt joint; its lower end ramps back
+    # into the wall at 45 deg so the lip prints without overhangs (part
+    # prints flap-ring-down, axis vertical).
     z_butt = P.drum_ring_t + P.drum_barrel_len_outer
-    z_bot = z_butt - P.drum_guide_len
+    z_ring = z_butt - P.drum_guide_ring_len
     r_embed = P.drum_wall_r_in + 0.2
     r_face = P.drum_wall_r_in - P.drum_guide_rib_h
-    pent = Polygon(
-        (r_embed, z_butt),
-        (r_face, z_butt),
-        (r_face, z_bot + P.drum_guide_rib_h),
-        (P.drum_wall_r_in, z_bot),
-        (r_embed, z_bot),
-        align=None,
-    )
-    body += revolve(Rot(90, 0, 0) * pent, Axis.Z)
 
-    # Notches: one per fin, width = fin thickness + clearance per side.
-    notch_x = (r_face - 0.5 + P.drum_wall_r_in + 0.3) / 2
-    notch_dx = (P.drum_wall_r_in + 0.3) - (r_face - 0.5)
+    def _lip_profile(z_lo):
+        return Polygon(
+            (r_embed, z_butt),
+            (r_face, z_butt),
+            (r_face, z_lo + P.drum_guide_rib_h),
+            (P.drum_wall_r_in, z_lo),
+            (r_embed, z_lo),
+            align=None,
+        )
+
+    body += revolve(Rot(90, 0, 0) * _lip_profile(z_ring), Axis.Z)
+
+    # Notches through the ring: one per fin, width = fin thickness +
+    # clearance per side.
+    # cutter stops flush at the wall face — overshooting radially dents
+    # a step into the barrel wall behind the notch
+    notch_x = (r_face - 0.5 + P.drum_wall_r_in) / 2
+    notch_dx = P.drum_wall_r_in - (r_face - 0.5)
     for a in range(P.drum_fin_count):
         fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
         body -= Rot(0, 0, a * 360 / P.drum_fin_count) * Pos(
-            notch_x, 0, (z_butt + z_bot) / 2
-        ) * Box(notch_dx, fin_t + 2 * P.drum_fin_clear, P.drum_guide_len + 2)
+            notch_x, 0, (z_butt + z_ring) / 2
+        ) * Box(
+            notch_dx,
+            fin_t + 2 * P.drum_fin_clear,
+            P.drum_guide_ring_len + 2 * P.drum_guide_rib_h + 1,
+        )
+
+    # Below the ring, rail pairs flank each notch down to drum_guide_len
+    # so the fins stay side-supported over their whole travel; same
+    # 45-deg ramp at the lower end.
+    z_bot = z_butt - P.drum_guide_len
+    # (this polygon winds opposite to the fin's, so it extrudes -Y and
+    # needs the opposite recentring shift)
+    rib = Pos(0, P.drum_guide_rib_w / 2, 0) * Rot(90, 0, 0) * extrude(
+        _lip_profile(z_bot), amount=P.drum_guide_rib_w
+    )
+    for a in range(P.drum_fin_count):
+        fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
+        gap = fin_t / 2 + P.drum_fin_clear
+        for side in (+1, -1):
+            body += Rot(0, 0, a * 360 / P.drum_fin_count) * Pos(
+                0, side * (gap + P.drum_guide_rib_w / 2), 0
+            ) * rib
 
     # First-slot indicator: triangle debossed into the ring's outside
     # (bottom) face, on the key-notch line pointing at slot 0.

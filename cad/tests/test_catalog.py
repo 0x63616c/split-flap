@@ -19,7 +19,10 @@ def test_every_src_is_a_real_module():
 
 
 def test_src_map_covers_all_models():
-    assert set(SRC_TO_MODEL.values()) == set(MODELS)
+    # models may share a src (unit/plate); the map keeps the first, and
+    # every mapped name must be a real model
+    assert set(SRC_TO_MODEL.values()) <= set(MODELS)
+    assert set(SRC_TO_MODEL) == {m.src for m in MODELS.values()}
 
 
 def test_printable_builders_exist():

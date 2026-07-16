@@ -37,6 +37,12 @@ def _unit():
     return dict(objects=[u], names=["unit"])
 
 
+def _plate():
+    from .unit import unit_plate
+
+    return dict(objects=[unit_plate()], names=["plate"])
+
+
 def _drum():
     from build123d import Pos, Rot
 
@@ -84,6 +90,7 @@ MODELS = {
         "unit",
         _unit,
     ),
+    "plate": Model("side plate only — no vendor fins/towers", "unit", _plate),
     "drum": Model("drum outer + inner, side by side", "drum", _drum),
     "flap": Model("single flap card", "flap", _flap),
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj", _motor_byj),
@@ -91,8 +98,12 @@ MODELS = {
     "vendor": Model("vendor unit STEP, aligned to our frame", "vendor", _vendor),
 }
 
-# saved file stem -> model name, for the watcher's auto-focus
-SRC_TO_MODEL = {m.src: name for name, m in MODELS.items()}
+# saved file stem -> model name, for the watcher's auto-focus.
+# First entry wins on shared src (unit.py saves focus the full unit,
+# not the plate-only view).
+SRC_TO_MODEL: dict = {}
+for _name, _m in MODELS.items():
+    SRC_TO_MODEL.setdefault(_m.src, _name)
 
 
 # --- printable solids (STL export) ---
