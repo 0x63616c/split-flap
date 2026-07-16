@@ -4,7 +4,7 @@
     python -m splitflap_cad show NAME [--port]  # build + push one model
     python -m splitflap_cad sync [FILE]         # assembly -> :3939, focus -> :3940
     python -m splitflap_cad pin [NAME|--clear]  # pin/unpin the focus model
-    python -m splitflap_cad export NAME         # write cad/export/NAME.stl
+    python -m splitflap_cad export [NAME]       # write STL(s); no NAME = all
 
 Normally driven by `just cad` (viewers + cmux panes + save watcher); see
 tools/cad/up.sh. Two viewers: :3939 always shows the full assembly, :3940
@@ -54,10 +54,10 @@ def _check(name, pool=MODELS):
 
 
 def cmd_list(_args):
-    print("models (just cad NAME):")
+    print("models (just cad dev NAME):")
     for name, m in MODELS.items():
         print(f"  {name:<12} {m.help}")
-    print("printable (just export NAME):")
+    print("printable (just cad export NAME):")
     for name in PRINTABLE:
         print(f"  {name}")
 
@@ -95,12 +95,14 @@ def cmd_sync(args):
 def cmd_export(args):
     from build123d import export_stl
 
-    _check(args.name, PRINTABLE)
-    part = PRINTABLE[args.name]()
+    names = [args.name] if args.name else list(PRINTABLE)
+    for name in names:
+        _check(name, PRINTABLE)
     EXPORT_DIR.mkdir(exist_ok=True)
-    out = EXPORT_DIR / f"{args.name}.stl"
-    export_stl(part, str(out))
-    print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+    for name in names:
+        out = EXPORT_DIR / f"{name}.stl"
+        export_stl(PRINTABLE[name](), str(out))
+        print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
 
 
 def main():
@@ -120,8 +122,8 @@ def main():
     s = sub.add_parser("sync", help="push assembly + focus (watcher entrypoint)")
     s.add_argument("file", nargs="?")
 
-    s = sub.add_parser("export", help="write an STL to cad/export/")
-    s.add_argument("name")
+    s = sub.add_parser("export", help="write STLs to cad/export/ (no NAME = all)")
+    s.add_argument("name", nargs="?")
 
     args = p.parse_args()
     if args.cmd == "pin" and not args.clear and not args.name:

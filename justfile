@@ -27,22 +27,31 @@ up: free
     uv run --with pyserial python3 tools/bench/bench_ui.py --serial {{port}}
 
 # --- CAD (build123d, in cad/) ---
+# Everything lives under `just cad <cmd>`. Bare `just cad` prints this help.
 
-# CAD dev loop: 2 viewers + cmux panes + save watcher. `just cad list` = menu, `just cad <model>` = pin focus, `just cad down` = stop
-cad target="auto":
-    @./tools/cad/up.sh {{target}}
-
-# export a printable part to cad/export/<part>.stl (`just cad list` shows names)
-export part="unit":
-    uv run --project cad python -m splitflap_cad export {{part}}
-
-# sync the cad env (uv creates .venv, pins python 3.12, installs build123d)
-cad-install:
-    uv sync --project cad
-
-# dimensional tests (volume, bbox, clearances)
-cad-test:
-    uv run --project cad python -m pytest
+cad cmd="help" *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{cmd}}" in
+    help|-h|--help)
+        cat <<'EOF'
+    just cad dev [model]    dev loop: 2 viewers + cmux panes + save watcher
+                            (optional model pins the focus pane)
+    just cad down           stop watcher + both viewers
+    just cad list           list every model + printable part
+    just cad export [part]  write STL(s) to cad/export/ — no part = all printables
+    just cad test           dimensional tests (volume, bbox, clearances)
+    just cad install        sync the cad uv env (python 3.12 + build123d)
+    EOF
+        ;;
+    dev)     ./tools/cad/up.sh {{args}} ;;
+    down)    ./tools/cad/up.sh down ;;
+    list)    ./tools/cad/up.sh list ;;
+    export)  uv run --project cad python -m splitflap_cad export {{args}} ;;
+    test)    uv run --project cad python -m pytest {{args}} ;;
+    install) uv sync --project cad ;;
+    *) echo "unknown cad cmd: {{cmd}} — try 'just cad help'" >&2; exit 2 ;;
+    esac
 
 # list attached USB serial ports
 ports:

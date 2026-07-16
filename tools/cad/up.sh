@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# `just cad [target]` — the one-command CAD dev loop.
+# `just cad dev [model]` — the one-command CAD dev loop (dispatched from the
+# justfile; also re-execs itself for the watcher loop and for down/list).
 #
-#   just cad           ensure viewers + cmux panes + watcher; focus follows saves
-#   just cad <model>   same, but pin the focus pane to <model>
-#   just cad list      print the model catalog
-#   just cad down      stop watcher + both viewers
+#   just cad dev           ensure viewers + cmux panes + watcher; focus follows saves
+#   just cad dev <model>   same, but pin the focus pane to <model>
+#   just cad list          print the model catalog
+#   just cad down          stop watcher + both viewers
 #
 # Two viewers: :3939 = full assembly (top pane), :3940 = focus model
 # (bottom pane). The watcher rebuilds + re-pushes both on every .py save
