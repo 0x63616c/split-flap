@@ -260,6 +260,11 @@ def drum_inner():
         for e in body.edges().filter_by(GeomType.LINE)
         if abs(e.center().Z) < 0.1
         and _diam_dist(e) < P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1
+        # stay in the fin's radial zone: the flap slots' straight side
+        # edges are also near-diametral lines at z=0, but they sit out in
+        # the ring band (r~32) — filleting them rounds the slots and
+        # explodes the mesh.
+        and (e.center().X**2 + e.center().Y**2) ** 0.5 < P.drum_wall_r_in
     ]
     body = fillet(junction + roots, P.drum_fin_hub_fillet)
 
@@ -281,19 +286,6 @@ def drum_inner():
     body -= Rot(0, 0, 45) * Pos(P.drum_magnet_r, 0, 0) * Cylinder(
         P.drum_poke_d / 2, 4 * P.drum_magnet_standoff
     )
-    # Fillet the boss root: the ring where the boss OD meets the web
-    # underside (z=0). Pick the circular edge at the boss centre with the
-    # boss radius — skips the poke-hole ring (much smaller radius).
-    mx = P.drum_magnet_r / 2**0.5  # boss centre at 45 deg
-    root = [
-        e
-        for e in body.edges().filter_by(GeomType.CIRCLE)
-        if abs(e.arc_center.Z) < 0.3
-        and abs(e.arc_center.X - mx) < 0.5
-        and abs(e.arc_center.Y - mx) < 0.5
-        and abs(e.radius - boss_d / 2) < 0.5
-    ]
-    body = fillet(root, P.drum_magnet_boss_fillet)
     return body
 
 
