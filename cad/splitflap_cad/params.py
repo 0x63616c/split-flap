@@ -232,8 +232,14 @@ class Params:
                                    # rail pairs flank each notch so the
                                    # fins stay side-supported
     drum_guide_rib_w: float = 1.5  # rail width (tangential)
-    drum_guide_rib_h: float = 1.5  # ring/rail protrusion off the wall
-                                   # (radial)
+    drum_guide_rib_h: float = 1.5  # guide ring protrusion off the wall
+                                   # (radial); kept short — deeper and it
+                                   # hits the magnet boss (sweeps r 22.1)
+    drum_guide_rail_h: float = 4.5  # rail protrusion off the wall
+                                   # (radial): 3x the ring, grabs more of
+                                   # the fin's flank toward the centre;
+                                   # rails sit at the fin angles so the
+                                   # 45-deg magnet boss clears them
     drum_hub_d: float = 16.8       # shaft hub outer diameter
     drum_hub_len: float = 15.8     # hub length below the web underside
     drum_bore_depth: float = 9.0   # double-D shaft bore depth

@@ -226,7 +226,8 @@ def unit_plate():
             P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_pilot_depth / 2
         ) * Cylinder(P.hall_pilot_d / 2, P.hall_pilot_depth)
 
-    return plate + wall + rod + pad + guard + lip + top + bottom + base_cham + hall
+    # TEMP: pad hidden for inspection — restore before printing
+    return plate + wall + rod + guard + lip + top + bottom + base_cham + hall
 
 
 # Interconnect tab holes, measured off the vendor STEP: 4 corner tabs
