@@ -88,6 +88,7 @@ class Params:
     # to the -X edge, so the motor wires can leave the module flat.
     wire_chan_w: float = 8.0       # channel width
     wire_chan_d: float = 1.6       # channel depth into the underside
+    byj_pad_slot_chamfer: float = 1.0  # edge break on the pad's wire-slot cuts
     # Screw towers (ours, remodeled from the vendor STEP): one curved
     # arm per motor ear. Footprint = rectangular bound ∩ the flap-swing
     # arc (about the shaft axis) − the can relief circle.
@@ -281,6 +282,9 @@ class Params:
                                    # under the guide ring
     drum_magnet_standoff: float = 13.0  # boss under the web dropping the
                                    # magnet toward the hall sensor
+    drum_magnet_boss_fillet: float = 1.0  # fillet where the magnet boss
+                                   # meets the web underside — kills the
+                                   # sharp stress-riser root
     drum_poke_d: float = 2.2       # magnet eject hole (toothpick) through
                                    # the web into the pocket's blind end
     # First-slot indicator: debossed triangle next to flap slot 0 (the
