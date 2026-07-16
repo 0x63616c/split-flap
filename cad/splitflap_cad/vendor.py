@@ -9,7 +9,7 @@ corner relief). If the surrounding parametric geometry moves, re-measure.
 
 from pathlib import Path
 
-from build123d import Box, Cylinder, Pos, import_step
+from build123d import Box, Pos, import_step
 
 from .params import P
 
@@ -42,23 +42,5 @@ def vendor_plate_cutouts():
     return slab - (reference() & slab)
 
 
-def vendor_towers():
-    """The motor screw towers with their bridges, trapped-nut slots and
-    drum-corner relief — one region box per tower complex."""
-    towers = None
-    # z clipped flat at the flange seat — the vendor has 0.2mm nubs above
-    # it that would dig into our motor's ears.
-    for x_lo, x_hi in ((-13.0, -0.8), (23.8, 36.0)):
-        region = Pos(
-            (x_lo + x_hi) / 2, P.tower_zone_y, (2.95 + P.byj_flange_seat) / 2
-        ) * Box(x_hi - x_lo, 2 * P.tower_zone_half_y, P.byj_flange_seat - 2.95)
-        t = reference() & region
-        towers = t if towers is None else towers + t
-    # The vendor can-relief arc (r=14.3 about the can axis) only starts
-    # at z=7; below that the towers keep a straight-edged skirt poking
-    # into the pad zone. Extend the relief the full height so the flank
-    # is one clean arc.
-    towers -= Pos(P.byj_can_x, P.byj_can_y, (2.95 + P.byj_flange_seat) / 2) * Cylinder(
-        14.3, P.byj_flange_seat - 2.95
-    )
-    return towers
+# (the motor screw towers used to be cropped out of the STEP here too;
+# they're modeled parametrically now — unit.motor_towers)

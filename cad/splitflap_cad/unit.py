@@ -267,13 +267,12 @@ def unit_plate():
             P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_pilot_depth / 2
         ) * Cylinder(P.hall_pilot_d / 2, P.hall_pilot_depth)
 
-    # TEMP: pad hidden for inspection — restore before printing
-    return plate + wall + rod + guard + lip + top + bottom + base_cham + hall
+    return (
+        plate + wall + rod + pad + motor_towers() + guard + lip + top + bottom
+        + base_cham + hall
+    )
 
 
-# Interconnect tab holes, measured off the vendor STEP: 4 corner tabs
-# (3mm thick) outboard of the back wall, holes on the Z axis at the
-# mating faces z=0 (bottom pair) and z=53 (top pair).
 # Interconnect tabs, measured off the vendor STEP: hole centres at
 # (x=-51.89, y=+-54.61), mating faces z=0 (bottom tabs, flat 3mm
 # plates spanning x -56.28..-47.5) and z=53 (top tabs, 45-deg ramped
@@ -360,50 +359,18 @@ def _stack_tab_mods(fins):
     return adds, cuts
 
 
-# Motor screw towers, measured off the vendor STEP: screw bores Ø4.2 on
-# (x, y=2.0), trapped-nut slots interrupting them z 11..14.6, flange
-# seat (bore mouth) at z=25.
-_TOWER_X = (-6.05, 29.05)
-_TOWER_Y = 2.0
-_TOWER_SLOT_Z = (11.0, 14.6)
-_TOWER_SEAT_Z = 25.0
-_TOWER_INSERT_DEPTH = 8.0  # M3 heat-set insert hole depth from the seat
-
-
-def _tower_insert_mods(towers):
-    """Adds deleting the vendor trapped-nut slots (we heat-set M3
-    inserts instead): fill each slot with a shifted clone of the tower
-    cross-section just above it (exact outline, keeps the bore), then
-    plug the bore below insert depth — leaving a Ø4.2 blind hole,
-    _TOWER_INSERT_DEPTH deep, opening at the flange seat."""
-    z_lo, z_hi = _TOWER_SLOT_Z
-    hole_bottom = _TOWER_SEAT_Z - _TOWER_INSERT_DEPTH
-    adds = []
-    for x in _TOWER_X:
-        slab = towers & Pos(x, _TOWER_Y, z_hi + (z_hi - z_lo) / 2) * Box(
-            16, 28, z_hi - z_lo
-        )
-        adds.append(Pos(0, 0, -(z_hi - z_lo)) * slab)
-        adds.append(
-            Pos(x, _TOWER_Y, (2.95 + hole_bottom) / 2)
-            * Cylinder(2.6, hole_bottom - 2.95)
-        )
-    return adds
-
-
 def full_unit():
-    """The printable unit: parametric body + verbatim vendor pieces
-    (interconnect fins, motor screw towers). Plate lightening windows
-    are our own (plate_windows), cut in unit_plate; the tabs' screw
-    holes become magnet pockets. Needs the STEP on disk."""
-    from .vendor import vendor_fins, vendor_towers
+    """The printable unit: parametric body (incl. our motor towers) +
+    verbatim vendor interconnect fins. Plate lightening windows are our
+    own (plate_windows), cut in unit_plate; the tabs' screw holes become
+    magnet pockets. Needs the STEP on disk."""
+    from .vendor import vendor_fins
 
     fins = vendor_fins()
-    towers = vendor_towers()
-    unit = unit_plate() + fins + towers
+    unit = unit_plate() + fins
     adds, cuts = _tab_magnet_mods(fins)
     s_adds, s_cuts = _stack_tab_mods(fins)
-    for a in adds + s_adds + _tower_insert_mods(towers):
+    for a in adds + s_adds:
         unit += a
     for c in cuts + s_cuts:
         unit -= c

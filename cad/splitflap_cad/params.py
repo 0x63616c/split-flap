@@ -272,7 +272,7 @@ class Params:
     drum_magnet_boss_wall: float = 1.0  # boss wall around the pocket,
                                    # per side; thin so the boss squeezes
                                    # under the guide ring
-    drum_magnet_standoff: float = 10.0  # boss under the web dropping the
+    drum_magnet_standoff: float = 11.0  # boss under the web dropping the
                                    # magnet toward the hall sensor
     drum_poke_d: float = 2.2       # magnet eject hole (toothpick) through
                                    # the web into the pocket's blind end
