@@ -45,17 +45,17 @@ repl:
 
 # --- CAD (build123d, in cad/) ---
 
+# CAD dev loop: 2 viewers + cmux panes + save watcher. `just cad list` = menu, `just cad <model>` = pin focus, `just cad down` = stop
+cad target="auto":
+    @./tools/cad/up.sh {{target}}
+
+# export a printable part to cad/export/<part>.stl (`just cad list` shows names)
+export part="unit":
+    uv run --project cad python -m splitflap_cad export {{part}}
+
 # sync the cad env (uv creates .venv, pins python 3.12, installs build123d)
 cad-install:
     uv sync --project cad
-
-# start the live model viewer — leave running in its own terminal, open http://127.0.0.1:3939/viewer
-cad-view:
-    uv run --project cad python -m ocp_vscode
-
-# build the flap and push it to the running viewer
-flap:
-    uv run --project cad python -m splitflap_cad.flap
 
 # dimensional tests (volume, bbox, clearances)
 cad-test:

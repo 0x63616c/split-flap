@@ -1,0 +1,26 @@
+"""The catalog is the single registry — keep it honest without building
+geometry (builders are lazy; nothing here should touch build123d)."""
+
+from pathlib import Path
+
+from splitflap_cad.catalog import MODELS, PRINTABLE, SRC_TO_MODEL
+
+SRC = Path(__file__).parent.parent / "splitflap_cad"
+
+
+def test_every_model_documented():
+    for name, m in MODELS.items():
+        assert m.help.strip(), f"{name} needs a help line"
+
+
+def test_every_src_is_a_real_module():
+    for name, m in MODELS.items():
+        assert (SRC / f"{m.src}.py").exists(), f"{name}: no module {m.src}.py"
+
+
+def test_src_map_covers_all_models():
+    assert set(SRC_TO_MODEL.values()) == set(MODELS)
+
+
+def test_printable_builders_exist():
+    assert set(PRINTABLE) == {"unit", "flap", "drum-outer", "drum-inner"}

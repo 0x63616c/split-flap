@@ -1,0 +1,24 @@
+[project]
+name = "splitflap-cad"
+version = "0.0.0"
+description = "Code-first CAD for the modular split-flap (build123d)."
+requires-python = ">=3.12,<3.13"   # cadquery-ocp wheels lag newest Python; pin 3.12
+dependencies = [
+    "build123d==0.11.1",  # pre-1.0 API churn — pin exact, bump deliberately
+    "ocp-vscode>=2.8.0",  # browser/VS Code live viewer (port 3939)
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["splitflap_cad"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

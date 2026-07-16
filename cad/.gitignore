@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+*.egg-info/
+export/
+.viewer-state.json
+# vendor reference models (Printables downloads, license unclear — don't commit)
+reference/
