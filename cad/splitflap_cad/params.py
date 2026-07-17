@@ -367,7 +367,7 @@ class Params:
     holder_clear: float = 0.6      # radial slip clearance over the drum ring OD
     holder_ring_w: float = 22.0    # ring radial width (holds the slots)
     holder_slot_depth: float = 5.0  # how deep a flap edge drops in
-    holder_slot_floor: float = 2.0  # material left under a slot
+    holder_slot_floor: float = 3.0  # material left under a slot
     holder_slot_clear: float = 0.4  # slot width over flap thickness (slip fit)
     holder_slot_len: float = 16.0  # slot radial length
     holder_slot_inset: float = 1.5  # gap from the bore to the slot start
