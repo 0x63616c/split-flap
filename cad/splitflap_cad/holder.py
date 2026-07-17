@@ -55,17 +55,18 @@ def holder():
 
 def _flap_in_slot():
     """A flap posed in slot 0: width (the pin-to-pin span) along the drum
-    axis = vertical, height radial. Pivot edge faces the bore so the
-    lower pin hangs over the drum ring's slot span; the body's lower
-    side edge sits on the slot floor."""
+    axis = vertical, height radial. Pivot edge faces the bore, the lower
+    pin drops through the drum ring's slot, and the body's lower side
+    edge rests on the drum ring's top face (the drum sits on the rim,
+    ring underside flush with the slot floors)."""
     from .flap import flap
 
     # flap local: x = width, y = height (0 at the pivot edge), z =
     # thickness. Rot(90,0,0) then Rot(0,90,0): x -> -Z, y -> +X, z -> -Y.
     r_pin_mid = (P.drum_slot_r_in_inner + P.drum_slot_r_out) / 2
     x_pivot = r_pin_mid - (P.flap_pin_y0 + P.flap_pin_h / 2)
-    z_floor = P.holder_ring_t - P.holder_slot_depth
-    pose = Pos(x_pivot, P.flap_thick / 2, z_floor + P.flap_w / 2)
+    z_ring_top = P.holder_slot_floor + P.drum_ring_t  # drum sits on the rim
+    pose = Pos(x_pivot, P.flap_thick / 2, z_ring_top + P.flap_w / 2)
     return pose * Rot(0, 90, 0) * Rot(90, 0, 0) * flap()
 
 
