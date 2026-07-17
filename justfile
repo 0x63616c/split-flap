@@ -26,31 +26,19 @@ up: free
     uv run --with mpremote python3 -m mpremote connect {{port}} cp firmware/micropython-spike/bench_board.py :main.py + reset
     uv run --with pyserial python3 tools/bench/bench_ui.py --serial {{port}}
 
-# --- CAD (build123d, in cad/) ---
-# Everything lives under `just cad <cmd>`. Bare `just cad` prints this help.
+# run the ctl TUI / CLI (Go; recompiles automatically via the build cache)
+ctl *args:
+    cd tools/ctl && go run . {{args}}
 
-cad cmd="help" *args:
+# --- CAD (build123d, in cad/) ---
+# `just cad` = interactive menu. Direct: view [model] | export [model] | list
+cad cmd="" *args:
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{cmd}}" in
-    help|-h|--help)
-        cat <<'EOF'
-    just cad dev [model]    dev loop: 2 viewers + cmux panes + save watcher
-                            (optional model pins the focus pane)
-    just cad down           stop watcher + both viewers
-    just cad list           list every model + printable part
-    just cad export [part]  write STL(s) to cad/export/ — no part = all printables
-    just cad test           dimensional tests (volume, bbox, clearances)
-    just cad install        sync the cad uv env (python 3.12 + build123d)
-    EOF
-        ;;
-    dev)     ./tools/cad/up.sh {{args}} ;;
-    down)    ./tools/cad/up.sh down ;;
-    list)    ./tools/cad/up.sh list ;;
-    export)  uv run --project cad python -m splitflap_cad export {{args}} ;;
-    test)    uv run --project cad python -m pytest {{args}} ;;
+    test)    cd cad && uv run python -m pytest {{args}} ;;
     install) uv sync --project cad ;;
-    *) echo "unknown cad cmd: {{cmd}} — try 'just cad help'" >&2; exit 2 ;;
+    *)       cd tools/ctl && go run . cad {{cmd}} {{args}} ;;
     esac
 
 # list attached USB serial ports

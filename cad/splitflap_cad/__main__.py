@@ -1,17 +1,13 @@
-"""splitflap_cad CLI — one entrypoint for the whole viewer/export flow.
+"""splitflap_cad CLI — geometry side of the `just cad` tooling.
 
-    python -m splitflap_cad list                # catalog: every model + printable
-    python -m splitflap_cad show NAME [--port]  # build + push one model
-    python -m splitflap_cad sync [FILE]         # assembly -> :3939, focus -> :3940
-    python -m splitflap_cad pin [NAME|--clear]  # pin/unpin the focus model
+    python -m splitflap_cad list [--json]       # catalog: models + printables
+    python -m splitflap_cad show NAME [--port]  # build + push one model to a viewer
     python -m splitflap_cad export [NAME]       # write STL(s); no NAME = all
                                                 # + flap 3MFs/Bambu plates;
                                                 # NAME "flaps" = artwork only
 
-Normally driven by `just cad` (viewers + cmux panes + save watcher); see
-tools/cad/up.sh. Two viewers: :3939 always shows the full assembly, :3940
-shows the focus model — the pinned one, else the model of the last-saved
-file (sync FILE), else the last focus.
+Driven by tools/ctl (Go): `just cad view [model]` runs a viewer + save
+watcher in the current pane and calls `show` on every source change.
 """
 
 import argparse
@@ -21,21 +17,8 @@ from pathlib import Path
 
 from .catalog import MODELS, PRINTABLE, SRC_TO_MODEL
 
-ASSEMBLY_PORT = 3939
 FOCUS_PORT = 3940
-STATE_FILE = Path(__file__).parent.parent / ".viewer-state.json"
 EXPORT_DIR = Path(__file__).parent.parent / "export"
-
-
-def _state():
-    try:
-        return json.loads(STATE_FILE.read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-
-def _save_state(st):
-    STATE_FILE.write_text(json.dumps(st) + "\n")
 
 
 def _push(name, port):
@@ -80,31 +63,6 @@ def cmd_show(args):
     _push(args.name, args.port)
 
 
-def cmd_pin(args):
-    st = _state()
-    if args.clear:
-        st.pop("pin", None)
-        print("pin cleared — focus follows the last-saved file")
-    else:
-        _check(args.name)
-        st["pin"] = args.name
-        print(f"pinned focus: {args.name}")
-    _save_state(st)
-
-
-def cmd_sync(args):
-    st = _state()
-    focus = st.get("pin")
-    if not focus and args.file:
-        focus = SRC_TO_MODEL.get(Path(args.file).stem)
-    if not focus:
-        focus = st.get("last", "assembly")
-    st["last"] = focus
-    _save_state(st)
-    _push("assembly", ASSEMBLY_PORT)
-    _push(focus, FOCUS_PORT)
-
-
 def _export_flap_artwork():
     """The flap set: per-flap colored 3MFs + plate projects that drag
     into Bambu Studio already two-coloured (PrusaSlicer format)."""
@@ -147,13 +105,6 @@ def main():
     s.add_argument("name")
     s.add_argument("--port", type=int, default=FOCUS_PORT)
 
-    s = sub.add_parser("pin", help="pin the focus model (bottom pane)")
-    s.add_argument("name", nargs="?")
-    s.add_argument("--clear", action="store_true")
-
-    s = sub.add_parser("sync", help="push assembly + focus (watcher entrypoint)")
-    s.add_argument("file", nargs="?")
-
     s = sub.add_parser(
         "export",
         help="write STLs to cad/export/ (no NAME = all + flap 3MFs/plates; 'flaps' = artwork only)",
@@ -161,13 +112,9 @@ def main():
     s.add_argument("name", nargs="?")
 
     args = p.parse_args()
-    if args.cmd == "pin" and not args.clear and not args.name:
-        p.error("pin needs a NAME or --clear")
     {
         "list": cmd_list,
         "show": cmd_show,
-        "pin": cmd_pin,
-        "sync": cmd_sync,
         "export": cmd_export,
     }[args.cmd](args)
 
