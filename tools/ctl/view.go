@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,14 +16,26 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func logf(format string, a ...any) {
-	fmt.Printf("[%s] "+format+"\n", append([]any{time.Now().Format("15:04:05")}, a...)...)
+// runView is the CLI entrypoint: viewJob with stdout logging and Ctrl-C as
+// the stop signal.
+func runView(model string) error {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	stop := make(chan struct{})
+	go func() { <-sig; close(stop) }()
+	return viewJob(model, func(s string) { fmt.Println(s) }, stop)
 }
 
-// runView turns the current pane into a live viewer: own viewer server on a
+// viewJob turns the current pane into a live viewer: own viewer server on a
 // free port, browser tab here (tab 2), rebuild+push on every .py save.
-// model "" = follow the last-saved file's model. Ctrl-C tears it all down.
-func runView(model string) error {
+// model "" = follow the last-saved file's model. Log lines go to emit;
+// closing stop tears it all down. Shared by the CLI path and the TUI run
+// screen.
+func viewJob(model string, emit func(string), stop <-chan struct{}) error {
+	logf := func(format string, a ...any) {
+		emit(fmt.Sprintf("[%s] "+format, append([]any{time.Now().Format("15:04:05")}, a...)...))
+	}
+
 	root, err := repoRoot()
 	if err != nil {
 		return err
@@ -43,14 +56,28 @@ func runView(model string) error {
 	}
 	url := fmt.Sprintf("http://127.0.0.1:%d/viewer", port)
 
-	// viewer child — its output streams into this pane (tab 1)
+	// viewer child — its output streams into the log
 	viewer := exec.Command("uv", "run", "--project", "cad",
 		"python", "-m", "ocp_vscode", "--port", strconv.Itoa(port))
 	viewer.Dir = root
-	viewer.Stdout, viewer.Stderr = os.Stdout, os.Stderr
+	vout, vw, err := os.Pipe()
+	if err != nil {
+		return err
+	}
+	viewer.Stdout, viewer.Stderr = vw, vw
 	if err := viewer.Start(); err != nil {
+		vout.Close()
+		vw.Close()
 		return fmt.Errorf("start viewer: %w", err)
 	}
+	vw.Close() // child holds the write end
+	go func() {
+		sc := bufio.NewScanner(vout)
+		for sc.Scan() {
+			emit(sc.Text())
+		}
+		vout.Close()
+	}()
 	logf("viewer starting on :%d", port)
 
 	tab := ""
@@ -62,10 +89,8 @@ func runView(model string) error {
 		_, _ = viewer.Process.Wait()
 	}
 	defer cleanup()
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 
-	if !waitHTTP(url, 30*time.Second, sig) {
+	if !waitHTTP(url, 30*time.Second, stop) {
 		return fmt.Errorf("viewer on :%d never came up", port)
 	}
 	if pane, ok := cmuxCallerPane(); ok {
@@ -147,16 +172,15 @@ func runView(model string) error {
 			push(name)
 		case err := <-w.Errors:
 			logf("watch error: %v", err)
-		case <-sig:
-			fmt.Println()
+		case <-stop:
 			logf("shutting down")
 			return nil
 		}
 	}
 }
 
-// waitHTTP polls url until it responds, times out, or a signal arrives.
-func waitHTTP(url string, timeout time.Duration, sig <-chan os.Signal) bool {
+// waitHTTP polls url until it responds, times out, or stop closes.
+func waitHTTP(url string, timeout time.Duration, stop <-chan struct{}) bool {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		resp, err := http.Get(url)
@@ -165,7 +189,7 @@ func waitHTTP(url string, timeout time.Duration, sig <-chan os.Signal) bool {
 			return true
 		}
 		select {
-		case <-sig:
+		case <-stop:
 			return false
 		case <-time.After(500 * time.Millisecond):
 		}
