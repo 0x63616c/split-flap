@@ -19,10 +19,15 @@ watcher, no registry, no pane orchestration.
 
 - `tools/ctl/` — Go module (`go.mod`), deps: bubbletea, lipgloss (+
   bubbles for the list picker), fsnotify.
-- Justfile: the `cad` recipe keeps `test`/`install` as uv dispatch (they
-  manage the python env, not cad workflow) and forwards everything else:
-  `cad cmd="" *args:` → `test|install` → uv, else
-  `cd tools/ctl && go run . cad {{cmd}} {{args}}`.
+- Justfile:
+  - `ctl *args:` → `cd tools/ctl && go run . {{args}}` — runs the ctl
+    (bare = root TUI menu). `go run` recompiles via the build cache, so
+    Go source changes are picked up automatically.
+  - `cad cmd="" *args:` keeps `test`/`install` as uv dispatch (they
+    manage the python env, not cad workflow) and forwards everything
+    else to `just ctl cad {{cmd}} {{args}}`.
+- Go builds no geometry ever — it shells out to
+  `uv run --project cad python -m splitflap_cad …` for list/push/export.
 - `tools/cad/up.sh` deleted.
 
 ## Commands
