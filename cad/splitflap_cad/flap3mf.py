@@ -105,9 +105,13 @@ def _mesh_object_xml(mesh_id: int, shape, center) -> tuple[str, int]:
     return xml, len(tris)
 
 
-def export_plates(out_dir: Path, per_plate: int = 11) -> list[Path]:
+def export_plates(out_dir: Path, per_plate: int = 13) -> list[Path]:
     """Write plate-batched Bambu-native project 3MFs for all flaps."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Drop stale plates from a prior run with a different per_plate, else a
+    # smaller batch count leaves orphaned flaps_plate_N.3mf behind.
+    for stale in out_dir.glob("flaps_plate_*.3mf"):
+        stale.unlink()
     n = len(CHARSET)
     plates = [list(range(i, min(i + per_plate, n))) for i in range(0, n, per_plate)]
     written = []
