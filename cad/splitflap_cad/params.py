@@ -95,7 +95,7 @@ class Params:
     byj_flat_across: float = 3.0  # remaining thickness across the flat
     byj_shaft_offset: float = 8.0  # shaft axis offset from the can centre
     byj_wirebox_w: float = 14.75  # wire housing width (measured)
-    byj_wirebox_d: float = 3.0    # wire housing radial protrusion (31mm can-edge span − 28 can dia)
+    byj_wirebox_d: float = 2.75   # wire housing radial protrusion (30.75mm outer span − 28 can dia)
     byj_wirebox_h: float = 16.5   # wire housing height (approx)
 
     # motor mount anchor: the CAN centre / ear line (vendor screw line).
