@@ -107,10 +107,8 @@ func runCadMenu() error {
 	}
 	for {
 		i, err := pick("cad", []menuItem{
-			{label: "view — watch a specific model"},
-			{label: "view — watch last saved model"},
-			{label: "export — all printables"},
-			{label: "export — one model"},
+			{label: "view"},
+			{label: "export"},
 			{label: "list models"},
 		})
 		if err != nil || i == -1 {
@@ -118,32 +116,70 @@ func runCadMenu() error {
 		}
 		switch i {
 		case 0:
-			name, err := pickModel(root, false)
+			done, err := viewMenu(root)
 			if err != nil {
 				return err
 			}
-			if name != "" {
-				return runView(name) // foreground until Ctrl-C
+			if done {
+				return nil // view ran until Ctrl-C — exit cleanly
 			}
 		case 1:
-			return runView("")
-		case 2:
-			if err := runCad([]string{"export"}); err != nil {
+			if err := exportMenu(root); err != nil {
 				return err
 			}
-		case 3:
+		case 2:
+			if err := runCad([]string{"list"}); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+// viewMenu returns done=true when a view actually ran (it blocks until
+// Ctrl-C, so the menu shouldn't loop again afterwards).
+func viewMenu(root string) (bool, error) {
+	for {
+		i, err := pick("cad · view", []menuItem{
+			{label: "specific model"},
+			{label: "last saved model"},
+		})
+		if err != nil || i == -1 {
+			return false, err
+		}
+		switch i {
+		case 0:
+			name, err := pickModel(root, false)
+			if err != nil {
+				return false, err
+			}
+			if name != "" {
+				return true, runView(name)
+			}
+		case 1:
+			return true, runView("")
+		}
+	}
+}
+
+func exportMenu(root string) error {
+	for {
+		i, err := pick("cad · export", []menuItem{
+			{label: "all printables"},
+			{label: "one model"},
+		})
+		if err != nil || i == -1 {
+			return err
+		}
+		switch i {
+		case 0:
+			return runCad([]string{"export"})
+		case 1:
 			name, err := pickModel(root, true)
 			if err != nil {
 				return err
 			}
 			if name != "" {
-				if err := runCad([]string{"export", name}); err != nil {
-					return err
-				}
-			}
-		case 4:
-			if err := runCad([]string{"list"}); err != nil {
-				return err
+				return runCad([]string{"export", name})
 			}
 		}
 	}
