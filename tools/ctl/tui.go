@@ -28,7 +28,9 @@ type action struct {
 
 type menuItem struct {
 	label    string
-	disabled bool
+	help     string // dim text shown right of the label
+	disabled bool   // unselectable (cursor skips it)
+	inert    bool   // selectable but enter does nothing (coming-soon items)
 }
 
 // screen is one level of the menu stack.
@@ -95,7 +97,7 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.stack = m.stack[:len(m.stack)-1]
 			}
 		case "enter":
-			if s.items[s.cursor].disabled {
+			if s.items[s.cursor].disabled || s.items[s.cursor].inert {
 				return m, nil
 			}
 			return m.select_()
@@ -162,12 +164,25 @@ func (m *appModel) View() string {
 	s := m.top()
 	out := titleStyle.Render("ctl — split-flap tooling") + "\n"
 	out += crumbStyle.Render(m.breadcrumb()) + "\n\n"
+	maxw := 0
+	for _, it := range s.items {
+		if it.help != "" && len([]rune(it.label)) > maxw {
+			maxw = len([]rune(it.label))
+		}
+	}
 	for i, it := range s.items {
 		line := "  " + it.label
 		if it.disabled {
 			line = dimStyle.Render(line)
 		} else if i == s.cursor {
 			line = selStyle.Render("> " + it.label)
+		}
+		if it.help != "" {
+			pad := maxw - len([]rune(it.label)) + 3
+			for j := 0; j < pad; j++ {
+				line += " "
+			}
+			line += dimStyle.Render(it.help)
 		}
 		out += line + "\n"
 	}
@@ -182,30 +197,30 @@ func (m *appModel) View() string {
 
 func rootScreen() screen {
 	return screen{id: "root", title: "ctl", items: []menuItem{
-		{label: "cad — viewers & exports"},
-		{label: "bench (coming soon)", disabled: true},
+		{label: "cad", help: "viewers & exports"},
+		{label: "bench", help: "(coming soon)", inert: true},
 	}}
 }
 
 func cadScreen() screen {
 	return screen{id: "cad", title: "cad", items: []menuItem{
-		{label: "view"},
-		{label: "export"},
-		{label: "list models"},
+		{label: "view", help: "live viewer in this pane, re-renders on save"},
+		{label: "export", help: "write STLs to cad/export/"},
+		{label: "list models", help: "the model catalog"},
 	}}
 }
 
 func viewScreen() screen {
 	return screen{id: "view", title: "view", items: []menuItem{
-		{label: "specific model"},
-		{label: "last saved model"},
+		{label: "specific model", help: "pin one model to this pane"},
+		{label: "last saved model", help: "follow whichever file you save"},
 	}}
 }
 
 func exportScreen() screen {
 	return screen{id: "export", title: "export", items: []menuItem{
-		{label: "all printables"},
-		{label: "one model"},
+		{label: "all printables", help: "every STL + flap 3MFs/plates"},
+		{label: "one model", help: "single STL"},
 	}}
 }
 
