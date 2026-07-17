@@ -23,6 +23,7 @@ from build123d import (
     mirror,
 )
 
+from .geo import radial_plate
 from .params import P
 
 
@@ -266,8 +267,7 @@ def unit_plate():
     def wedge(d, length, ang):
         """Wedge strip against an inner wall face d from centre, hypotenuse
         toward the box interior, run `length`, rotated ang about Z."""
-        p = Pos(0, length / 2, 0) * Rot(90, 0, 0) * extrude(tri, amount=length)
-        return Rot(0, 0, ang) * Pos(-d, 0, 0) * p
+        return Rot(0, 0, ang) * Pos(-d, 0, 0) * radial_plate(tri, length)
 
     base_cham = (
         wedge(P.unit_plate_w / 2 - P.unit_wall_thick, P.unit_plate_h, 0)  # back

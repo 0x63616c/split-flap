@@ -28,6 +28,7 @@ from build123d import (
     revolve,
 )
 
+from .geo import polar, polar_locs, radial_plate, slot0_marker
 from .params import P
 
 
@@ -44,9 +45,8 @@ def _slot_cutter():
 
 def _cut_slots(part):
     """Cut drum_flap_count radial pin slots into part (around z=0..ring_t)."""
-    cutter = _slot_cutter()
-    for i in range(P.drum_flap_count):
-        part -= Rot(0, 0, i * 360 / P.drum_flap_count) * cutter
+    for c in polar(_slot_cutter(), P.drum_flap_count):
+        part -= c
     return part
 
 
@@ -57,23 +57,6 @@ def _ring():
         P.drum_ring_id / 2, P.drum_ring_t * 2
     )
     return _cut_slots(Pos(0, 0, P.drum_ring_t / 2) * ring)
-
-
-def _slot0_marker(z_face, depth_sign):
-    """Debossed triangle pointing (radially outward) at flap slot 0, cut
-    into a horizontal face at z_face. depth_sign=-1 cuts down into a top
-    face, +1 cuts up into a bottom face."""
-    apex_r = P.drum_slot_r_in_inner - 0.5
-    base_r = apex_r - P.drum_mark_len
-    tri = Polygon(
-        (apex_r, 0),
-        (base_r, P.drum_mark_w / 2),
-        (base_r, -P.drum_mark_w / 2),
-        align=None,
-    )
-    return Pos(0, 0, z_face - (P.drum_mark_depth if depth_sign < 0 else 0)) * extrude(
-        tri, amount=P.drum_mark_depth
-    )
 
 
 def _barrel(length):
@@ -117,11 +100,9 @@ def drum_outer():
     # a step into the barrel wall behind the notch
     notch_x = (r_face - 0.5 + P.drum_wall_r_in) / 2
     notch_dx = P.drum_wall_r_in - (r_face - 0.5)
-    for a in range(P.drum_fin_count):
+    for a, loc in enumerate(polar_locs(P.drum_fin_count)):
         fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
-        body -= Rot(0, 0, a * 360 / P.drum_fin_count) * Pos(
-            notch_x, 0, (z_butt + z_ring) / 2
-        ) * Box(
+        body -= loc * Pos(notch_x, 0, (z_butt + z_ring) / 2) * Box(
             notch_dx,
             fin_t + 2 * P.drum_fin_clear,
             P.drum_guide_ring_len + 2 * P.drum_guide_rib_h + 1,
@@ -132,18 +113,12 @@ def drum_outer():
     # 45-deg ramp at the lower end. Rails reach deeper radially than the
     # ring (drum_guide_rail_h) to grab more of the fin's flank.
     z_bot = z_butt - P.drum_guide_len
-    # (this polygon winds opposite to the fin's, so it extrudes -Y and
-    # needs the opposite recentring shift)
-    rib = Pos(0, P.drum_guide_rib_w / 2, 0) * Rot(90, 0, 0) * extrude(
-        _lip_profile(z_bot, P.drum_guide_rail_h), amount=P.drum_guide_rib_w
-    )
-    for a in range(P.drum_fin_count):
+    rib = radial_plate(_lip_profile(z_bot, P.drum_guide_rail_h), P.drum_guide_rib_w)
+    for a, loc in enumerate(polar_locs(P.drum_fin_count)):
         fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
         gap = fin_t / 2 + P.drum_fin_clear
         for side in (+1, -1):
-            body += Rot(0, 0, a * 360 / P.drum_fin_count) * Pos(
-                0, side * (gap + P.drum_guide_rib_w / 2), 0
-            ) * rib
+            body += loc * Pos(0, side * (gap + P.drum_guide_rib_w / 2), 0) * rib
 
     # Lock-screw rib: a wide rib inside the wall (solid web quadrant,
     # beside the 90-deg fin's rails), top flush with the butt joint —
@@ -158,11 +133,7 @@ def drum_outer():
         (r_embed, z_rib - (r_embed - r_rib_in)),
         align=None,
     )
-    # (winds opposite to _lip_profile, so it extrudes +Y and needs the
-    # opposite recentring shift to the rails')
-    screw_rib = Pos(0, -P.drum_screw_boss_w / 2, 0) * Rot(90, 0, 0) * extrude(
-        rib_prof, amount=P.drum_screw_boss_w
-    )
+    screw_rib = radial_plate(rib_prof, P.drum_screw_boss_w)
     # Break the sharp corner jutting into the drum: the top-inner edge
     # only. The two outer-face edges must stay sharp — they sit just
     # 0.2 into the wall, so a 0.6 chamfer cuts past the embed and opens
@@ -184,7 +155,7 @@ def drum_outer():
 
     # First-slot indicator: triangle debossed into the ring's outside
     # (bottom) face, on the key-notch line pointing at slot 0.
-    body -= _slot0_marker(0, +1)
+    body -= slot0_marker(P.drum_slot_r_in_inner - 0.5, 0, cut="up")
     return body
 
 
@@ -216,7 +187,7 @@ def drum_inner():
 
     # First-slot indicator: triangle debossed into the web's outside
     # (top) face, on the key-fin line pointing at slot 0.
-    body -= _slot0_marker(P.drum_ring_t, -1)
+    body -= slot0_marker(P.drum_slot_r_in_inner - 0.5, P.drum_ring_t, cut="down")
 
     # This part's share of the barrel wall, reaching down to butt against
     # the outer part's share mid-drum.
@@ -238,13 +209,11 @@ def drum_inner():
     # round the tip corner (where the sloped bottom edge meets the rim)
     # so the fin docks into the guide channels easily
     profile = fillet(profile.vertices().sort_by(Axis.Y)[0], P.drum_fin_tip_fillet)
-    # profile is radial(x) x axial(y); extrude the thickness and stand
-    # it up so the built y becomes the drum's -Z. Fin 0 is thicker (the
-    # key): only fits channel 0, so there's one assembly orientation.
-    for a in range(P.drum_fin_count):
+    # Fin 0 is thicker (the key): only fits channel 0, so there's one
+    # assembly orientation.
+    for a, loc in enumerate(polar_locs(P.drum_fin_count)):
         fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
-        fin = Pos(0, -fin_t / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=fin_t)
-        body += Rot(0, 0, a * 360 / P.drum_fin_count) * fin
+        body += loc * radial_plate(profile, fin_t)
 
     # Hub: down from the web, double-D bore opening at the bottom.
     hub = Pos(0, 0, -P.drum_hub_len / 2) * Cylinder(P.drum_hub_d / 2, P.drum_hub_len)
