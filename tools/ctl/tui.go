@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -36,6 +37,45 @@ type screen struct {
 	items  []menuItem
 	names  []string // pick-* screens: model name per item
 	cursor int
+
+	// `/` fuzzy filter (pick-* screens): items/names hold the filtered view,
+	// allItems/allNames the full set.
+	canFilter bool
+	filtering bool
+	query     string
+	allItems  []menuItem
+	allNames  []string
+}
+
+// fuzzyMatch reports whether pattern is a case-insensitive subsequence of s.
+func fuzzyMatch(pattern, s string) bool {
+	p := []rune(strings.ToLower(pattern))
+	if len(p) == 0 {
+		return true
+	}
+	i := 0
+	for _, r := range strings.ToLower(s) {
+		if r == p[i] {
+			i++
+			if i == len(p) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// applyFilter rebuilds the visible items from the query and resets the cursor.
+func (s *screen) applyFilter() {
+	s.items = s.items[:0:0]
+	s.names = s.names[:0:0]
+	for i, n := range s.allNames {
+		if fuzzyMatch(s.query, n) {
+			s.items = append(s.items, s.allItems[i])
+			s.names = append(s.names, n)
+		}
+	}
+	s.cursor = 0
 }
 
 type disarmMsg struct{ gen int }
@@ -89,12 +129,13 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case tea.KeyMsg:
-		return m.key(msg.String())
+		return m.key(msg)
 	}
 	return m, nil
 }
 
-func (m *appModel) key(key string) (tea.Model, tea.Cmd) {
+func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	key := msg.String()
 	if key == "ctrl+c" {
 		if m.armed {
 			if m.run != nil && !m.run.done {
@@ -114,6 +155,15 @@ func (m *appModel) key(key string) (tea.Model, tea.Cmd) {
 		return m.runKey(key)
 	}
 	s := m.top()
+	if s.filtering {
+		return m.filterKey(msg)
+	}
+	if s.canFilter && msg.Type == tea.KeyRunes && msg.Runes[0] == '/' {
+		s.filtering = true
+		s.query = string(msg.Runes[1:]) // batched input: "/dru" pasted at once
+		s.applyFilter()
+		return m, nil
+	}
 	switch key {
 	case "up", "k":
 		for i := s.cursor - 1; i >= 0; i-- {
@@ -138,6 +188,45 @@ func (m *appModel) key(key string) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		return m.select_()
+	}
+	return m, nil
+}
+
+// filterKey handles keys while the top screen's `/` filter is active:
+// printable keys type, arrows move, enter selects, esc clears.
+func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	s := m.top()
+	if msg.Type == tea.KeyRunes { // typed text (possibly batched runes)
+		s.query += string(msg.Runes)
+		s.applyFilter()
+		return m, nil
+	}
+	switch msg.String() {
+	case "esc":
+		s.filtering = false
+		s.query = ""
+		s.applyFilter()
+	case "backspace":
+		if s.query == "" {
+			s.filtering = false
+			return m, nil
+		}
+		rs := []rune(s.query)
+		s.query = string(rs[:len(rs)-1])
+		s.applyFilter()
+	case "enter":
+		if len(s.items) == 0 {
+			return m, nil
+		}
+		return m.select_()
+	case "up":
+		if s.cursor > 0 {
+			s.cursor--
+		}
+	case "down":
+		if s.cursor < len(s.items)-1 {
+			s.cursor++
+		}
 	}
 	return m, nil
 }
@@ -257,7 +346,19 @@ func (m *appModel) View() string {
 		}
 		out += line + "\n"
 	}
-	footer := dimStyle.Render(footerHelp)
+	if s.filtering && len(s.items) == 0 {
+		out += dimStyle.Render("  (no matches)") + "\n"
+	}
+	help := footerHelp
+	if s.canFilter {
+		help = "  ↑↓ / move · / / filter · esc / go back · enter / select · ctrl+c / quit"
+	}
+	if s.filtering {
+		out += "\n  /" + s.query + "▌" +
+			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems)))
+		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
+	}
+	footer := dimStyle.Render(help)
 	if m.armed {
 		footer = warnStyle.Render("  press ctrl+c again to quit")
 	}
@@ -375,7 +476,8 @@ func pickScreen(id string, cat catalog, printable bool) screen {
 		}
 		items[i] = menuItem{label: label}
 	}
-	return screen{id: id, title: "pick a model", items: items, names: names}
+	return screen{id: id, title: "pick a model", items: items, names: names,
+		canFilter: true, allItems: items, allNames: names}
 }
 
 func listScreen(cat catalog) screen {
