@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -20,7 +21,7 @@ var (
 	crumbStyle = lipgloss.NewStyle().Italic(true).Faint(true).Padding(0, 1)
 )
 
-const footerHelp = "  ↑↓ / move · esc / go back · enter / select · ctrl+c / quit"
+const footerHelp = "  ↑↓ / move · esc / go back · enter / select · h / help · ctrl+c / quit"
 
 type menuItem struct {
 	label    string
@@ -48,8 +49,25 @@ type screen struct {
 }
 
 // fuzzyMatch reports whether pattern is a case-insensitive subsequence of s.
+// Patterns of 4+ runes tolerate one wrong character ("frap" matches "flap").
 func fuzzyMatch(pattern, s string) bool {
 	p := []rune(strings.ToLower(pattern))
+	if subseq(p, s) {
+		return true
+	}
+	if len(p) < 4 {
+		return false
+	}
+	for i := range p {
+		dropped := append(append([]rune{}, p[:i]...), p[i+1:]...)
+		if subseq(dropped, s) {
+			return true
+		}
+	}
+	return false
+}
+
+func subseq(p []rune, s string) bool {
 	if len(p) == 0 {
 		return true
 	}
@@ -64,6 +82,21 @@ func fuzzyMatch(pattern, s string) bool {
 	}
 	return false
 }
+
+// killWord chops the trailing word off the query (option/alt+delete, ctrl+w).
+func killWord(q string) string {
+	rs := []rune(q)
+	i := len(rs)
+	for i > 0 && !isWordRune(rs[i-1]) {
+		i--
+	}
+	for i > 0 && isWordRune(rs[i-1]) {
+		i--
+	}
+	return string(rs[:i])
+}
+
+func isWordRune(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
 
 // applyFilter rebuilds the visible items from the query and resets the cursor.
 func (s *screen) applyFilter() {
@@ -128,10 +161,57 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.popRun()
 		}
 		return m, nil
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionPress {
+			switch msg.Button {
+			// inverted on purpose — matches how scrolling feels right here
+			case tea.MouseButtonWheelUp:
+				m.wheel(false)
+			case tea.MouseButtonWheelDown:
+				m.wheel(true)
+			}
+		}
+		return m, nil
 	case tea.KeyMsg:
 		return m.key(msg)
 	}
 	return m, nil
+}
+
+// wheel scrolls the run log or moves the menu cursor. up means "toward
+// older" for the log and "toward the first item" for menus.
+func (m *appModel) wheel(up bool) {
+	if m.top().id == "run" {
+		r := m.run
+		if up {
+			if r.scroll < len(r.lines)-m.logAvail() {
+				r.scroll++
+			}
+		} else if r.scroll > 0 {
+			r.scroll--
+		}
+		return
+	}
+	m.cursorMove(m.top(), up)
+}
+
+// cursorMove steps the cursor to the previous/next enabled item.
+func (m *appModel) cursorMove(s *screen, up bool) {
+	if up {
+		for i := s.cursor - 1; i >= 0; i-- {
+			if !s.items[i].disabled {
+				s.cursor = i
+				break
+			}
+		}
+		return
+	}
+	for i := s.cursor + 1; i < len(s.items); i++ {
+		if !s.items[i].disabled {
+			s.cursor = i
+			break
+		}
+	}
 }
 
 func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -164,21 +244,19 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		s.applyFilter()
 		return m, nil
 	}
+	if key == "h" {
+		if s.id == "help" {
+			m.stack = m.stack[:len(m.stack)-1]
+		} else {
+			m.stack = append(m.stack, helpScreen())
+		}
+		return m, nil
+	}
 	switch key {
 	case "up", "k":
-		for i := s.cursor - 1; i >= 0; i-- {
-			if !s.items[i].disabled {
-				s.cursor = i
-				break
-			}
-		}
+		m.cursorMove(s, true)
 	case "down", "j":
-		for i := s.cursor + 1; i < len(s.items); i++ {
-			if !s.items[i].disabled {
-				s.cursor = i
-				break
-			}
-		}
+		m.cursorMove(s, false)
 	case "esc":
 		if len(m.stack) > 1 {
 			m.stack = m.stack[:len(m.stack)-1]
@@ -213,6 +291,9 @@ func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		rs := []rune(s.query)
 		s.query = string(rs[:len(rs)-1])
+		s.applyFilter()
+	case "alt+backspace", "ctrl+w":
+		s.query = killWord(s.query)
 		s.applyFilter()
 	case "enter":
 		if len(s.items) == 0 {
@@ -317,8 +398,12 @@ func (m *appModel) breadcrumb() string {
 }
 
 func (m *appModel) View() string {
+	crumb := m.breadcrumb()
+	if m.top().id == "help" {
+		crumb = "help"
+	}
 	header := titleStyle.Render("ctl — split-flap tooling") + "\n" +
-		crumbStyle.Render(m.breadcrumb()) + "\n\n"
+		crumbStyle.Render(crumb) + "\n\n"
 	if m.top().id == "run" {
 		return header + m.runView()
 	}
@@ -356,6 +441,9 @@ func (m *appModel) View() string {
 	help := footerHelp
 	if s.canFilter {
 		help = "  ↑↓ / move · / / filter · esc / go back · enter / select · ctrl+c / quit"
+	}
+	if s.id == "help" {
+		help = "  esc / go back · ctrl+c / quit"
 	}
 	if s.filtering {
 		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
@@ -430,6 +518,25 @@ func truncLine(s string, width int) string {
 }
 
 // --- screens -----------------------------------------------------------
+
+func helpScreen() screen {
+	row := func(key, what string) menuItem {
+		return menuItem{label: fmt.Sprintf("%-24s %s", key, what), disabled: true}
+	}
+	return screen{id: "help", title: "help", items: []menuItem{
+		row("↑↓ / j k / wheel", "move · scroll a run log"),
+		row("enter", "select"),
+		row("esc", "back · stop a run · clear the filter"),
+		row("/", "fuzzy filter on pick-a-model screens"),
+		row("  typo-tolerant", "one wrong character is forgiven (frap → flap)"),
+		row("  opt+delete / ctrl+w", "delete a word from the filter"),
+		row("h", "this help (h or esc closes)"),
+		row("ctrl+c ctrl+c", "quit — a running job is shut down first"),
+		{label: "", disabled: true},
+		row("runs", "export/view stream their logs right here;"),
+		row("", "view keeps re-rendering on every .py save"),
+	}}
+}
 
 func rootScreen() screen {
 	return screen{id: "root", title: "home", items: []menuItem{
@@ -517,6 +624,6 @@ func runTUI(startAtCad bool) error {
 	if startAtCad {
 		m.stack = append(m.stack, cadScreen())
 	}
-	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err = tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion()).Run()
 	return err
 }

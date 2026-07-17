@@ -14,10 +14,27 @@ func TestFuzzyMatch(t *testing.T) {
 		{"nid", "drum-inner", false},
 		{"flap", "holder", false},
 		{"hldr", "holder", true},
+		{"frap", "flap", true}, // one wrong char forgiven at 4+ runes
+		{"fr", "flap", false},  // short patterns stay strict
+		{"xyz", "flap", false},
 	}
 	for _, c := range cases {
 		if got := fuzzyMatch(c.pattern, c.s); got != c.want {
 			t.Errorf("fuzzyMatch(%q, %q) = %v, want %v", c.pattern, c.s, got, c.want)
+		}
+	}
+}
+
+func TestKillWord(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"drum-in", "drum-"},
+		{"drum-", ""},
+		{"fg", ""},
+		{"", ""},
+	}
+	for _, c := range cases {
+		if got := killWord(c.in); got != c.want {
+			t.Errorf("killWord(%q) = %q, want %q", c.in, got, c.want)
 		}
 	}
 }
