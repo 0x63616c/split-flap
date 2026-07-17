@@ -95,21 +95,23 @@ def cmd_export(args):
     from build123d import export_stl
 
     # "flaps" = the glyph card set (3MFs, not a PRINTABLE STL entry)
-    if args.name == "flaps":
-        _print_timings(_export_flap_artwork())
-        return
-    names = [args.name] if args.name else list(PRINTABLE)
+    flap_art = "flaps" in args.name
+    names = [n for n in args.name if n != "flaps"] or (
+        [] if flap_art else list(PRINTABLE)
+    )
     for name in names:
         _check(name, PRINTABLE)
     EXPORT_DIR.mkdir(exist_ok=True)
     timings = []
+    if flap_art:
+        timings += _export_flap_artwork()
     for name in names:
         t0 = time.perf_counter()
         out = EXPORT_DIR / f"{name}.stl"
         export_stl(PRINTABLE[name].build(), str(out))
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
         timings.append((name, time.perf_counter() - t0))
-    if not args.name:
+    if not args.name:  # bare `export` = everything, artwork included
         timings += _export_flap_artwork()
     _print_timings(timings)
 
@@ -129,7 +131,7 @@ def main():
         "export",
         help="write STLs to cad/export/ (no NAME = all + flap 3MFs/plates; 'flaps' = artwork only)",
     )
-    s.add_argument("name", nargs="?")
+    s.add_argument("name", nargs="*")
 
     args = p.parse_args()
     {

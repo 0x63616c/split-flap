@@ -69,3 +69,25 @@ func TestApplyFilter(t *testing.T) {
 		t.Fatalf("clear filter: got %v", s.names)
 	}
 }
+
+func TestMultiSelectToggleAndMarked(t *testing.T) {
+	s := screen{
+		multi:    true,
+		selected: map[string]bool{},
+		names:    []string{"drum-outer", "flap"},
+		allNames: []string{"drum-outer", "drum-inner-byj", "flap"},
+	}
+	s.toggle() // mark drum-outer
+	s.cursor = 1
+	s.toggle() // mark flap
+	got := s.marked()
+	if len(got) != 2 || got[0] != "drum-outer" || got[1] != "flap" {
+		t.Fatalf("marked() = %v, want [drum-outer flap] in allNames order", got)
+	}
+	s.toggle() // unmark flap
+	if got := s.marked(); len(got) != 1 || got[0] != "drum-outer" {
+		t.Fatalf("after unmark, marked() = %v", got)
+	}
+	empty := screen{} // space on non-multi screens is a no-op
+	empty.toggle()
+}

@@ -33,12 +33,9 @@ func listenRun(ch chan tea.Msg) tea.Cmd {
 	return func() tea.Msg { return <-ch }
 }
 
-// startExport streams `splitflap_cad export [model]` into the run screen.
-func startExport(root, model string) *runState {
-	args := []string{"export"}
-	if model != "" {
-		args = append(args, model)
-	}
+// startExport streams `splitflap_cad export [model...]` into the run screen.
+func startExport(root string, models ...string) *runState {
+	args := append([]string{"export"}, models...)
 	cmd := pyCmd(root, args...)
 	ch := make(chan tea.Msg, 64)
 	r := &runState{ch: ch, stop: func() {}}

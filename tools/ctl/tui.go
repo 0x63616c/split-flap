@@ -46,6 +46,36 @@ type screen struct {
 	query     string
 	allItems  []menuItem
 	allNames  []string
+
+	// multi-select (pick-export): space marks rows, enter exports the
+	// marked set (or just the cursor row when nothing is marked).
+	// Keyed by name so marks survive filtering.
+	multi    bool
+	selected map[string]bool
+}
+
+// toggle flips the mark on the cursor row of a multi screen.
+func (s *screen) toggle() {
+	if !s.multi || len(s.names) == 0 {
+		return
+	}
+	n := s.names[s.cursor]
+	if s.selected[n] {
+		delete(s.selected, n)
+	} else {
+		s.selected[n] = true
+	}
+}
+
+// marked returns the marked names in list order (the full, unfiltered order).
+func (s *screen) marked() []string {
+	var out []string
+	for _, n := range s.allNames {
+		if s.selected[n] {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 // fuzzyMatch reports whether pattern is a case-insensitive subsequence of s.
@@ -229,6 +259,8 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cursorMove(s, true)
 	case "down", "j":
 		m.cursorMove(s, false)
+	case " ":
+		s.toggle()
 	case "esc":
 		if len(m.stack) > 1 {
 			m.stack = m.stack[:len(m.stack)-1]
@@ -246,6 +278,10 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 // printable keys type, arrows move, enter selects, esc clears.
 func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	s := m.top()
+	if s.multi && msg.String() == " " { // model names never contain spaces
+		s.toggle()
+		return m, nil
+	}
 	if msg.Type == tea.KeyRunes { // typed text (possibly batched runes)
 		s.query += string(msg.Runes)
 		s.applyFilter()
@@ -353,6 +389,13 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 	case "pick-view":
 		return m.startRun("view "+s.names[s.cursor], startView(s.names[s.cursor]))
 	case "pick-export":
+		if marked := s.marked(); len(marked) > 0 {
+			title := fmt.Sprintf("export %d models", len(marked))
+			if len(marked) == 1 {
+				title = "export " + marked[0]
+			}
+			return m.startRun(title, startExport(m.root, marked...))
+		}
 		return m.startRun("export "+s.names[s.cursor], startExport(m.root, s.names[s.cursor]))
 	}
 	return m, nil
@@ -388,11 +431,19 @@ func (m *appModel) View() string {
 		}
 	}
 	for i, it := range s.items {
-		line := "  " + it.label
+		label := it.label
+		if s.multi {
+			mark := "[ ] "
+			if s.selected[s.names[i]] {
+				mark = "[x] "
+			}
+			label = mark + label
+		}
+		line := "  " + label
 		if it.disabled {
 			line = dimStyle.Render(line)
 		} else if i == s.cursor {
-			line = selStyle.Render("> " + it.label)
+			line = selStyle.Render("> " + label)
 		}
 		if it.help != "" {
 			pad := maxw - len([]rune(it.label)) + 3
@@ -410,6 +461,9 @@ func (m *appModel) View() string {
 	if s.canFilter {
 		help = "  ↑↓ / move · / / filter · esc / go back · enter / select · ctrl+c / quit"
 	}
+	if s.multi {
+		help = "  ↑↓ / move · space / mark · / / filter · enter / export marked (or row) · esc / back"
+	}
 	if s.id == "help" {
 		help = "  esc / go back · ctrl+c / quit"
 	}
@@ -417,6 +471,9 @@ func (m *appModel) View() string {
 		out += "\n  /" + s.query + "▌" +
 			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems)))
 		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
+		if s.multi {
+			help = "  type to filter · ↑↓ / move · space / mark · enter / export · esc / clear"
+		}
 	}
 	footer := dimStyle.Render(help)
 	if m.armed {
@@ -498,6 +555,7 @@ func helpScreen() screen {
 		row("enter", "select"),
 		row("esc", "back · stop a run · clear the filter"),
 		row("/", "fuzzy filter on pick-a-model screens"),
+		row("space", "mark rows on the export picker; enter exports the set"),
 		row("  typo-tolerant", "one wrong character is forgiven (frap → flap)"),
 		row("  opt+delete / ctrl+w", "delete a word from the filter"),
 		row("h", "this help (h or esc closes)"),
@@ -555,8 +613,14 @@ func pickScreen(id string, cat catalog, printable bool) screen {
 		}
 		items[i] = menuItem{label: label}
 	}
-	return screen{id: id, title: "pick a model", items: items, names: names,
+	s := screen{id: id, title: "pick a model", items: items, names: names,
 		canFilter: true, allItems: items, allNames: names}
+	if printable { // export picker: space marks rows, enter runs the set
+		s.multi = true
+		s.selected = map[string]bool{}
+		s.title = "pick a model(s)"
+	}
+	return s
 }
 
 func listScreen(cat catalog) screen {
