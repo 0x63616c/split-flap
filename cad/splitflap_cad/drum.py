@@ -173,11 +173,16 @@ def drum_outer():
     return body
 
 
-def drum_inner():
-    """Inner drum (short side): ring + web disc, shaft hub with double-D
-    bore, two screw bosses, its share of the barrel wall. Own frame: web
-    underside at z=0, hub and barrel pointing -Z (toward the motor once
-    assembled)."""
+def drum_inner(shaft: str = "byj"):
+    """Inner drum (short side): ring + web disc, shaft hub, two screw
+    bosses, its share of the barrel wall. Own frame: web underside at
+    z=0, hub and barrel pointing -Z (toward the motor once assembled).
+
+    Everything is shared between motor variants except the hub bore:
+    shaft="byj" -> double-D, drum_bore_depth deep (28BYJ 8mm shaft);
+    shaft="nema" -> single-D, drum_bore_depth_nema deep (the pancake's
+    20.5mm shaft parks its extra length in the deeper bore, so the drum
+    sits at the same axial spot in both variants)."""
     # Ring + web are one 1.6 disc: full circle out to the ring OD, slots
     # in the ring band, four lightening holes in the web.
     body = Pos(0, 0, P.drum_ring_t / 2) * Cylinder(P.drum_ring_od / 2, P.drum_ring_t)
@@ -236,16 +241,27 @@ def drum_inner():
         fin_t = P.drum_fin_t_key if a == 0 else P.drum_fin_t
         body += loc * radial_plate(profile, fin_t)
 
-    # Hub: down from the web, double-D bore opening at the bottom.
+    # Hub: down from the web, shaft bore opening at the bottom.
     hub = Pos(0, 0, -P.drum_hub_len / 2) * Cylinder(P.drum_hub_d / 2, P.drum_hub_len)
-    # Double-D bore = cylinder clipped by a slab across the flats. Bore
-    # opens at the hub's bottom face, drum_bore_depth deep.
-    bore_r = (P.byj_shaft_d + P.drum_bore_clear) / 2
-    flat_w = P.byj_flat_across + P.drum_bore_clear
-    bore_z = -P.drum_hub_len + P.drum_bore_depth / 2
-    hub -= Pos(0, 0, bore_z) * Cylinder(bore_r, P.drum_bore_depth) & Pos(
-        0, 0, bore_z
-    ) * Box(bore_r * 2, flat_w, P.drum_bore_depth)
+    # Bore = cylinder clipped by a slab across the flat(s), opening at
+    # the hub's bottom face. byj: slab centred = double-D. nema: one
+    # flat — slab shifted so its far face is the flat plane, its near
+    # face outside the bore circle.
+    if shaft == "byj":
+        shaft_d, flat_across, depth = P.byj_shaft_d, P.byj_flat_across, P.drum_bore_depth
+    else:
+        shaft_d, flat_across, depth = (
+            P.motor_shaft_d,
+            P.motor_flat_across,
+            P.drum_bore_depth_nema,
+        )
+    bore_r = (shaft_d + P.drum_bore_clear) / 2
+    flat_w = flat_across + P.drum_bore_clear
+    slab_y = 0 if shaft == "byj" else flat_w / 2 - bore_r
+    bore_z = -P.drum_hub_len + depth / 2
+    hub -= Pos(0, 0, bore_z) * Cylinder(bore_r, depth) & Pos(
+        0, slab_y, bore_z
+    ) * Box(bore_r * 2, flat_w, depth)
     # lead-in chamfer around the bore mouth so the shaft self-centres on
     # insertion: the bore-opening edge loop on the hub's bottom face
     hub = chamfer(reach_under(bottom_edges(hub), bore_r + 1), P.drum_bore_chamfer)
@@ -330,9 +346,14 @@ def drum_assembly():
     return drum_outer() + drum_inner_mated()
 
 
-def drum_inner_mated():
+def drum_inner_mated(shaft: str = "byj"):
     """The inner disc in the drum frame (web on the barrel's open end)."""
-    return Pos(0, 0, P.drum_ring_t + P.drum_barrel_len) * drum_inner()
+    return Pos(0, 0, P.drum_ring_t + P.drum_barrel_len) * drum_inner(shaft)
+
+
+def drum_inner_nema():
+    """The NEMA-bore inner disc (see drum_inner)."""
+    return drum_inner("nema")
 
 
 def drum_inner_print():
@@ -340,6 +361,11 @@ def drum_inner_print():
     and fins into -Z (below the bed); flip so the web sits flat on the
     bed and the barrel points up."""
     return Rot(180, 0, 0) * drum_inner()
+
+
+def drum_inner_nema_print():
+    """drum_inner_nema flipped for printing (see drum_inner_print)."""
+    return Rot(180, 0, 0) * drum_inner("nema")
 
 
 def scene():
@@ -359,11 +385,14 @@ def posed_drum():
     return DRUM_IN_UNIT * drum_assembly()
 
 
-def posed_drum_parts():
-    """(outer, inner) posed separately in unit coords, for display."""
+def posed_drum_parts(shaft: str = "byj"):
+    """(outer, inner) posed separately in unit coords, for display. The
+    outer part is identical across motor variants; DRUM_IN_UNIT holds
+    for both (the NEMA bore is deepened precisely so the drum sits at
+    the same axial spot)."""
     from .frames import DRUM_IN_UNIT
 
     return (
         DRUM_IN_UNIT * Rot(0, 0, 180) * drum_outer(),
-        DRUM_IN_UNIT * Rot(0, 0, 180) * drum_inner_mated(),
+        DRUM_IN_UNIT * Rot(0, 0, 180) * drum_inner_mated(shaft),
     )

@@ -140,10 +140,8 @@ def full_unit_nema():
 
 def scene():
     """NEMA unit: plate (+ fins when the STEP is on disk), bridge posed,
-    motor ghost face-up in the pocket, drum ghost around it.
-
-    Drum pose is the 28BYJ-derived one for now — right axial spot in the
-    box; the NEMA drum (deeper bore for the 20.5 shaft) is future work."""
+    motor ghost face-up in the pocket, drum ghost around it (NEMA-bore
+    inner part; same axial pose as the 28BYJ build by construction)."""
     from .drum import posed_drum_parts
     from .frames import NEMA_FACE_IN_UNIT
     from .motor import motor
@@ -153,7 +151,7 @@ def scene():
         u = full_unit_nema()
     except FileNotFoundError:
         u = nema_plate()
-    drum_o, drum_i = posed_drum_parts()
+    drum_o, drum_i = posed_drum_parts("nema")
     return (
         Scene()
         .add(u, "unit_nema", "orange")

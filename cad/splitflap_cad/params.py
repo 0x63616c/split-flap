@@ -365,7 +365,15 @@ class Params:
                                    # 45-deg magnet boss clears them
     drum_hub_d: float = 16.8       # shaft hub outer diameter
     drum_hub_len: float = 15.8     # hub length below the web underside
-    drum_bore_depth: float = 9.0   # double-D shaft bore depth
+    drum_bore_depth: float = 9.0   # double-D shaft bore depth (28BYJ)
+    drum_bore_depth_nema: float = 14.0  # single-D bore depth, NEMA
+                                   # variant: swallows the pancake's
+                                   # 20.5 shaft so the drum sits at the
+                                   # SAME axial spot as the 28BYJ build
+                                   # (tip z 43.5 vs bore end z 44.5;
+                                   # hub floor left: 15.8 - 14 = 1.8).
+                                   # Needs the shaft flat >= ~13.5 long
+                                   # — VERIFY with the motor in hand.
     drum_bore_clear: float = 0.2   # shaft bore clearance (dia and flats)
     drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
                                    # round section (bore is double-D; only

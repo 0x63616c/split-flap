@@ -99,4 +99,5 @@ PRINTABLE = {
     "flap": Printable("flap", "flap"),
     "drum-outer": Printable("drum", "drum_outer"),
     "drum-inner": Printable("drum", "drum_inner_print"),
+    "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
 }

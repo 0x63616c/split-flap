@@ -33,5 +33,6 @@ def test_printable_builders_exist():
         "flap",
         "drum-outer",
         "drum-inner",
+        "drum-inner-nema",
         "holder",
     }

@@ -44,6 +44,12 @@ def _drum_inner():
     return drum_inner()
 
 
+def _drum_inner_nema():
+    from splitflap_cad.drum import drum_inner_nema
+
+    return drum_inner_nema()
+
+
 def _motor_byj():
     from splitflap_cad.stepper28byj import stepper28byj
 
@@ -92,6 +98,7 @@ BREP_PARTS = {
     "holder": _holder,
     "drum-outer": _drum_outer,
     "drum-inner": _drum_inner,
+    "drum-inner-nema": _drum_inner_nema,
     "motor-byj": _motor_byj,
     "hall-pcb": _hall_pcb,
     "unit-plate": _unit_plate,
