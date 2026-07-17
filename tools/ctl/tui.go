@@ -569,6 +569,8 @@ func rootScreen() screen {
 	return screen{id: "root", title: "home", items: []menuItem{
 		{label: "cad", help: "viewers & exports"},
 		{label: "bench", help: "(coming soon)", inert: true},
+		{label: "demo", help: "(coming soon)", inert: true},
+		{label: "credits", help: "(coming soon)", inert: true},
 	}}
 }
 
