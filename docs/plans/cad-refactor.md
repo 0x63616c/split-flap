@@ -14,7 +14,9 @@ between all of them.
    (`for i in range(N): body -= Rot(0,0,i*360/N) * cutter`) in drum ×4 +
    holder; radial-profile-to-standing-plate
    (`Pos(0,±t/2,0) * Rot(90,0,0) * extrude(...)`) ×4 in drum, each with a
-   winding-direction trap comment.
+   winding-direction trap comment; slot-0 deboss triangle duplicated
+   (`drum._slot0_marker` + `holder._slot0_marker`, both off
+   `P.drum_mark_*`) → `geo.deboss_mark()`.
 3. **Ad-hoc edge selectors** — drum bore mouth/rim, fin roots
    (`_diam_dist` + magic tolerances). Most fragile code in the package.
 4. **Catalog boilerplate** — ten `_xxx()` lazy shims + separate
@@ -36,7 +38,11 @@ shape; the only new classes are small dataclasses (`Scene`, `Model`).
 
 - **L1 exports**: `just cad export` + git diff on `cad/export/` — byte
   churn possible from tessellation even when geometry identical; signal,
-  not judge.
+  not judge. 3MFs currently churn on EVERY export (commit 3958b40):
+  `zipfile.writestr` stamps wall-clock time into entries. Phase 0 fixes
+  this — write via `ZipInfo` with fixed `date_time=(1980,1,1,0,0,0)` in
+  `flap3mf.py` (and glyphflap's Mesher output if it embeds dates), making
+  3MFs deterministic and L1 meaningful for them.
 - **L2 fingerprint** (fast, every commit): per part volume / area / bbox
   / centre-of-mass vs JSON golden, rel tol ~1e-6.
 - **L3 XOR** (slow, definitive, per phase): golden BREP per part;
@@ -48,8 +54,10 @@ shape; the only new classes are small dataclasses (`Scene`, `Model`).
 
 ## Coordination with the ctl TUI plan (2026-07-16-ctl-cad-tui.md)
 
-Runs concurrently. Shared seam: `show NAME --port N` — neither plan
-changes it. Rules:
+STATUS 2026-07-16: TUI plan fully landed (Tasks 1–8, incl. `list
+--json`, pin/sync deletion, CLAUDE.md rewrite) — **Phase 3 is
+unblocked**; `cad/tests/test_cli.py` exists and is the contract gate.
+Original rules kept for the record:
 
 - **Phases 0–2 are parallel-safe** (part modules, new geo/select/viewer
   modules; only `__main__._push` touched, which the TUI plan never
@@ -75,6 +83,9 @@ changes it. Rules:
    + XOR pytest marked `slow`.
 2. Catalog smoke test: every `MODELS` entry builds; every `PRINTABLE`
    has volume.
+2b. Deterministic 3MFs: fixed `ZipInfo` timestamps in `flap3mf.py` +
+   check `glyphflap.export_flaps` (Mesher) for embedded dates — kills
+   the perpetual export churn, upgrades L1.
 3. Run → green.
 4. **Prove RED** (temporary, uncommitted sabotage; three failure classes):
    - param nudge (`drum_ring_t` 1.6→1.7) → fingerprint + XOR fail
