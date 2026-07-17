@@ -46,6 +46,27 @@ shape; the only new classes are small dataclasses (`Scene`, `Model`).
   0.4), then regenerate goldens in the same commit — `git log` on
   `cad/tests/golden/` = shape-change history.
 
+## Coordination with the ctl TUI plan (2026-07-16-ctl-cad-tui.md)
+
+Runs concurrently. Shared seam: `show NAME --port N` — neither plan
+changes it. Rules:
+
+- **Phases 0–2 are parallel-safe** (part modules, new geo/select/viewer
+  modules; only `__main__._push` touched, which the TUI plan never
+  edits).
+- **Phase 3 BLOCKS on TUI Tasks 1+7**: both rewrite `__main__.py`
+  (`list --json` added; `pin`/`sync`/state deleted). After they land:
+  - `list --json` output shape `{models, printable, src_to_model}` is a
+    contract with Go `loadCatalog` — keep it byte-compatible when
+    `PRINTABLE` folds into `Model.printable` (derived views). TUI's
+    `test_cli.py` is the Phase 3 gate.
+  - Drop this plan's `sync`/`pin` re-testing (commands deleted); re-test
+    `just cad view` watcher path instead (`src_to_model` still consumed
+    by Go).
+- **Phase 5 CLAUDE.md edit goes after TUI Task 7's** CAD-section
+  rewrite; viewer eyeball step uses `just cad view MODEL` (per-pane,
+  dynamic ports), not the fixed :3939/:3940 pair.
+
 ## Phase 0 — safety net
 
 1. Golden harness in `cad/tests/`: generator writes BREP + fingerprint
