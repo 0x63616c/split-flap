@@ -31,6 +31,8 @@ func pyCmd(root string, args ...string) *exec.Cmd {
 	full := append([]string{"run", "--project", "cad", "python", "-m", "splitflap_cad"}, args...)
 	cmd := exec.Command("uv", full...)
 	cmd.Dir = root
+	// output often lands in a pipe (TUI run screen) — keep it line-by-line
+	cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
 	return cmd
 }
 

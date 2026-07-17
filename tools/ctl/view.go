@@ -60,6 +60,7 @@ func viewJob(model string, emit func(string), stop <-chan struct{}) error {
 	viewer := exec.Command("uv", "run", "--project", "cad",
 		"python", "-m", "ocp_vscode", "--port", strconv.Itoa(port))
 	viewer.Dir = root
+	viewer.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
 	vout, vw, err := os.Pipe()
 	if err != nil {
 		return err
