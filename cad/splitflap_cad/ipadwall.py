@@ -95,9 +95,10 @@ def bracket():
     )
     bw = P.ibar_w + 2 * P.ibkt_clear + 2 * P.ibkt_wall
     boss = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=bw)
-    # round the top-front nose — the iPad swings past this edge
-    nose = boss.edges().filter_by(Axis.Y).sort_by(Axis.X)[-1]
-    boss = fillet(nose, radius=P.ibkt_nose_r)
+    # round both front edges (top + bottom) in the side profile — the
+    # iPad swings past the top one, the bottom just matches
+    front = boss.edges().filter_by(Axis.Y).sort_by(Axis.X)[-2:]
+    boss = fillet(front, radius=P.ibkt_nose_r)
 
     plate_w = bw + 2 * P.ibkt_tab_w
     plate = (
@@ -149,25 +150,19 @@ def bracket():
 
 
 def scene() -> Scene:
-    """Full viz: wall ghost, bracket, bar in its pocket, swivel hinge
-    at the bar's far end, iPad hanging off it VERTICAL (the swivel lets
-    it tilt back/forth independent of the bar's 16 deg)."""
-    t = math.radians(P.ibar_tilt_deg)
-    xb, zb = _pocket_frame()
+    """Full viz: wall ghost, bracket, bar in its pocket, iPad rigid on
+    the bar's top end — back face ipad_gap off the bar front (the mount
+    stack; swivel locked), parallel to the bar."""
+    pose = _bar_pose()
     wall = Pos(-1.5, 0, 80) * Box(3.0, 420, 420)
-    # swivel axis: horizontal (Y) at the bar's outer (top) end
-    hx = xb + P.ibar_len * math.sin(t)
-    hz = zb + P.ibar_len * math.cos(t)
-    swivel_r = 6.0
-    swivel = Pos(hx, 0, hz) * Rot(90, 0, 0) * Cylinder(swivel_r, 30)
-    # iPad neutral: vertical, back face kissing the swivel body
-    ipad_loc = Pos(hx + swivel_r + P.ipad_thick / 2, 0, hz)
+    ipad_loc = pose * Pos(
+        P.ibar_thick / 2 + P.ipad_gap + P.ipad_thick / 2, 0, P.ibar_len
+    )
     return (
         Scene()
         .add(wall, "wall", color="lightgray", alpha=0.15)
         .add(bracket(), "bracket", color="orange", alpha=0.8)
-        .add(bar(), "bar", color="gray", loc=_bar_pose())
-        .add(swivel, "swivel", color="dimgray")
+        .add(bar(), "bar", color="gray", loc=pose)
         .add(ipad(), "ipad", color="black", alpha=0.5, loc=ipad_loc)
     )
 
