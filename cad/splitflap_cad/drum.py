@@ -153,8 +153,10 @@ def drum_outer():
     # they sit just 0.2 into the wall, so a chamfer there opens a slit
     # between the rib and the wall face.
     screw_rib = chamfer(screw_rib.edges().filter_by(Axis.Z).sort_by(Axis.X)[:2], 0.6)
-    body += Rot(0, 0, P.drum_screw_ang) * screw_rib
-    # Insert bore in the rib top: ONE cylinder at insert diameter (same
+    # Two ribs on opposite quadrants (drum_screw_ang and +180): one M3
+    # each, beside fin 0 and fin 180's rails — a bolt per side clamps
+    # the butt joint shut evenly.
+    # Insert bore in each rib top: ONE cylinder at insert diameter (same
     # idiom as the motor mount, unit.py) — insert seats in the top, the
     # screw tip runs on down the same bore. Depth = drum_screw_len minus
     # the inner-part stack past the butt plane, plus slack (0.5 free +
@@ -163,9 +165,11 @@ def drum_outer():
     bore_depth = P.drum_screw_len + 0.75 - (
         P.drum_ring_t - P.drum_screw_recess_t + P.drum_barrel_len_inner
     )
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, z_rib - bore_depth / 2
-    ) * Cylinder(P.byj_insert_d / 2, bore_depth)
+    for sa in (P.drum_screw_ang, P.drum_screw_ang + 180):
+        body += Rot(0, 0, sa) * screw_rib
+        body -= Rot(0, 0, sa) * Pos(
+            P.drum_screw_r, 0, z_rib - bore_depth / 2
+        ) * Cylinder(P.byj_insert_d / 2, bore_depth)
 
     # First-slot indicator: triangle debossed into the ring's outside
     # (bottom) face, on the key-notch line pointing at slot 0.
@@ -188,8 +192,9 @@ def drum_inner(shaft: str = "byj"):
     body = Pos(0, 0, P.drum_ring_t / 2) * Cylinder(P.drum_ring_od / 2, P.drum_ring_t)
     # Elongated radial pin slots, matching the outer ring.
     body = _cut_slots(body)
-    # Only 3 lightening windows: the 45-deg quadrant stays solid to
-    # carry the homing magnet. Pie-quadrant shaped: annular sector with
+    # Only 2 lightening windows: the 45-deg quadrant stays solid (homing
+    # magnet + one lock screw), the opposite 225-deg quadrant stays solid
+    # for the second lock screw. Pie-quadrant shaped: annular sector with
     # uniform margins to the hub, barrel wall and fin faces, rounded
     # corners.
     w_r_in = P.drum_hub_d / 2 + P.drum_web_window_edge
@@ -201,7 +206,7 @@ def drum_inner(shaft: str = "byj"):
     window = (Circle(w_r_out) - Circle(w_r_in)) & quad
     window = fillet(window.vertices(), P.drum_web_window_fillet)
     cutter = extrude(window, amount=P.drum_ring_t * 2)
-    for ang in (90, 180, 270):  # window centres 135/225/315; 45 solid
+    for ang in (90, 270):  # windows at 135/315; 45 + 225 solid (both screws)
         body -= Rot(0, 0, ang) * cutter
 
     # First-slot indicator: triangle debossed into the web's outside
@@ -307,26 +312,19 @@ def drum_inner(shaft: str = "byj"):
     body -= Rot(0, 0, 45) * Pos(P.drum_magnet_r, 0, 0) * Cylinder(
         P.drum_poke_d / 2, 4 * P.drum_magnet_standoff
     )
-    # Lock-screw boss: hangs off the web underside (solid quadrant,
-    # beside the 90-deg fin), lands on the outer part's rib at the
-    # butt joint; its edge fuses into this part's own barrel wall for
-    # strength. The M3 drops from the web's outer face: head recess
-    # there (narrower than the boss, so the seat is fully backed),
-    # clearance bore straight through web + boss, threads into the
-    # rib's heat-set insert to clamp the parts shut.
+    # Lock-screw bosses: one per solid quadrant (drum_screw_ang and
+    # +180), each hangs off the web underside beside a fin, lands on the
+    # outer part's matching rib at the butt joint; its edge fuses into
+    # this part's own barrel wall for strength. The M3 drops from the
+    # web's outer face: head recess there (narrower than the boss, so the
+    # seat is fully backed), clearance bore straight through web + boss,
+    # threads into the rib's heat-set insert to clamp the parts shut.
     sboss = Pos(0, 0, -P.drum_barrel_len_inner / 2) * Cylinder(
         P.drum_screw_boss_d / 2, P.drum_barrel_len_inner
     )
     # rim break at the bottom face
     sboss = chamfer(sboss.edges().group_by(Axis.Z)[0], 0.5)
-    body += Rot(0, 0, P.drum_screw_ang) * Pos(P.drum_screw_r, 0, 0) * sboss
     bore_l = P.drum_ring_t + P.drum_barrel_len_inner + 1
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, P.drum_ring_t + 0.5 - bore_l / 2
-    ) * Cylinder(P.screw_hole_d / 2, bore_l)
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t / 2
-    ) * Cylinder(P.drum_screw_recess_d / 2, P.drum_screw_recess_t)
     # Sloped seat: below the cylindrical recess the bottom is a 45-deg
     # cone tapering to the screw bore. The part prints web-face down, so
     # a flat recess bottom would be a ceiling bridged over air; the cone
@@ -334,9 +332,17 @@ def drum_inner(shaft: str = "byj"):
     # sinks ~0.25 below the cylinder's end.
     cone_h = (P.drum_screw_recess_d - P.screw_hole_d) / 2
     z_seat = P.drum_ring_t - P.drum_screw_recess_t  # cone top
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, z_seat - cone_h / 2
-    ) * Cone(P.screw_hole_d / 2, P.drum_screw_recess_d / 2, cone_h)
+    for sa in (P.drum_screw_ang, P.drum_screw_ang + 180):
+        body += Rot(0, 0, sa) * Pos(P.drum_screw_r, 0, 0) * sboss
+        body -= Rot(0, 0, sa) * Pos(
+            P.drum_screw_r, 0, P.drum_ring_t + 0.5 - bore_l / 2
+        ) * Cylinder(P.screw_hole_d / 2, bore_l)
+        body -= Rot(0, 0, sa) * Pos(
+            P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t / 2
+        ) * Cylinder(P.drum_screw_recess_d / 2, P.drum_screw_recess_t)
+        body -= Rot(0, 0, sa) * Pos(
+            P.drum_screw_r, 0, z_seat - cone_h / 2
+        ) * Cone(P.screw_hole_d / 2, P.drum_screw_recess_d / 2, cone_h)
     return body
 
 
