@@ -21,12 +21,15 @@ from build123d import (
     Axis,
     Box,
     Cylinder,
+    Keep,
+    Plane,
     Polygon,
     Pos,
     RectangleRounded,
     Rot,
     extrude,
     fillet,
+    split,
 )
 
 from .params import P
@@ -169,3 +172,40 @@ def scene() -> Scene:
 
 def bracket_scene() -> Scene:
     return Scene().add(bracket(), "bracket")
+
+
+def _split_plane() -> Plane:
+    """Plane of the pocket's front face — the two-piece parting plane.
+    Normal points out of the wall (lid side)."""
+    t = math.radians(P.ibar_tilt_deg)
+    half = P.ibar_thick / 2 + P.ibkt_clear
+    xb, zb = _pocket_frame()
+    n = (math.cos(t), 0, -math.sin(t))  # bar-plane normal, world
+    return Plane(
+        origin=(xb + half * n[0], 0, zb + half * n[2]), z_dir=n
+    )
+
+
+def bracket_body():
+    """Two-piece option: everything behind the pocket front face — an
+    open channel the bar lies into. Prints wall-face down, no bridging."""
+    return split(bracket(), bisect_by=_split_plane(), keep=Keep.BOTTOM)
+
+
+def bracket_lid():
+    """Two-piece option: the front cap. Carries the lock-screw recess;
+    the screw clamps lid + bar + body. Prints front-face down."""
+    return split(bracket(), bisect_by=_split_plane(), keep=Keep.TOP)
+
+
+def two_piece_scene() -> Scene:
+    """Two-piece bracket, exploded: body + bar seated in the open
+    channel, lid floated out along the parting normal."""
+    t = math.radians(P.ibar_tilt_deg)
+    lid_off = Pos(25 * math.cos(t), 0, -25 * math.sin(t))
+    return (
+        Scene()
+        .add(bracket_body(), "body", color="orange", alpha=0.9)
+        .add(bar(), "bar", color="gray", loc=_bar_pose())
+        .add(bracket_lid(), "lid", color="steelblue", alpha=0.9, loc=lid_off)
+    )

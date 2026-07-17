@@ -87,9 +87,14 @@ MODELS = {
         "ipadwall",
     ),
     "ipad-bracket": Model(
-        "SIDE QUEST printed wall bracket alone (16 deg epoxy pocket)",
+        "SIDE QUEST printed wall bracket alone (angled lock-screw pocket)",
         "ipadwall",
         "bracket_scene",
+    ),
+    "ipad-bracket-2pc": Model(
+        "SIDE QUEST two-piece bracket option, exploded: channel body + lid",
+        "ipadwall",
+        "two_piece_scene",
     ),
 }
 
