@@ -604,6 +604,8 @@ class Params:
     ibkt_screw_head_depth: float = 3.0
     ibkt_nose_r: float = 3.5       # top-front edge round (iPad swings past
                                    # here) — must stay < ibkt_wall
+    ibkt_lid_t: float = 5.0        # two-piece lid thickness (leaves 2mm
+                                   # web under recessed heads)
 
     @property
     def unit_back_rise(self) -> float:

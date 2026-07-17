@@ -21,15 +21,12 @@ from build123d import (
     Axis,
     Box,
     Cylinder,
-    Keep,
-    Plane,
     Polygon,
     Pos,
     RectangleRounded,
     Rot,
     extrude,
     fillet,
-    split,
 )
 
 from .params import P
@@ -174,38 +171,96 @@ def bracket_scene() -> Scene:
     return Scene().add(bracket(), "bracket")
 
 
-def _split_plane() -> Plane:
-    """Plane of the pocket's front face — the two-piece parting plane.
-    Normal points out of the wall (lid side)."""
-    t = math.radians(P.ibar_tilt_deg)
+# --- two-piece variant: flat sandwich, assumes ibar_tilt_deg == 0 ---
+# Body = wall plate + open channel the bar lies into; lid = full-
+# footprint front plate matching the body's rounded outline. The four
+# #8 wall screws pass through lid + body into the wall, clamping the
+# whole sandwich; the centre lock screw still pins the bar. Both parts
+# print flat: body wall-face down (channel opens up, no bridging), lid
+# front-face down.
+
+
+def _sandwich_frame():
+    """Shared two-piece numbers: (h, bw, plate_w, x_part, screw ys/zs)."""
     half = P.ibar_thick / 2 + P.ibkt_clear
     xb, zb = _pocket_frame()
-    n = (math.cos(t), 0, -math.sin(t))  # bar-plane normal, world
-    return Plane(
-        origin=(xb + half * n[0], 0, zb + half * n[2]), z_dir=n
+    h = zb + P.ibkt_embed  # tilt 0: embedded rise = embed
+    bw = P.ibar_w + 2 * P.ibkt_clear + 2 * P.ibkt_wall
+    plate_w = bw + 2 * P.ibkt_tab_w
+    x_part = xb + half  # parting plane: pocket front face
+    y_screw = (bw + P.ibkt_tab_w) / 2
+    return h, bw, plate_w, x_part, y_screw
+
+
+def _rounded_slab(h, w, thick):
+    """Wall-parallel slab, rounded corners, y centred, z in [0, h],
+    x in [0, thick]."""
+    return (
+        Pos(0, 0, h / 2)
+        * Rot(0, 90, 0)
+        * extrude(RectangleRounded(h, w, 8), amount=thick)
     )
 
 
 def bracket_body():
-    """Two-piece option: everything behind the pocket front face — an
-    open channel the bar lies into. Prints wall-face down, no bridging."""
-    return split(bracket(), bisect_by=_split_plane(), keep=Keep.BOTTOM)
+    """Two-piece body: wall plate + open channel. Plain through-holes —
+    heads recess in the lid, screws run on into the wall."""
+    half = P.ibar_thick / 2 + P.ibkt_clear
+    xb, zb = _pocket_frame()
+    h, bw, plate_w, x_part, y_screw = _sandwich_frame()
+
+    body = _rounded_slab(h, plate_w, P.ibkt_plate_thick)
+    walls = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(
+        Polygon((0, 0), (x_part, 0), (x_part, h), (0, h), align=None),
+        amount=bw,
+    )
+    body += walls
+    # the channel: pocket cut, open at the front (lid closes it)
+    cut_len = P.ibkt_embed + 20
+    body -= (
+        _bar_pose()
+        * Pos(0, 0, cut_len / 2)
+        * Box(2 * half, P.ibar_w + 2 * P.ibkt_clear, cut_len)
+    )
+    # four wall-screw shanks + centre lock-screw shank, all plain
+    for ys in (-y_screw, y_screw):
+        for zs in (0.25 * h, 0.75 * h):
+            body -= Pos(0, ys, zs) * Rot(0, 90, 0) * Cylinder(
+                P.ibkt_screw_d / 2, 60
+            )
+    body -= Pos(xb, 0, zb + P.ibkt_embed / 2) * Rot(0, 90, 0) * Cylinder(
+        P.ibkt_screw_d / 2, 60
+    )
+    return body
 
 
 def bracket_lid():
-    """Two-piece option: the front cap. Carries the lock-screw recess;
-    the screw clamps lid + bar + body. Prints front-face down."""
-    return split(bracket(), bisect_by=_split_plane(), keep=Keep.TOP)
+    """Two-piece lid: full-footprint front plate, same rounded outline
+    as the body. Recessed heads for the four wall screws + the centre
+    lock screw."""
+    xb, zb = _pocket_frame()
+    h, bw, plate_w, x_part, y_screw = _sandwich_frame()
+
+    lid = Pos(x_part, 0, 0) * _rounded_slab(h, plate_w, P.ibkt_lid_t)
+    x_front = x_part + P.ibkt_lid_t
+    holes = [(ys, zs) for ys in (-y_screw, y_screw) for zs in (0.25 * h, 0.75 * h)]
+    holes.append((0, zb + P.ibkt_embed / 2))  # centre lock screw
+    for ys, zs in holes:
+        lid -= Pos(0, ys, zs) * Rot(0, 90, 0) * Cylinder(P.ibkt_screw_d / 2, 60)
+        lid -= Pos(
+            x_front - P.ibkt_screw_head_depth / 2, ys, zs
+        ) * Rot(0, 90, 0) * Cylinder(
+            P.ibkt_screw_head_d / 2, P.ibkt_screw_head_depth
+        )
+    return lid
 
 
 def two_piece_scene() -> Scene:
-    """Two-piece bracket, exploded: body + bar seated in the open
-    channel, lid floated out along the parting normal."""
-    t = math.radians(P.ibar_tilt_deg)
-    lid_off = Pos(25 * math.cos(t), 0, -25 * math.sin(t))
+    """Two-piece sandwich, exploded: body + bar in the open channel,
+    full-face lid floated out front."""
     return (
         Scene()
         .add(bracket_body(), "body", color="orange", alpha=0.9)
         .add(bar(), "bar", color="gray", loc=_bar_pose())
-        .add(bracket_lid(), "lid", color="steelblue", alpha=0.9, loc=lid_off)
+        .add(bracket_lid(), "lid", color="steelblue", alpha=0.9, loc=Pos(25, 0, 0))
     )
