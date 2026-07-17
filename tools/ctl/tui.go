@@ -154,7 +154,7 @@ func (m *appModel) runKey(key string) (tea.Model, tea.Cmd) {
 			r.stop()
 		}
 	case "up", "k":
-		if r.scroll < len(r.lines)-1 {
+		if r.scroll < len(r.lines)-m.logAvail() {
 			r.scroll++
 		}
 	case "down", "j":
@@ -264,9 +264,8 @@ func (m *appModel) View() string {
 	return out + "\n" + footer + "\n"
 }
 
-// runView renders the log tail of the active run under the shared header.
-func (m *appModel) runView() string {
-	r := m.run
+// logAvail is how many log lines fit between the header and the footer.
+func (m *appModel) logAvail() int {
 	height := m.height
 	if height == 0 {
 		height = 24
@@ -275,8 +274,15 @@ func (m *appModel) runView() string {
 	if avail < 1 {
 		avail = 1
 	}
-	if r.scroll > len(r.lines)-1 {
-		r.scroll = max(0, len(r.lines)-1)
+	return avail
+}
+
+// runView renders the log tail of the active run under the shared header.
+func (m *appModel) runView() string {
+	r := m.run
+	avail := m.logAvail()
+	if r.scroll > len(r.lines)-avail {
+		r.scroll = max(0, len(r.lines)-avail)
 	}
 	end := len(r.lines) - r.scroll
 	start := max(0, end-avail)
