@@ -48,9 +48,17 @@ def stepper28byj():
         shaft -= Pos(0, cut_c, flat_z) * Box(P.byj_shaft_d * 2, P.byj_shaft_d, P.byj_flat_len)
 
     # Wire housing: rough box on the can side OPPOSITE the shaft offset.
-    wire_y = -P.byj_shaft_offset - P.byj_can_d / 2 - P.byj_wirebox_d / 2
+    # The box's flat inner face only kisses the round can at one point, so
+    # its corners would gap. Push the inner face IN until it meets the can
+    # circle at the box's outer corners — the box then unions into the can
+    # with no gap. Outer face still stands byj_wirebox_d proud of the can.
+    can_r = P.byj_can_d / 2
+    embed = (can_r**2 - (P.byj_wirebox_w / 2) ** 2) ** 0.5  # can centre -> inner face
+    inner_y = -P.byj_shaft_offset - embed
+    outer_y = -P.byj_shaft_offset - can_r - P.byj_wirebox_d
+    wire_y = (inner_y + outer_y) / 2
     wirebox = Pos(0, wire_y, -P.byj_wirebox_h / 2) * Box(
-        P.byj_wirebox_w, P.byj_wirebox_d, P.byj_wirebox_h
+        P.byj_wirebox_w, inner_y - outer_y, P.byj_wirebox_h
     )
 
     return can + ears + boss + shaft + wirebox
