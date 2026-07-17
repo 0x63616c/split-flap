@@ -15,7 +15,7 @@ Frame: drum axis = Z, ring underside at z=0. Prints flat, ring-down.
 View it: `just cad dev holder`.
 """
 
-from build123d import Axis, Box, Cylinder, Pos, Rot, chamfer
+from build123d import Axis, Box, Cylinder, Polygon, Pos, Rot, chamfer, extrude
 
 from .params import P
 
@@ -48,9 +48,29 @@ def holder():
     cutter = _slot_cutter()
     for i in range(P.drum_flap_count):
         body -= Rot(0, 0, i * P.holder_slot_pitch) * cutter
-    # break the top outer edge (print/handling)
+    # break the top outer edge (print/handling); before the marker cut,
+    # whose shallow vertical edges would land in the topmost edge group
     body = chamfer(body.edges().filter_by(Axis.Z).group_by(Axis.Z)[-1], 0.6)
+    body -= _slot0_marker()
     return body
+
+
+def _slot0_marker():
+    """Debossed triangle on the TOP face at slot 0, apex pointing in at
+    the bore — same style as the drum parts' marks; slot 0's slit splits
+    it down the middle, which still reads fine. Lines the holder's slot 0
+    up with the drum's."""
+    apex_r = P.holder_ring_id / 2 + 1.0
+    base_r = apex_r + P.drum_mark_len
+    tri = Polygon(
+        (apex_r, 0),
+        (base_r, P.drum_mark_w / 2),
+        (base_r, -P.drum_mark_w / 2),
+        align=None,
+    )
+    return Pos(0, 0, P.holder_ring_t - P.drum_mark_depth) * extrude(
+        tri, amount=P.drum_mark_depth
+    )
 
 
 def _flap_in_slot():
