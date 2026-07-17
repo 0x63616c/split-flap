@@ -22,3 +22,6 @@ packages = ["splitflap_cad"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# slow = XOR-vs-golden-BREP + full catalog builds; run with `pytest -m slow`
+markers = ["slow: heavy geometry checks (golden XOR, full catalog builds)"]
+addopts = "-m 'not slow'"

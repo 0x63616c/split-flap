@@ -159,6 +159,8 @@ def export_flaps(out_dir: Path) -> list[Path]:
     set on a Compound."""
     from build123d import Color, Mesher
 
+    from .threemf import canonicalize_3mf
+
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     for i, ch in enumerate(CHARSET):
@@ -175,6 +177,7 @@ def export_flaps(out_dir: Path) -> list[Path]:
                 s.label = "glyph"
                 m.add_shape(s)
         m.write(str(path))
+        canonicalize_3mf(path)  # lib3mf UUIDs are random per run
         written.append(path)
     return written
 

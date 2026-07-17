@@ -24,11 +24,11 @@ profile and takes only the extruder assignment. Load with File > Open
 (or drag) — model_settings.config is read on both paths.
 """
 
-import zipfile
 from pathlib import Path
 
 from .glyphflap import CHARSET, char_slug, flap_at
 from .params import P
+from .threemf import write_zip_entries
 
 _XML = '<?xml version="1.0" encoding="UTF-8"?>\n'
 _MODEL_ATTRS = (
@@ -208,10 +208,14 @@ def _write_plate(path: Path, idxs: list[int]) -> None:
         + "\n".join(instances)
         + "\n  </plate>\n</config>"
     )
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("[Content_Types].xml", _CONTENT_TYPES)
-        z.writestr("_rels/.rels", _RELS)
-        z.writestr("3D/3dmodel.model", main_model)
-        z.writestr("3D/_rels/3dmodel.model.rels", _MODEL_RELS)
-        z.writestr("3D/Objects/object_1.model", objects_model)
-        z.writestr("Metadata/model_settings.config", model_settings)
+    write_zip_entries(
+        path,
+        [
+            ("[Content_Types].xml", _CONTENT_TYPES),
+            ("_rels/.rels", _RELS),
+            ("3D/3dmodel.model", main_model),
+            ("3D/_rels/3dmodel.model.rels", _MODEL_RELS),
+            ("3D/Objects/object_1.model", objects_model),
+            ("Metadata/model_settings.config", model_settings),
+        ],
+    )
