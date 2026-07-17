@@ -589,7 +589,7 @@ class Params:
     ibar_w: float = 50.0           # bar plate width
     ibar_len: float = 75.0         # bar plate length
     ibar_thick: float = 5.0
-    ibar_tilt_deg: float = 10.0    # bar plane off the wall (pocket sets
+    ibar_tilt_deg: float = 0.0     # bar plane off the wall (pocket sets
                                    # this; iPad swivel compensates)
     ibkt_embed: float = 45.0       # bar length swallowed by the pocket
     ibkt_wall: float = 4.0         # printed wall around the pocket
