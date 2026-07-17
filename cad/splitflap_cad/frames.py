@@ -24,3 +24,8 @@ MOTOR_IN_UNIT = Pos(P.mount_x, P.byj_shaft_y, P.byj_flange_z) * Rot(0, 0, 180)
 # Hall PCB frame (board centre, top face up) flat onto its posts in the
 # crescent between the motor can and the flap circle.
 HALL_PCB_IN_UNIT = Pos(P.hall_pcb_x, P.hall_y, P.hall_seat + P.hall_pcb_t / 2)
+
+# NEMA variant: the pancake motor's mounting-face plane on the shared
+# shaft axis. Both the motor model (z=0 at the face, shaft +Z, body
+# below) and the bridge (same convention) pose with this one frame.
+NEMA_FACE_IN_UNIT = Pos(P.mount_x, P.byj_shaft_y, P.nema_face_z)

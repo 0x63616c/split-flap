@@ -95,8 +95,14 @@ class Params:
     nema_bridge_r: float = 21.5      # deck outer radius about the shaft
     nema_leg_t: float = 3.0          # leg thickness along X
     nema_leg_w: float = 16.0         # leg width along Y
-    nema_foot_len: float = 9.0       # foot run along X past the leg face
-    nema_foot_h: float = 4.0         # foot height (insert lives in this)
+    nema_foot_len: float = 4.0       # foot run along X past the leg face
+                                     # (short: foot outer corners must
+                                     # stay inside the barrel wall sweep,
+                                     # r 26.5 — long low feet under the
+                                     # ring can't hold an insert)
+    nema_foot_h: float = 6.0         # foot height (insert lives in this)
+    nema_foot_corner: float = 2.0    # plan chamfer on the foot's outer
+                                     # corners (buys wall clearance)
     nema_insert_depth: float = 3.5   # M3 insert bore depth into the foot
     nema_cbore_d: float = 6.4        # screw-head recess in the plate
                                      # bottom (button head Ø5.7 x 1.65)

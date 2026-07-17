@@ -50,6 +50,16 @@ MODELS = {
         "unit",
     ),
     "plate": Model("side plate only — no vendor fins/towers", "unit", "plate_scene"),
+    "unit-nema": Model(
+        "NEMA variant: plate + bridge + pancake motor ghost",
+        "unitnema",
+    ),
+    "plate-nema": Model(
+        "NEMA side plate only — no fins/bridge", "unitnema", "plate_scene"
+    ),
+    "bridge-nema": Model(
+        "NEMA bridge clamp alone, local frame", "unitnema", "bridge_scene"
+    ),
     "drum": Model("drum outer + inner, side by side", "drum"),
     "holder": Model(
         "PROTOTYPE flap-loading jig: ring + radial slots, drum ghost",
@@ -67,7 +77,7 @@ MODELS = {
         "glyph_flap_demo",
     ),
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj"),
-    "motor-nema": Model("NEMA 14 reference (possible later swap)", "motor"),
+    "motor-nema": Model("NEMA 14 pancake reference (ordered part)", "motor"),
     "vendor": Model("vendor unit STEP, aligned to our frame", "vendor"),
 }
 
@@ -83,6 +93,8 @@ for _name, _m in MODELS.items():
 
 PRINTABLE = {
     "unit": Printable("unit", "full_unit"),
+    "unit-nema": Printable("unitnema", "full_unit_nema"),
+    "bridge-nema": Printable("unitnema", "nema_bridge"),
     "holder": Printable("holder", "holder"),
     "flap": Printable("flap", "flap"),
     "drum-outer": Printable("drum", "drum_outer"),

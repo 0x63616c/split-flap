@@ -68,6 +68,24 @@ def _full_unit():
     return full_unit()
 
 
+def _nema_plate():
+    from splitflap_cad.unitnema import nema_plate
+
+    return nema_plate()
+
+
+def _nema_bridge():
+    from splitflap_cad.unitnema import nema_bridge
+
+    return nema_bridge()
+
+
+def _full_unit_nema():
+    from splitflap_cad.unitnema import full_unit_nema
+
+    return full_unit_nema()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -77,10 +95,13 @@ BREP_PARTS = {
     "motor-byj": _motor_byj,
     "hall-pcb": _hall_pcb,
     "unit-plate": _unit_plate,
+    "unit-nema-plate": _nema_plate,
+    "bridge-nema": _nema_bridge,
 }
 
 FINGERPRINT_ONLY = {
     "unit-full": _full_unit,  # vendor fins embedded — no BREP committed
+    "unit-nema-full": _full_unit_nema,  # ditto
 }
 
 ALL_PARTS = {**BREP_PARTS, **FINGERPRINT_ONLY}
