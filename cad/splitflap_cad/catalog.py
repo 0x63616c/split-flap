@@ -61,6 +61,9 @@ MODELS = {
         "NEMA bridge alone, local frame", "unitnema", "bridge_scene"
     ),
     "drum": Model("drum outer + inner, side by side", "drum"),
+    "drum-nema": Model(
+        "drum outer + NEMA-bore inner, side by side", "drum", "nema_scene"
+    ),
     "holder": Model(
         "PROTOTYPE flap-loading jig: ring + radial slots, drum ghost",
         "holder",

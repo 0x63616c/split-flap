@@ -384,6 +384,22 @@ def scene():
     )
 
 
+def nema_scene():
+    """Same layout, NEMA-bore inner (open single-D; outer is shared)."""
+    from .viewer import Scene
+
+    return (
+        Scene()
+        .add(drum_outer(), "drum_outer", "orange")
+        .add(
+            drum_inner("nema"),
+            "drum_inner_nema",
+            "steelblue",
+            loc=Pos(90, 0, 0) * Rot(180, 0, 0),
+        )
+    )
+
+
 def posed_drum():
     """The assembled drum posed in unit coords on the motor shaft axis."""
     from .frames import DRUM_IN_UNIT
