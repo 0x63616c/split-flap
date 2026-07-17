@@ -1,8 +1,9 @@
-"""The unit side plate — holds the motor, wires, drum and hall sensor.
+"""The 28BYJ unit side plate — shell + 28BYJ motor harness + hall mount.
 
-The module is assembled lying on its left side, so this plate is the build
-base. Starts as a bare rectangle; motor boss, wire routing, drum bearing and
-hall mount get added incrementally.
+Motor-agnostic geometry lives in shell.py; this module adds everything
+the 28BYJ-48 needs: motor screw towers, can support pad, in-plate wire
+channel, hall-sensor post, and the plate lightening windows (cut around
+those features, so they're per-motor too).
 
 View it: `just cad unit` (see cad/splitflap_cad/catalog.py).
 """
@@ -12,24 +13,26 @@ from build123d import (
     Box,
     Circle,
     Cylinder,
-    Plane,
     Polygon,
     Pos,
     Rectangle,
-    Rot,
     chamfer,
     extrude,
     fillet,
-    mirror,
 )
 
-from .geo import radial_plate
 from .params import P
-
-
-def window_profile(w, h):
-    """The house window style: rectangle with 45°-chamfered corners."""
-    return chamfer(Rectangle(w, h).vertices(), P.unit_window_chamfer)
+from .shell import (
+    back_wall,
+    base_chamfers,
+    base_plate,
+    cap_walls,
+    flap_guard,
+    front_lip,
+    stop_rod,
+    window_profile,
+    with_vendor_fins,
+)
 
 
 def plate_windows():
@@ -107,31 +110,8 @@ def motor_towers():
 
 
 def unit_plate():
-    """Return the unit side plate Part: base plate + back wall."""
-    outline = Rectangle(P.unit_plate_w, P.unit_plate_h)
-    plate = extrude(outline, amount=P.unit_plate_thick)
-
-    # Back wall: full length of the long (Y) edge, inset into the plate
-    # footprint — outer face flush with the -X plate edge (matches the
-    # vendor reference). Rises to unit_back_height total from plate bottom.
-    wall_x = -(P.unit_plate_w / 2 - P.unit_wall_thick / 2)
-    wall = Pos(wall_x, 0, P.unit_plate_thick) * extrude(
-        Rectangle(P.unit_wall_thick, P.unit_plate_h), amount=P.unit_back_rise
-    )
-
-    # Two windows [][] cut through the wall: margin-wide frame at the
-    # outer edges, between them, and top/bottom. Opening outline is a
-    # rectangle with 45°-chamfered corners, sketched in the wall plane
-    # (YZ) and extruded both ways so it punches clean through.
-    win = extrude(
-        Plane.YZ * window_profile(P.unit_window_w, P.unit_window_h),
-        amount=P.unit_wall_thick,
-        both=True,
-    )
-    y_off = (P.unit_window_w + P.unit_window_margin) / 2
-    z_c = P.unit_plate_thick + P.unit_window_margin + P.unit_window_h / 2
-    for y in (-y_off, y_off):
-        wall -= Pos(wall_x, y, z_c) * win
+    """Return the unit side plate Part: shell + 28BYJ harness."""
+    plate = base_plate()
 
     # --- 28BYJ harness ---
     # Support pad: pedestal under the can's end face. The can rests on it;
@@ -191,90 +171,6 @@ def unit_plate():
     # Lightening windows through the plate, house style.
     plate -= plate_windows()
 
-    # Screw towers: ours (motor_towers) — vendor's are no longer used.
-
-    # Flap stop rod: full-height pillar at the front (+Y) edge, plate top
-    # up to the wall-top height. Top flap rests against it.
-    rod_h = P.unit_back_height - P.unit_plate_thick
-    rod = Pos(P.rod_x, P.rod_y, P.unit_plate_thick + rod_h / 2) * Cylinder(P.rod_r, rod_h)
-
-    # Flap guard: angled prism wall on the front (+X/-Y) corner, plate top
-    # to wall top. Profile is corner-relative in params.
-    cx, cy = P.unit_plate_w / 2, -P.unit_plate_h / 2
-    guard_pts = [(cx + dx, cy + dy) for dx, dy in P.guard_profile]
-    # profile winding is clockwise, so pin the extrude direction to +Z
-    guard = extrude(Polygon(*guard_pts, align=None), amount=P.unit_back_rise, dir=(0, 0, 1))
-    guard = Pos(0, 0, P.unit_plate_thick) * guard
-
-    # Front lip: short wall on the front (+X) edge at the bottom (+Y)
-    # corner — the guard blade's counterpart at the other end of the
-    # flap opening, so the bottom flap shows framed.
-    lip = Pos(
-        P.unit_plate_w / 2 - P.unit_top_thick / 2,
-        P.unit_plate_h / 2 - P.unit_front_lip / 2,
-        P.unit_plate_thick,
-    ) * extrude(
-        Rectangle(P.unit_top_thick, P.unit_front_lip), amount=P.unit_back_rise
-    )
-
-    # Top/bottom walls: close the -Y side (module top once standing) and
-    # the +Y side. Full X width, same thickness as the guard's front
-    # blade, plate top to wall top, two [][] windows each.
-    def cap_wall(y_sign, spans):
-        """spans = (x_lo, x_hi) window openings along the wall."""
-        y = y_sign * (P.unit_plate_h / 2 - P.unit_top_thick / 2)
-        cap = Pos(0, y, P.unit_plate_thick) * extrude(
-            Rectangle(P.unit_plate_w, P.unit_top_thick), amount=P.unit_back_rise
-        )
-        z_c = P.unit_plate_thick + P.unit_window_margin + P.unit_window_h / 2
-        for x_lo, x_hi in spans:
-            win = extrude(
-                Plane.XZ * window_profile(x_hi - x_lo, P.unit_window_h),
-                amount=P.unit_top_thick,
-                both=True,
-            )
-            cap -= Pos((x_lo + x_hi) / 2, y, z_c) * win
-        return cap
-
-    edge = P.unit_plate_w / 2 - P.unit_window_margin  # outer window edge
-    # the top wall's front window stops short of the guard prism, which
-    # sits inside the corner and would bury the window's front chamfer
-    guard_back = P.unit_plate_w / 2 + min(dx for dx, _ in P.guard_profile)
-    top = cap_wall(
-        -1,
-        [(-edge, -P.unit_window_margin / 2), (P.unit_window_margin / 2, guard_back - 2)],
-    )
-    # bottom: two windows flanking the stop rod, a margin shy of it on
-    # both sides — wide one to the back, narrow one to the front edge
-    bottom = cap_wall(
-        +1,
-        [
-            (-edge, P.rod_x - P.rod_r - P.unit_window_margin),
-            (P.rod_x + P.rod_r + P.unit_window_margin, edge),
-        ],
-    )
-
-    # Interior base chamfers: 45° wedge strips where the plate top meets
-    # the wall inner faces, so the inside corners aren't square.
-    c = P.unit_base_chamfer
-    tri = Polygon(
-        (0, P.unit_plate_thick),
-        (c, P.unit_plate_thick),
-        (0, P.unit_plate_thick + c),
-        align=None,
-    )
-
-    def wedge(d, length, ang):
-        """Wedge strip against an inner wall face d from centre, hypotenuse
-        toward the box interior, run `length`, rotated ang about Z."""
-        return Rot(0, 0, ang) * Pos(-d, 0, 0) * radial_plate(tri, length)
-
-    base_cham = (
-        wedge(P.unit_plate_w / 2 - P.unit_wall_thick, P.unit_plate_h, 0)  # back
-        + wedge(P.unit_plate_h / 2 - P.unit_top_thick, P.unit_plate_w, 90)  # -Y
-        + wedge(P.unit_plate_h / 2 - P.unit_top_thick, P.unit_plate_w, -90)  # +Y
-    )
-
     # Hall sensor mount: the PCB screws flat onto one narrow post block
     # spanning both holes on the hole line (-X edge, M2 self-tap
     # pilots); the rest of the board cantilevers over the pad's
@@ -296,95 +192,9 @@ def unit_plate():
         ) * Cylinder(P.hall_pilot_d / 2, P.hall_pilot_depth)
 
     return (
-        plate + wall + rod + pad + motor_towers() + guard + lip + top + bottom
-        + base_cham + hall
+        plate + back_wall() + stop_rod() + pad + motor_towers() + flap_guard()
+        + front_lip() + cap_walls() + base_chamfers() + hall
     )
-
-
-# Interconnect tabs, measured off the vendor STEP: hole centres at
-# (x=-51.89, y=+-54.61), mating faces z=0 (bottom tabs, flat 3mm
-# plates spanning x -56.28..-47.5) and z=53 (top tabs, 45-deg ramped
-# gussets ~6.6mm thick at the hole).
-_TAB_HOLE_X = -51.89
-_TAB_HOLE_Y = 54.61
-_TAB_W_X = 8.78   # tab footprint width along X
-_TAB_Y_IN = 41.56  # bottom tab arm inner edge |y| (arm runs to the +-59 edge)
-_TAB_THICK = 3.0  # bottom tab plate thickness
-_TAB_FLOOR = 1.5  # pocket floor thickness behind the magnet
-
-
-def _tab_magnet_mods(fins):
-    """(adds, cuts) turning the tabs' screw holes into magnet pockets
-    (same rhinocats 6x3 magnet + clearances as the drum), opening at
-    the mating faces, poke hole through the floor to eject. The top
-    tabs' ramped gussets are deep enough as-is; each flat bottom tab
-    arm gets thickened by stacking a shifted copy of itself, so the
-    pad follows the vendor outline exactly."""
-    pocket_h = P.drum_magnet_t + 0.3
-    pad_h = pocket_h + _TAB_FLOOR - _TAB_THICK
-    adds, cuts = [], []
-    for y_s in (-1, +1):
-        y = y_s * _TAB_HOLE_Y
-        for z_face, s in ((0.0, +1), (P.unit_back_height, -1)):
-            # s points into the module from the mating face
-            at = Pos(_TAB_HOLE_X, y, 0)
-            if s > 0:  # flat bottom tab: clone the arm, shift up, union
-                y_edge = P.unit_plate_h / 2  # arm runs out to the plate edge
-                arm = fins & Pos(
-                    _TAB_HOLE_X,
-                    y_s * (_TAB_Y_IN + y_edge) / 2,
-                    _TAB_THICK / 2,
-                ) * Box(_TAB_W_X + 2, y_edge - _TAB_Y_IN + 2, _TAB_THICK)
-                adds.append(Pos(0, 0, pad_h) * arm)
-            cuts.append(
-                at
-                * Pos(0, 0, z_face + s * pocket_h / 2)
-                * Cylinder((P.drum_magnet_d + P.drum_magnet_clear) / 2, pocket_h)
-            )
-            cuts.append(
-                at
-                * Pos(0, 0, z_face + s * 4)
-                * Cylinder(P.drum_poke_d / 2, 10)
-            )
-    return adds, cuts
-
-
-# Stacking tab, measured off the vendor STEP: middle of the back frame's
-# +Y edge, 3mm plate (y 56..59), magnet hole axis Y at the mating face
-# y=59. The vendor has no -Y counterpart; we mirror one on so units
-# stack vertically.
-_STACK_TAB_Y = (56.0, 59.0)
-_STACK_HOLE_Z = 26.5
-
-
-def _stack_tab_mods(fins):
-    """(adds, cuts): clone + mirror the bottom stacking tab onto the -Y
-    (top) edge, thicken both inward by a shifted self-clone (the 3mm
-    plate can't hold pocket + floor), then magnet pocket at each mating
-    face and a poke hole through the floor — same scheme as the corner
-    tabs."""
-    pocket_h = P.drum_magnet_t + 0.3
-    tab_t = _STACK_TAB_Y[1] - _STACK_TAB_Y[0]
-    pad_h = pocket_h + _TAB_FLOOR - tab_t
-    tab = fins & Pos(
-        _TAB_HOLE_X, (_STACK_TAB_Y[0] + _STACK_TAB_Y[1]) / 2, _STACK_HOLE_Z
-    ) * Box(12, tab_t, 20)
-    adds, cuts = [], []
-    for y_s in (+1, -1):
-        t = tab if y_s > 0 else mirror(tab, Plane.XZ)
-        adds.append(t + Pos(0, -y_s * pad_h, 0) * t)
-        y_face = y_s * _STACK_TAB_Y[1]
-        cuts.append(
-            Pos(_TAB_HOLE_X, y_face - y_s * pocket_h / 2, _STACK_HOLE_Z)
-            * Rot(90, 0, 0)
-            * Cylinder((P.drum_magnet_d + P.drum_magnet_clear) / 2, pocket_h)
-        )
-        cuts.append(
-            Pos(_TAB_HOLE_X, y_face - y_s * 4, _STACK_HOLE_Z)
-            * Rot(90, 0, 0)
-            * Cylinder(P.drum_poke_d / 2, 10)
-        )
-    return adds, cuts
 
 
 def full_unit():
@@ -392,17 +202,7 @@ def full_unit():
     verbatim vendor interconnect fins. Plate lightening windows are our
     own (plate_windows), cut in unit_plate; the tabs' screw holes become
     magnet pockets. Needs the STEP on disk."""
-    from .vendor import vendor_fins
-
-    fins = vendor_fins()
-    unit = unit_plate() + fins
-    adds, cuts = _tab_magnet_mods(fins)
-    s_adds, s_cuts = _stack_tab_mods(fins)
-    for a in adds + s_adds:
-        unit += a
-    for c in cuts + s_cuts:
-        unit -= c
-    return unit
+    return with_vendor_fins(unit_plate())
 
 
 def scene():
