@@ -15,6 +15,7 @@ from build123d import (
     Axis,
     Box,
     Circle,
+    Cone,
     Cylinder,
     Polygon,
     Pos,
@@ -146,18 +147,18 @@ def drum_outer():
     # a slit between the rib and the wall face.
     screw_rib = chamfer(screw_rib.edges().filter_by(Axis.Y).sort_by(Axis.X)[:1], 0.6)
     body += Rot(0, 0, P.drum_screw_ang) * screw_rib
-    # Insert bore in the rib top, plus screw-tip clearance below it:
-    # the tip runs drum_screw_len minus the inner-part stack past the
-    # butt plane. Both bores open upward — no overhangs, no membrane.
-    tip_depth = P.drum_screw_len + 0.5 - (
+    # Insert bore in the rib top: ONE cylinder at insert diameter (same
+    # idiom as the motor mount, unit.py) — insert seats in the top, the
+    # screw tip runs on down the same bore. Depth = drum_screw_len minus
+    # the inner-part stack past the butt plane, plus slack (0.5 free +
+    # 0.25 the head sinks into the cone seat). Opens upward — no
+    # overhang, no membrane, no step.
+    bore_depth = P.drum_screw_len + 0.75 - (
         P.drum_ring_t - P.drum_screw_recess_t + P.drum_barrel_len_inner
     )
     body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, z_rib - P.drum_screw_insert_h / 2
-    ) * Cylinder(P.byj_insert_d / 2, P.drum_screw_insert_h)
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, z_rib - tip_depth / 2
-    ) * Cylinder(P.screw_hole_d / 2, tip_depth)
+        P.drum_screw_r, 0, z_rib - bore_depth / 2
+    ) * Cylinder(P.byj_insert_d / 2, bore_depth)
 
     # First-slot indicator: triangle debossed into the ring's outside
     # (bottom) face, on the key-notch line pointing at slot 0.
@@ -199,15 +200,22 @@ def drum_inner():
     # the outer part's share mid-drum.
     body += Pos(0, 0, -P.drum_barrel_len_inner) * _barrel(P.drum_barrel_len_inner)
 
-    # Connector fins: thin radial plates from the hub out to just shy of
-    # the barrel's inner face, hanging below the web. Fin-shaped profile:
-    # bottom edge slopes from shallow at the hub to full depth at the
-    # rim, where the tips land in the outer part's guide-ring slots.
+    # Connector fins: thin radial plates from the hub outward, hanging
+    # below the web. Fin-shaped profile: bottom edge slopes from shallow
+    # at the hub to full depth at the rim, where the tips land in the
+    # outer part's guide-ring slots. Outer edge is STEPPED: over this
+    # part's own barrel length the fin reaches into the wall and fuses
+    # with it (same part — strength, no clearance needed); past the butt
+    # plane it steps back drum_fin_clear so the free length slides into
+    # the outer part's notches and rails.
     fin_r_in = P.drum_hub_d / 2 - 1
     fin_r_out = P.drum_wall_r_in - P.drum_fin_clear
+    fin_r_wall = P.drum_wall_r_in + 0.2  # embed into the own wall
     profile = Polygon(
         (fin_r_in, 0),
-        (fin_r_out, 0),
+        (fin_r_wall, 0),
+        (fin_r_wall, -P.drum_barrel_len_inner),
+        (fin_r_out, -P.drum_barrel_len_inner),
         (fin_r_out, -P.drum_fin_len),
         (fin_r_in, -P.drum_fin_len_hub),
         align=None,
@@ -278,7 +286,8 @@ def drum_inner():
     )
     # Lock-screw boss: hangs off the web underside (solid quadrant,
     # beside the 90-deg fin), lands on the outer part's rib at the
-    # butt joint. The M3 drops from the web's outer face: head recess
+    # butt joint; its edge fuses into this part's own barrel wall for
+    # strength. The M3 drops from the web's outer face: head recess
     # there (narrower than the boss, so the seat is fully backed),
     # clearance bore straight through web + boss, threads into the
     # rib's heat-set insert to clamp the parts shut.
@@ -295,6 +304,16 @@ def drum_inner():
     body -= Rot(0, 0, P.drum_screw_ang) * Pos(
         P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t / 2
     ) * Cylinder(P.drum_screw_recess_d / 2, P.drum_screw_recess_t)
+    # Sloped seat: below the cylindrical recess the bottom is a 45-deg
+    # cone tapering to the screw bore. The part prints web-face down, so
+    # a flat recess bottom would be a ceiling bridged over air; the cone
+    # self-supports. The button head (Ø5.7) bears on the cone's rim and
+    # sinks ~0.25 below the cylinder's end.
+    cone_h = (P.drum_screw_recess_d - P.screw_hole_d) / 2
+    z_seat = P.drum_ring_t - P.drum_screw_recess_t  # cone top
+    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
+        P.drum_screw_r, 0, z_seat - cone_h / 2
+    ) * Cone(P.screw_hole_d / 2, P.drum_screw_recess_d / 2, cone_h)
     return body
 
 
