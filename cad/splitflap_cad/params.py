@@ -54,21 +54,23 @@ class Params:
     unit_back_height: float = 53.0  # total height from plate bottom (matches vendor ref)
 
     # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A
-    # bipolar, 1.8deg, shaft 20.5 x Ø5, 4-lead). Face dims are standard
-    # NEMA 14; body/shaft lengths from the listing. Flat length/depth
-    # and boss height NOT in the listing — placeholders, VERIFY WITH
-    # CALIPERS when the motor arrives, before printing drum or bridge.
+    # bipolar, 1.8deg, 4-lead). Dims from the vendor's product drawing;
+    # body length carries ±0.8 so MEASURE the real unit before printing
+    # the bridge (wall height must match the actual body, or deck and
+    # feet can't both seat — the joint is overconstrained by design).
     motor_body_w: float = 35.2      # square faceplate side (MAX)
-    motor_body_len: float = 21.0    # body length, face to face (pancake)
+    motor_body_len: float = 20.2    # body length, face to face (drawing
+                                    # says ±0.8 — MEASURE the real one;
+                                    # bridge wall height keys off this)
     motor_boss_d: float = 22.0      # pilot boss diameter (22.0 -0.05)
-    motor_boss_len: float = 2.0     # boss protrusion past mounting face (VERIFY)
+    motor_boss_len: float = 1.6     # boss protrusion past mounting face (drawing)
     motor_shaft_d: float = 5.0      # shaft diameter (5.0 -0.012)
     motor_shaft_len: float = 20.5   # shaft length past mounting face
-    motor_flat_len: float = 15.0    # D-flat length, from shaft tip (VERIFY)
-    motor_flat_across: float = 4.5  # remaining thickness across the flat (VERIFY)
+    motor_flat_len: float = 16.5    # D-flat length, from shaft tip (drawing)
+    motor_flat_across: float = 4.5  # remaining thickness across the flat (drawing)
     motor_hole_pitch: float = 26.0  # M3 mount holes, square pattern
     motor_screw_d: float = 3.0      # M3 nominal (tapped in motor)
-    motor_screw_depth: float = 4.5  # tapped depth MIN
+    motor_screw_depth: float = 2.5  # tapped depth MIN (drawing) — shallow!
     pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
     screw_clearance: float = 0.2  # radial gap around M3 screws
 
@@ -97,9 +99,11 @@ class Params:
                                      # tapers the wall ends to knife
                                      # edges; the deck carries the motor
                                      # screw seats, not the walls
-    nema_flange_t: float = 2.0       # flange over the face (M3x6 = 4.0
-                                     # engaged of the motor's 4.5 min
-                                     # tap; top z 26 vs rails z 26.3)
+    nema_flange_t: float = 3.5       # deck thickness: motor taps are
+                                     # only 2.5 MIN deep, so M3x6 must
+                                     # engage exactly 6 - 3.5 = 2.5.
+                                     # Deck top clears the rails
+                                     # radially (r 22.9 < sweep 23.15)
     nema_flange_in: float = 10.0     # flange inner edge |X - shaft|
                                      # (hole line 13 minus head + slack)
     nema_flange_r: float = 22.9      # flange plan clip radius — tighter
