@@ -105,7 +105,7 @@ def _mesh_object_xml(mesh_id: int, shape, center) -> tuple[str, int]:
     return xml, len(tris)
 
 
-def export_plates(out_dir: Path, per_plate: int = 26) -> list[Path]:
+def export_plates(out_dir: Path, per_plate: int = 11) -> list[Path]:
     """Write plate-batched Bambu-native project 3MFs for all flaps."""
     out_dir.mkdir(parents=True, exist_ok=True)
     n = len(CHARSET)
