@@ -94,8 +94,8 @@ class Params:
     byj_flat_len: float = 6.0     # D-flat length, from shaft tip
     byj_flat_across: float = 3.0  # remaining thickness across the flat
     byj_shaft_offset: float = 8.0  # shaft axis offset from the can centre
-    byj_wirebox_w: float = 14.5   # wire housing width (approx)
-    byj_wirebox_d: float = 5.0    # wire housing radial protrusion (approx)
+    byj_wirebox_w: float = 14.75  # wire housing width (measured)
+    byj_wirebox_d: float = 3.0    # wire housing radial protrusion (31mm can-edge span − 28 can dia)
     byj_wirebox_h: float = 16.5   # wire housing height (approx)
 
     # motor mount anchor: the CAN centre / ear line (vendor screw line).
@@ -260,8 +260,8 @@ class Params:
     # axial guide-rail channels on the outer barrel wall, which index
     # rotation and align the parts.
     drum_fin_count: int = 4
-    drum_fin_t: float = 1.2        # fin thickness
-    drum_fin_t_key: float = 2.7    # thickness of fin 0 (the key): only
+    drum_fin_t: float = 2.0        # fin thickness
+    drum_fin_t_key: float = 3.0    # thickness of fin 0 (the key): only
                                    # fits its own wide notch, so the
                                    # parts assemble one way only
     drum_fin_len: float = 18.0     # fin depth below the web, at the rim
@@ -336,26 +336,30 @@ class Params:
     # Clearance box (screw sits between magnet boss @45 and the key
     # fin @0; exact centre 22.5 kisses the magnet boss, so it's nudged
     # 1.5 deg finward): rib flank -> magnet boss 0.5, screw boss ->
-    # magnet boss ~1.3, rib corner clears the key-fin rails by ~1mm,
-    # rib base ≈ drum z 22.9 clears the hall board sweep (board top
+    # magnet boss ~0.7, rib corner clears the key-fin rails by ~1mm,
+    # rib base ≈ drum z 21.4 clears the hall board sweep (board top
     # unit z 25.1 ≈ drum z 20.4, and the board sits at ~270 deg anyway).
     drum_screw_ang: float = 21.0   # bore axis angle from the key fin
     drum_screw_r: float = 22.75    # bore axis radius
-    drum_screw_boss_d: float = 7.0  # boss dia (edge r 26.25 clears the
-                                   # wall face by 0.25)
+    drum_screw_boss_d: float = 9.0  # boss dia; edge (r 27.25) reaches
+                                   # past the wall face and fuses into
+                                   # the inner part's own barrel wall
+                                   # for strength (stays inside r_out)
     drum_screw_boss_w: float = 7.5  # rib width (tangential)
-    drum_screw_rib_r_in: float = 16.0  # rib inner radius: deep enough
-                                   # that the insert bore keeps a full
-                                   # wall above the 45-deg base ramp
+    drum_screw_rib_r_in: float = 14.5  # rib inner radius: deep enough
+                                   # that the single insert/tip bore
+                                   # keeps ~1mm wall above the 45-deg
+                                   # base ramp
     drum_screw_len: float = 12.0   # M3x12 button head
     drum_screw_recess_d: float = 6.2  # head recess dia (button head
                                    # Ø5.7); head (h 1.65) sits fully
                                    # below the web face
-    drum_screw_recess_t: float = 2.0  # head recess depth; deeper than
-                                   # the 1.6 web, dips 0.4 into the
-                                   # boss (Ø7.0 still backs the seat)
-    drum_screw_insert_h: float = 3.2  # insert bore depth in the rib
-                                   # (M3x3 insert + press slack)
+    drum_screw_recess_t: float = 2.0  # head recess depth (cylindrical
+                                   # part); below it the seat is a 45-deg
+                                   # cone down to the screw bore, so the
+                                   # print (web-face down) has no flat
+                                   # ceiling over air and the recess wall
+                                   # is backed by the Ø9 boss
     # First-slot indicator: debossed triangle next to flap slot 0 (the
     # slot on the key fin / key notch line) on both parts' outside faces.
     drum_mark_depth: float = 0.6
