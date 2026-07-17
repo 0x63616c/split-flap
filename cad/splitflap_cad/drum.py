@@ -134,19 +134,10 @@ def drum_outer():
     # drum's outer (web) face through the inner part and threads in.
     z_rib = z_butt  # flush with the lip / butt plane
     r_rib_in = P.drum_screw_rib_r_in
-    # Pennant profile: 45-deg ramp down from the inner tip to the
-    # deepest point under the screw axis, then 45-deg back UP to the
-    # wall — the belly outward of the bore held nothing. Both
-    # undersides stay at 45 deg (part prints flap-ring-down), and the
-    # bore keeps its ~1mm floor at both edges by symmetry about the
-    # screw axis.
-    r_deep = P.drum_screw_r
-    z_deep = z_rib - (r_deep - r_rib_in)
     rib_prof = Polygon(
         (r_rib_in, z_rib),
         (r_embed, z_rib),
-        (r_embed, z_deep + (r_embed - r_deep)),
-        (r_deep, z_deep),
+        (r_embed, z_rib - (r_embed - r_rib_in)),
         align=None,
     )
     screw_rib = radial_plate(rib_prof, P.drum_screw_boss_w)
