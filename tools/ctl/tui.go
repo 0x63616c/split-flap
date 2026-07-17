@@ -78,7 +78,7 @@ func (m menuModel) View() string {
 
 // pick runs a menu and returns the chosen index, -1 on quit/back.
 func pick(title string, items []menuItem) (int, error) {
-	res, err := tea.NewProgram(newMenu(title, items)).Run()
+	res, err := tea.NewProgram(newMenu(title, items), tea.WithAltScreen()).Run()
 	if err != nil {
 		return -1, err
 	}
