@@ -5,8 +5,8 @@ the drum barrel's interior, shaft coaxial with the 28BYJ variant's
 (mount_x, byj_shaft_y). Its tapped mount holes open upward, so a
 printed BRIDGE drops over it: a ring deck on the face (pilot bore +
 4 M3 clearance holes — the motor's own screws clamp deck to face) with
-a wall down each ±X body flat ending in a foot on the plate, each held
-by an M3x8 from above into a flush heat-set insert. Full-height well
+a solid chord-segment leg down each ±X body flat landing on the plate,
+each held by an M3x8 from above into a flush heat-set insert. Full-height well
 channels through the deck rim and wall faces give the bolts + hex key
 a straight vertical drop onto spot-faced seats.
 
@@ -66,12 +66,13 @@ def nema_plate():
 def nema_bridge():
     """The bridge, one printed part (local frame: shaft axis at the
     motor face plane, +Z up): a ring DECK over the whole face (pilot
-    bore + all 4 M3 clearance holes) joining a wall + full-height bolt
-    boss down each ±X body flat. Every outer edge is clipped concentric
-    with the drum. Each bolt gets an open-back U-slot down its boss —
-    bolt + hex key drop straight in from above onto a flat seat."""
+    bore + all 4 M3 clearance holes) joining a solid chord-segment LEG
+    down each ±X body flat — the leg fills everything outboard of the
+    flat, out to the mount circle. Every outer edge is clipped
+    concentric with the drum. Each bolt gets an open-back U-slot down
+    its leg — bolt + hex key drop straight in from above onto a flat
+    seat."""
     wall_in = P.motor_body_w / 2 + P.nema_body_clear
-    wall_out = wall_in + P.nema_leg_t
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
 
     # Deck: full ring on the face — clipped tighter than the rest (its
@@ -86,25 +87,18 @@ def nema_bridge():
             )
 
     body = deck
-    boss_out = wall_out + P.nema_foot_len
     z_seat = -drop + P.nema_foot_h
     rise = drop + P.nema_flange_t  # plate top -> deck TOP, flush with it
     z_mid = (P.nema_flange_t - drop) / 2
+    slab_out = P.nema_mount_r + 2  # overshoot; the mount-circle clip trims it
     for side in (-1, +1):
-        # Wall: up the body flat, plate top to the deck top — the plan
-        # reads as the deck circle with a tab out each side. Width sits
-        # fully inside the deck contour — no arc taper, full thickness
-        # end to end.
-        wall = Pos(side * (wall_in + wall_out) / 2, 0, z_mid) * Box(
-            P.nema_leg_t, P.nema_wall_w, rise
+        # Leg: one solid chord segment — everything outboard of the body
+        # flat, out to the mount circle, plate top to the deck top. The
+        # inner face is the chord; the plan clip below cuts the arc.
+        leg = Pos(side * (wall_in + slab_out) / 2, 0, z_mid) * Box(
+            slab_out - wall_in, 2 * P.nema_mount_r, rise
         )
-        # Bolt boss: full-height column on the wall's outer face, plate
-        # to deck top — solid material all round the bolt path (a mere
-        # scallop left knife-edge slivers in the wall).
-        boss = Pos(
-            side * (wall_out + boss_out) / 2, 0, z_mid
-        ) * Box(boss_out - wall_out, P.nema_foot_w, rise)
-        body += wall + boss
+        body += leg
 
         # Bolt path: open-back U-slot down the column (Ø well + a slot
         # out the back face — no thin outer skin), stopping on the flat
