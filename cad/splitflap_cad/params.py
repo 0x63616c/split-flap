@@ -336,20 +336,26 @@ class Params:
     # Clearance box (screw sits between magnet boss @45 and the key
     # fin @0; exact centre 22.5 kisses the magnet boss, so it's nudged
     # 1.5 deg finward): rib flank -> magnet boss 0.5, screw boss ->
-    # magnet boss ~0.7, rib corner clears the key-fin rails by ~1mm,
+    # magnet boss ~0.45 (fatter and they'd merge), rib corner clears
+    # the key-fin rails by ~1mm,
     # rib base ≈ drum z 21.4 clears the hall board sweep (board top
     # unit z 25.1 ≈ drum z 20.4, and the board sits at ~270 deg anyway).
     drum_screw_ang: float = 21.0   # bore axis angle from the key fin
     drum_screw_r: float = 22.75    # bore axis radius
-    drum_screw_boss_d: float = 9.0  # boss dia; edge (r 27.25) reaches
+    drum_screw_boss_d: float = 9.4  # boss dia; edge (r 27.45) reaches
                                    # past the wall face and fuses into
                                    # the inner part's own barrel wall
-                                   # for strength (stays inside r_out)
+                                   # for strength (stays inside r_out).
+                                   # Wall around the Ø6.2 recess = 1.6.
     drum_screw_boss_w: float = 7.5  # rib width (tangential)
     drum_screw_rib_r_in: float = 14.5  # rib inner radius: deep enough
                                    # that the single insert/tip bore
                                    # keeps ~1mm wall above the 45-deg
                                    # base ramp
+    drum_screw_rib_taper_wall: float = 1.0  # full-width rib column kept
+                                   # around the bore; inward of that the
+                                   # flanks taper at 45 deg in plan,
+                                   # shedding the wedge's dead corner
     drum_screw_len: float = 12.0   # M3x12 button head
     drum_screw_recess_d: float = 6.2  # head recess dia (button head
                                    # Ø5.7); head (h 1.65) sits fully

@@ -141,11 +141,27 @@ def drum_outer():
         align=None,
     )
     screw_rib = radial_plate(rib_prof, P.drum_screw_boss_w)
-    # Break the sharp corner jutting into the drum: the top-inner edge
-    # only. The two outer-face edges must stay sharp — they sit just
-    # 0.2 into the wall, so a 0.6 chamfer cuts past the embed and opens
-    # a slit between the rib and the wall face.
-    screw_rib = chamfer(screw_rib.edges().filter_by(Axis.Y).sort_by(Axis.X)[:1], 0.6)
+    # Plan taper: the rib keeps full width only around the bore column
+    # (+ taper_wall margin); inward of that the flanks close at 45 deg
+    # in plan, shedding the wedge's dead inner corner (rotating mass +
+    # filament). Taper faces are vertical — no new overhangs.
+    taper_r = P.drum_screw_r - P.byj_insert_d / 2 - P.drum_screw_rib_taper_wall
+    half_w = P.drum_screw_boss_w / 2
+    rib_depth = r_embed - r_rib_in
+    plan = Polygon(
+        (r_embed + 1, half_w),
+        (taper_r, half_w),
+        (taper_r - half_w, 0),
+        (taper_r, -half_w),
+        (r_embed + 1, -half_w),
+        align=None,
+    )
+    screw_rib &= Pos(0, 0, z_rib - rib_depth) * extrude(plan, amount=rib_depth + 1)
+    # Break the sharp corner jutting into the drum: the vertical tip
+    # edge where the two taper faces meet. The two outer-face edges
+    # must stay sharp — they sit just 0.2 into the wall, so a chamfer
+    # there opens a slit between the rib and the wall face.
+    screw_rib = chamfer(screw_rib.edges().filter_by(Axis.Z).sort_by(Axis.X)[:1], 0.6)
     body += Rot(0, 0, P.drum_screw_ang) * screw_rib
     # Insert bore in the rib top: ONE cylinder at insert diameter (same
     # idiom as the motor mount, unit.py) — insert seats in the top, the
