@@ -43,9 +43,31 @@ def holder():
     return body
 
 
+def _flap_in_slot():
+    """A flap posed in slot 0: pivot edge down on the slot floor, plane
+    radial (standing in the +X slot), positioned so the inner pin tab
+    lines up with the drum ring's slot span."""
+    from .flap import flap
+
+    # flap local: x = width (pins at the x extremes), y = height,
+    # z = thickness. Rot(90,0,0) stands it up: y -> Z, z -> -Y.
+    r_pin_mid = (P.drum_slot_r_in_inner + P.drum_slot_r_out) / 2
+    x_mid = r_pin_mid + (P.flap_w + P.flap_w_over_pins) / 4
+    z_floor = P.holder_ring_t - P.holder_slot_depth
+    return Pos(x_mid, P.flap_thick / 2, z_floor) * Rot(90, 0, 0) * flap()
+
+
 def holder_show_args() -> dict:
-    """holder alone; drum ghost overlaid when the outer part is buildable."""
+    """holder + a flap posed in slot 0; drum ghost overlaid when the
+    outer part is buildable."""
     objects, names, colors, alphas = [holder()], ["holder"], ["seagreen"], [1.0]
+    try:
+        objects.append(_flap_in_slot())
+        names.append("flap")
+        colors.append("white")
+        alphas.append(0.9)
+    except Exception:
+        pass
     try:
         from .drum import drum_outer
 
