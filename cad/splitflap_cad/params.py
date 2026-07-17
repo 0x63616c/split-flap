@@ -2,7 +2,8 @@
 
 Rule: raw measurements are named constants; anything positional is *derived*
 from them (see `pin_y`). Change a base dim -> dependents follow. No magic
-numbers in the part files.
+numbers in the part files — one blessed exception: cosmetic edge breaks
+(chamfers/fillets <= 1mm that only knock a sharp corner off) may inline.
 
 Most flap/drum numbers are PLACEHOLDERS until drum geometry is settled
 (issue #7). They exist so the model renders and tests have something to
@@ -64,6 +65,18 @@ class Params:
     motor_hole_pitch: float = 26.0  # M3 mount holes, square pattern
     motor_screw_d: float = 3.0      # M3 nominal (tapped in motor)
     motor_screw_depth: float = 4.5  # tapped depth MIN
+    pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
+    screw_clearance: float = 0.2  # radial gap around M3 screws
+
+    @property
+    def pilot_hole_d(self) -> float:
+        """Through-hole for the motor's pilot boss. Derived."""
+        return self.motor_boss_d + 2 * self.pilot_clearance
+
+    @property
+    def screw_hole_d(self) -> float:
+        """M3 clearance hole diameter. Derived."""
+        return self.motor_screw_d + 2 * self.screw_clearance
 
     # --- 28BYJ-48 stepper (vendor part, standard datasheet dims) ---
     # The ghost unit is designed around this motor: its 35mm ear pitch and
@@ -150,18 +163,6 @@ class Params:
         """Support pad height: from plate top up to the can's end face,
         which hangs byj_can_h below the flange face. Derived."""
         return self.byj_flange_z - self.byj_can_h - self.unit_plate_thick
-    pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
-    screw_clearance: float = 0.2  # radial gap around M3 screws
-
-    @property
-    def pilot_hole_d(self) -> float:
-        """Through-hole for the motor's pilot boss. Derived."""
-        return self.motor_boss_d + 2 * self.pilot_clearance
-
-    @property
-    def screw_hole_d(self) -> float:
-        """M3 clearance hole diameter. Derived."""
-        return self.motor_screw_d + 2 * self.screw_clearance
 
     # --- hall sensor mount ---
     # Sensor breakout (KY-003 style, measured off listing photos):
@@ -294,6 +295,9 @@ class Params:
     drum_hub_len: float = 15.8     # hub length below the web underside
     drum_bore_depth: float = 9.0   # double-D shaft bore depth
     drum_bore_clear: float = 0.2   # shaft bore clearance (dia and flats)
+    drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
+                                   # round section (bore is double-D; only
+                                   # the flat zone may enter it)
     drum_bore_chamfer: float = 0.5  # lead-in chamfer at the bore mouth
     drum_hub_edge_chamfer: float = 0.8  # hub bottom outer rim chamfer
     # Web lightening windows: pie-quadrant shaped (x3; the magnet
@@ -391,14 +395,6 @@ class Params:
         return self.flap_thick + self.holder_slot_clear
 
     @property
-    def holder_slot_pitch(self) -> float:
-        """Angular spacing of slots = the flap pitch. Derived."""
-        return 360.0 / self.drum_flap_count
-    drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
-                                   # round section (bore is double-D; only
-                                   # the flat zone may enter it)
-
-    @property
     def drum_barrel_len_outer(self) -> float:
         """Barrel share on the outer part. Derived."""
         return self.drum_barrel_len - self.drum_barrel_len_inner
@@ -409,11 +405,6 @@ class Params:
         face (vendor part had it at the wall's OUTER face, leaving a
         1.15 step). Derived."""
         return 2 * self.drum_wall_r_in
-
-    @property
-    def drum_slot_pitch(self) -> float:
-        """Angular pitch between flap slots. Derived."""
-        return 360.0 / self.drum_flap_count
 
     @property
     def drum_width(self) -> float:

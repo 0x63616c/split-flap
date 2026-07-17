@@ -17,9 +17,9 @@ from .stepper28byj import stepper28byj
 def posed_motor():
     """The 28BYJ posed in the harness: shaft at the mount axis, flange
     seated on the tower tops."""
-    # Positioned by SHAFT axis; the 180 about it puts the can on +Y so the
-    # can centre lands on the mount/ear line.
-    return Pos(P.mount_x, P.byj_shaft_y, P.byj_flange_z) * Rot(0, 0, 180) * stepper28byj()
+    from .frames import MOTOR_IN_UNIT
+
+    return MOTOR_IN_UNIT * stepper28byj()
 
 
 def posed_hall_pcb():
@@ -44,9 +44,9 @@ def posed_hall_pcb():
     legs = Pos(edge - span / 2, elem_dy, P.hall_pcb_t / 2 - 0.2) * Box(
         span, P.hall_elem_w, 0.4
     )
-    return Pos(P.hall_pcb_x, P.hall_y, P.hall_seat + P.hall_pcb_t / 2) * (
-        pcb + elem + legs
-    )
+    from .frames import HALL_PCB_IN_UNIT
+
+    return HALL_PCB_IN_UNIT * (pcb + elem + legs)
 
 
 def scene():

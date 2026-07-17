@@ -326,15 +326,18 @@ def scene():
     )
 
 
-def _pose(part):
-    return Pos(P.mount_x, P.byj_shaft_y, P.drum_z0) * part
-
-
 def posed_drum():
     """The assembled drum posed in unit coords on the motor shaft axis."""
-    return _pose(drum_assembly())
+    from .frames import DRUM_IN_UNIT
+
+    return DRUM_IN_UNIT * drum_assembly()
 
 
 def posed_drum_parts():
     """(outer, inner) posed separately in unit coords, for display."""
-    return _pose(Rot(0, 0, 180) * drum_outer()), _pose(Rot(0, 0, 180) * drum_inner_mated())
+    from .frames import DRUM_IN_UNIT
+
+    return (
+        DRUM_IN_UNIT * Rot(0, 0, 180) * drum_outer(),
+        DRUM_IN_UNIT * Rot(0, 0, 180) * drum_inner_mated(),
+    )
