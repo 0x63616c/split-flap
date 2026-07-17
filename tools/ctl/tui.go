@@ -161,38 +161,10 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.popRun()
 		}
 		return m, nil
-	case tea.MouseMsg:
-		if msg.Action == tea.MouseActionPress {
-			switch msg.Button {
-			// inverted on purpose — matches how scrolling feels right here
-			case tea.MouseButtonWheelUp:
-				m.wheel(false)
-			case tea.MouseButtonWheelDown:
-				m.wheel(true)
-			}
-		}
-		return m, nil
 	case tea.KeyMsg:
 		return m.key(msg)
 	}
 	return m, nil
-}
-
-// wheel scrolls the run log or moves the menu cursor. up means "toward
-// older" for the log and "toward the first item" for menus.
-func (m *appModel) wheel(up bool) {
-	if m.top().id == "run" {
-		r := m.run
-		if up {
-			if r.scroll < len(r.lines)-m.logAvail() {
-				r.scroll++
-			}
-		} else if r.scroll > 0 {
-			r.scroll--
-		}
-		return
-	}
-	m.cursorMove(m.top(), up)
 }
 
 // cursorMove steps the cursor to the previous/next enabled item.
@@ -409,10 +381,6 @@ func (m *appModel) View() string {
 	}
 	s := m.top()
 	out := header
-	if s.filtering {
-		out += "  /" + s.query + "▌" +
-			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems))) + "\n\n"
-	}
 	maxw := 0
 	for _, it := range s.items {
 		if it.help != "" && len([]rune(it.label)) > maxw {
@@ -446,6 +414,8 @@ func (m *appModel) View() string {
 		help = "  esc / go back · ctrl+c / quit"
 	}
 	if s.filtering {
+		out += "\n  /" + s.query + "▌" +
+			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems)))
 		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
 	}
 	footer := dimStyle.Render(help)
@@ -524,7 +494,7 @@ func helpScreen() screen {
 		return menuItem{label: fmt.Sprintf("%-24s %s", key, what), disabled: true}
 	}
 	return screen{id: "help", title: "help", items: []menuItem{
-		row("↑↓ / j k / wheel", "move · scroll a run log"),
+		row("↑↓ / j k", "move · scroll a run log"),
 		row("enter", "select"),
 		row("esc", "back · stop a run · clear the filter"),
 		row("/", "fuzzy filter on pick-a-model screens"),
@@ -624,6 +594,6 @@ func runTUI(startAtCad bool) error {
 	if startAtCad {
 		m.stack = append(m.stack, cadScreen())
 	}
-	_, err = tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion()).Run()
+	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
 	return err
 }
