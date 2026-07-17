@@ -92,6 +92,12 @@ def _full_unit_nema():
     return full_unit_nema()
 
 
+def _ipad_bracket():
+    from splitflap_cad.ipadwall import bracket
+
+    return bracket()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -104,6 +110,7 @@ BREP_PARTS = {
     "unit-plate": _unit_plate,
     "unit-nema-plate": _nema_plate,
     "bridge-nema": _nema_bridge,
+    "ipad-bracket": _ipad_bracket,
 }
 
 FINGERPRINT_ONLY = {

@@ -82,6 +82,15 @@ MODELS = {
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj"),
     "motor-nema": Model("NEMA 14 pancake reference (ordered part)", "motor"),
     "vendor": Model("vendor unit STEP, aligned to our frame", "vendor"),
+    "ipad-wall": Model(
+        "SIDE QUEST iPad swivel-bar wall mount: wall + bracket + bar + iPad",
+        "ipadwall",
+    ),
+    "ipad-bracket": Model(
+        "SIDE QUEST printed wall bracket alone (16 deg epoxy pocket)",
+        "ipadwall",
+        "bracket_scene",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -103,4 +112,5 @@ PRINTABLE = {
     "drum-outer": Printable("drum", "drum_outer"),
     "drum-inner-byj": Printable("drum", "drum_inner_print"),
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
+    "ipad-bracket": Printable("ipadwall", "bracket"),
 }

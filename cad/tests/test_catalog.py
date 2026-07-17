@@ -35,4 +35,5 @@ def test_printable_builders_exist():
         "drum-inner-byj",
         "drum-inner-nema",
         "holder",
+        "ipad-bracket",
     }

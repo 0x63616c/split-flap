@@ -577,6 +577,29 @@ class Params:
     tower_zone_y: float = 0.8        # zone centre
     tower_zone_half_y: float = 13.25  # zone half-extent
 
+    # --- iPad wall mount (side quest — not part of the split-flap) ---
+    # iPad on a magnetic swivel mount whose flat-iron bar ends in a
+    # 50 x 75 x 5 plate that sits 16 deg off the wall plane by default.
+    # A printed bracket screws to drywall and swallows the bar's wall
+    # end in an angled pocket; the bar gets epoxied in. iPad dims are
+    # an 11" iPad Pro (M4) PLACEHOLDER — measure the real device.
+    ipad_w: float = 249.7          # landscape width
+    ipad_h: float = 177.5          # landscape height
+    ipad_thick: float = 5.3
+    ibar_w: float = 50.0           # bar plate width
+    ibar_len: float = 75.0         # bar plate length
+    ibar_thick: float = 5.0
+    ibar_tilt_deg: float = 16.0    # bar plane off the wall plane
+    ibkt_embed: float = 45.0       # bar length swallowed by the pocket
+    ibkt_wall: float = 4.0         # printed wall around the pocket
+    ibkt_back_wall: float = 2.5    # printed skin between pocket and wall face
+    ibkt_clear: float = 0.3        # epoxy gap per face
+    ibkt_plate_thick: float = 6.0  # screw-tab base plate thickness
+    ibkt_tab_w: float = 16.0       # screw tab width per side
+    ibkt_screw_d: float = 4.5      # drywall screw shank clearance
+    ibkt_screw_head_d: float = 9.0  # pan-head counterbore diameter
+    ibkt_screw_head_depth: float = 3.0
+
     @property
     def unit_back_rise(self) -> float:
         """Back wall height above the plate top. Derived, not raw."""
