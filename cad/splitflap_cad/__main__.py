@@ -55,8 +55,19 @@ def _check(name, pool=MODELS):
         sys.exit(f"unknown model {name!r} — have: {', '.join(pool)}")
 
 
-def cmd_list(_args):
-    print("models (just cad dev NAME):")
+def cmd_list(args):
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "models": {name: m.help for name, m in MODELS.items()},
+                    "printable": list(PRINTABLE),
+                    "src_to_model": SRC_TO_MODEL,
+                }
+            )
+        )
+        return
+    print("models (just cad view NAME):")
     for name, m in MODELS.items():
         print(f"  {name:<12} {m.help}")
     print("printable (just cad export NAME):")
@@ -129,7 +140,8 @@ def main():
     p = argparse.ArgumentParser(prog="splitflap_cad")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("list", help="every model + printable part")
+    s = sub.add_parser("list", help="every model + printable part")
+    s.add_argument("--json", action="store_true")
 
     s = sub.add_parser("show", help="build + push one model to a viewer")
     s.add_argument("name")
