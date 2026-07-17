@@ -184,6 +184,22 @@ surface_pane() {
 }
 
 LOG_TAB_TITLE="cad watch log"
+CMD_TAB_TITLE="cad cmd"
+
+ensure_cmd_split() {
+    # small shell to the right of the log pane for one-off commands
+    # (`just cad export`, etc.), cd'd to the repo root.
+    local log_pane=$1 cmd_surface
+    cmux tree 2>/dev/null | grep -q "\"$CMD_TAB_TITLE\"" && return 0
+    cmd_surface=$(cmux new-surface --type terminal --pane "$log_pane" --focus false 2>/dev/null |
+        grep -o 'surface:[0-9]*' | head -1)
+    [ -n "$cmd_surface" ] || return 0
+    cmux split-off --surface "$cmd_surface" right --focus false >/dev/null 2>&1 || true
+    cmux rename-tab --surface "$cmd_surface" "$CMD_TAB_TITLE" >/dev/null 2>&1 || true
+    cmux send --surface "$cmd_surface" "cd $ROOT && clear" >/dev/null 2>&1 || true
+    cmux send-key --surface "$cmd_surface" enter >/dev/null 2>&1 || true
+    echo "cmd split created ($cmd_surface)"
+}
 
 ensure_log_pane() {
     # thin terminal pane under the focus viewer, tailing $WATCH_LOG.
@@ -191,8 +207,11 @@ ensure_log_pane() {
     # sizing only runs on creation so it never fights manual adjustments.
     local assembly_surface=$1 focus_surface=$2
     [ -n "$focus_surface" ] || return 0
-    if cmux tree 2>/dev/null | grep -q "\"$LOG_TAB_TITLE\""; then
+    local existing
+    existing=$(cmux tree 2>/dev/null | grep "\"$LOG_TAB_TITLE\"" | grep -o 'surface:[0-9]*' | head -1)
+    if [ -n "$existing" ]; then
         echo "log pane up"
+        ensure_cmd_split "$(surface_pane "$existing")"
         return 0
     fi
 
@@ -207,6 +226,7 @@ ensure_log_pane() {
     cmux send --surface "$log_surface" "exec tail -n 20 -F $WATCH_LOG" >/dev/null 2>&1 || true
     cmux send-key --surface "$log_surface" enter >/dev/null 2>&1 || true
     echo "log pane created ($log_surface)"
+    ensure_cmd_split "$(surface_pane "$log_surface")"
 
     # size 3:3:1 — webview innerHeight gives pane pixel heights; the fresh
     # split halved the focus region, so log ~= focus right now.
