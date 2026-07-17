@@ -72,19 +72,19 @@ class Params:
     pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
     screw_clearance: float = 0.2  # radial gap around M3 screws
 
-    # --- NEMA harness (two printed side mounts) ---
+    # --- NEMA harness (one printed bridge) ---
     # The pancake motor sits face-UP flat on the plate (no pocket), body
     # inside the drum barrel's interior, shaft on the same axis as the
     # 28BYJ variant (mount_x, byj_shaft_y). Its tapped holes open
-    # upward, so a printed MOUNT clamps each ±X body flat: wall up the
-    # side, flange over the face edge carrying that side's two M3
-    # clearance holes (the motor's own screws clamp flange to face),
-    # foot on the plate held by an M3x8 from above into a flush
-    # heat-set insert. Both mounts are the SAME part rotated 180° about
-    # the shaft — print it twice, flange face on the bed, no overhangs
-    # (the foot screw seat is a spot-faced well in a 45° back wedge).
-    # The whole mount plan is clipped to a cylinder about the shaft
-    # (nema_mount_r) so every outer edge runs concentric with the drum.
+    # upward, so a printed BRIDGE drops over it: ring deck on the face
+    # (pilot bore + 4 M3 — the motor's own screws clamp deck to face),
+    # a wall down each ±X body flat ending in a foot on the plate, each
+    # held by an M3x8 from above into a flush heat-set insert. Ø7 well
+    # channels through deck rim/wall give the bolts + hex key a
+    # straight vertical drop onto spot-faced seats. Prints deck-down,
+    # no overhangs (feet topped by 45° back wedges). The whole plan is
+    # clipped to a cylinder about the shaft (nema_mount_r) so every
+    # outer edge runs concentric with the drum.
     # Envelope (plate top z=3): body top/face z 24; flange top z 26 —
     # under the drum guide rails (sweep r>=23.15 from z~26.3; flange
     # kept inside r 22.9) and the web fins (bottom z 28.3 at the rim).

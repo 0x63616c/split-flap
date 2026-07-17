@@ -80,10 +80,10 @@ def _nema_plate():
     return nema_plate()
 
 
-def _nema_mount():
-    from splitflap_cad.unitnema import nema_mount
+def _nema_bridge():
+    from splitflap_cad.unitnema import nema_bridge
 
-    return nema_mount()
+    return nema_bridge()
 
 
 def _full_unit_nema():
@@ -103,7 +103,7 @@ BREP_PARTS = {
     "hall-pcb": _hall_pcb,
     "unit-plate": _unit_plate,
     "unit-nema-plate": _nema_plate,
-    "mount-nema": _nema_mount,
+    "bridge-nema": _nema_bridge,
 }
 
 FINGERPRINT_ONLY = {

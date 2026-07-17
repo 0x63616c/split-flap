@@ -51,14 +51,14 @@ MODELS = {
     ),
     "plate": Model("side plate only — no vendor fins/towers", "unit", "plate_scene"),
     "unit-nema": Model(
-        "NEMA variant: plate + side mounts + motor + drum ghosts",
+        "NEMA variant: plate + bridge + motor + drum ghosts",
         "unitnema",
     ),
     "plate-nema": Model(
-        "NEMA side plate only — no fins/mounts", "unitnema", "plate_scene"
+        "NEMA side plate only — no fins/bridge", "unitnema", "plate_scene"
     ),
-    "mount-nema": Model(
-        "NEMA side mount alone, local frame (print 2)", "unitnema", "mount_scene"
+    "bridge-nema": Model(
+        "NEMA bridge alone, local frame", "unitnema", "bridge_scene"
     ),
     "drum": Model("drum outer + inner, side by side", "drum"),
     "holder": Model(
@@ -94,7 +94,7 @@ for _name, _m in MODELS.items():
 PRINTABLE = {
     "unit": Printable("unit", "full_unit"),
     "unit-nema": Printable("unitnema", "full_unit_nema"),
-    "mount-nema": Printable("unitnema", "nema_mount"),
+    "bridge-nema": Printable("unitnema", "nema_bridge"),
     "holder": Printable("holder", "holder"),
     "flap": Printable("flap", "flap"),
     "drum-outer": Printable("drum", "drum_outer"),

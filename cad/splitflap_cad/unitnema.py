@@ -1,26 +1,26 @@
-"""The NEMA unit side plate + side mounts — pancake motor variant.
+"""The NEMA unit side plate + bridge — pancake motor variant.
 
 The pancake NEMA 14 sits face-UP flat on the base plate, body inside
 the drum barrel's interior, shaft coaxial with the 28BYJ variant's
 (mount_x, byj_shaft_y). Its tapped mount holes open upward, so a
-printed MOUNT clamps each ±X body flat: a wall up the side, a flange
-over the face edge carrying that side's two M3 clearance holes (the
-motor's own screws clamp flange to face), and a foot on the plate held
-by an M3x8 from above into a flush heat-set insert in the plate. Both
-mounts are the SAME part rotated 180° about the shaft — print two.
+printed BRIDGE drops over it: a ring deck on the face (pilot bore +
+4 M3 clearance holes — the motor's own screws clamp deck to face) with
+a wall down each ±X body flat ending in a foot on the plate, each held
+by an M3x8 from above into a flush heat-set insert. Full-height well
+channels through the deck rim and wall faces give the bolts + hex key
+a straight vertical drop onto spot-faced seats.
 
-Printability: print flange-face down. Walls rise vertically; the foot
-is topped by a 45° back wedge (no flat ceiling in print), with a
-spot-faced well down to the bolt-head seat. The whole plan is clipped
-to a cylinder about the shaft so every outer edge runs concentric with
-the drum, inside the barrel wall sweep.
+Printability: print deck-face down. Walls rise vertically; each foot
+is topped by a 45° back wedge (no flat ceiling in print). The whole
+plan is clipped to a cylinder about the shaft so every outer edge runs
+concentric with the drum, inside the barrel wall sweep.
 
 Hall/homing mount: OPEN. The 28BYJ hall post spot is buried under the
 motor body and a horizontal board above the face would cross the shaft;
 candidates are a vertical-board mast or TMC2209 sensorless homing —
 decide when the motor is in hand.
 
-Mount local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
+Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 (same convention as motor.py); frames.py poses it at nema_face_z.
 
 View it: `just cad unit-nema` (see cad/splitflap_cad/catalog.py).
@@ -43,11 +43,12 @@ from .shell import (
 
 
 def nema_plate():
-    """Return the NEMA unit side plate Part: shell + mount inserts.
-    No motor pocket — the body sits flat, located by the two mounts."""
+    """Return the NEMA unit side plate Part: shell + bridge-foot
+    inserts. No motor pocket — the body sits flat, located by the
+    bridge walls."""
     plate = base_plate()
 
-    # Mount foot inserts: M3x3 heat-set straight into the plate from
+    # Bridge foot inserts: M3x3 heat-set straight into the plate from
     # the top, flush — screws come down through the feet, module's
     # outer (bottom) face stays untouched.
     for side in (-1, +1):
@@ -62,64 +63,65 @@ def nema_plate():
     )
 
 
-def nema_mount():
-    """One side mount (local frame: shaft axis at the motor face plane,
-    +Z up, built on the +X side): wall + flange + foot + back wedge,
-    plan clipped concentric with the drum. The -X mount is this part
-    rotated 180° about Z."""
+def nema_bridge():
+    """The bridge, one printed part (local frame: shaft axis at the
+    motor face plane, +Z up): a ring DECK over the whole face (pilot
+    bore + all 4 M3 clearance holes) joining a wall + foot + back wedge
+    down each ±X body flat. Every outer edge is clipped concentric with
+    the drum. Each foot bolt gets a full-height Ø well channel cut
+    through deck rim, wall face and wedge — the bolt + hex key drop
+    straight in from above onto a spot-faced seat."""
     wall_in = P.motor_body_w / 2 + P.nema_body_clear
     wall_out = wall_in + P.nema_leg_t
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
 
-    # Wall: up the body flat, plate top to the face plane.
-    wall = Pos((wall_in + wall_out) / 2, 0, -drop / 2) * Box(
-        P.nema_leg_t, P.nema_wall_w, drop
-    )
-
-    # Flange: on the face, inner edge short of the pilot boss, carrying
-    # this side's two M3 clearance holes.
-    flange = Pos(
-        (P.nema_flange_in + wall_out) / 2, 0, P.nema_flange_t / 2
-    ) * Box(wall_out - P.nema_flange_in, P.nema_wall_w, P.nema_flange_t)
-    # clip the flange plan tighter than the rest: its top grazes the
-    # guide-rail sweep band, so it must stay inside that radius too
-    flange &= extrude(Circle(P.nema_flange_r), amount=P.nema_flange_t)
+    # Deck: full ring on the face — clipped tighter than the rest (its
+    # top grazes the guide-rail sweep band), pilot-boss bore, 4 M3.
+    deck = extrude(Circle(P.nema_flange_r), amount=P.nema_flange_t)
+    deck -= Cylinder(P.pilot_hole_d / 2, P.nema_flange_t * 3)
     half = P.motor_hole_pitch / 2
-    for y in (-half, half):
-        flange -= Pos(half, y, 0) * Cylinder(
-            P.screw_hole_d / 2, P.nema_flange_t * 3
-        )
+    for x in (-half, half):
+        for y in (-half, half):
+            deck -= Pos(x, y, 0) * Cylinder(
+                P.screw_hole_d / 2, P.nema_flange_t * 3
+            )
 
-    # Foot: block at the wall bottom, outer face on the clip arc; the
-    # 45° back wedge above it fills the re-entrant corner so the part
-    # prints flange-down without a flat ceiling.
+    body = deck
     foot_out = wall_out + P.nema_foot_len
     z_foot_top = -drop + P.nema_foot_h
-    foot = Pos(
-        (wall_in + foot_out) / 2, 0, (-drop + z_foot_top) / 2
-    ) * Box(foot_out - wall_in, P.nema_foot_w, P.nema_foot_h)
-    # 45° back wedge, radial(x) × axial(z) profile stood up as a plate:
-    # wall face -> foot top outer edge
-    wedge = radial_plate(
-        Polygon(
-            (wall_out, z_foot_top),
-            (foot_out, z_foot_top),
-            (wall_out, z_foot_top + P.nema_foot_len),
-            align=None,
-        ),
-        P.nema_foot_w,
-    )
+    for side in (-1, +1):
+        # Wall: up the body flat, plate top to the face plane.
+        wall = Pos(side * (wall_in + wall_out) / 2, 0, -drop / 2) * Box(
+            P.nema_leg_t, P.nema_wall_w, drop
+        )
+        # Foot + 45° back wedge (no flat ceiling printed deck-down).
+        foot = Pos(
+            side * (wall_in + foot_out) / 2, 0, (-drop + z_foot_top) / 2
+        ) * Box(foot_out - wall_in, P.nema_foot_w, P.nema_foot_h)
+        wedge = radial_plate(
+            Polygon(
+                (wall_out, z_foot_top),
+                (foot_out, z_foot_top),
+                (wall_out, z_foot_top + P.nema_foot_len),
+                align=None,
+            ),
+            P.nema_foot_w,
+        )
+        if side < 0:
+            wedge = Rot(0, 0, 180) * wedge
+        body += wall + foot + wedge
 
-    body = wall + flange + foot + wedge
-
-    # Foot bolt: spot-faced well down the wedge to a flat head seat,
-    # M3 clearance on through the foot.
-    body -= Pos(P.nema_screw_x_off, 0, z_foot_top + P.nema_foot_h) * Cylinder(
-        P.nema_seat_well_d / 2, 2 * P.nema_foot_h
-    )
-    body -= Pos(P.nema_screw_x_off, 0, -drop + P.nema_foot_h / 2) * Cylinder(
-        P.screw_hole_d / 2, P.nema_foot_h * 3
-    )
+        # Foot bolt path: full-height well channel from above the deck
+        # down to the spot-faced head seat on the foot top, then M3
+        # clearance on through the foot.
+        x_screw = side * P.nema_screw_x_off
+        chan_top = P.nema_flange_t + 1  # punch past the deck top
+        body -= Pos(x_screw, 0, (z_foot_top + chan_top) / 2) * Cylinder(
+            P.nema_seat_well_d / 2, chan_top - z_foot_top
+        )
+        body -= Pos(x_screw, 0, -drop + P.nema_foot_h / 2) * Cylinder(
+            P.screw_hole_d / 2, P.nema_foot_h * 3
+        )
 
     # Clip the whole plan to the mount cylinder: outer edges concentric
     # with the drum, inside the barrel wall sweep.
@@ -164,7 +166,7 @@ def full_unit_nema():
 
 
 def scene():
-    """NEMA unit: plate (+ fins when the STEP is on disk), both mounts
+    """NEMA unit: plate (+ fins when the STEP is on disk), bridge
     posed, motor ghost face-up, foot bolts, drum ghost around it
     (NEMA-bore inner; same axial pose as the 28BYJ build)."""
     from .drum import posed_drum_parts
@@ -177,12 +179,10 @@ def scene():
     except FileNotFoundError:
         u = nema_plate()
     drum_o, drum_i = posed_drum_parts("nema")
-    m = nema_mount()
     return (
         Scene()
         .add(u, "unit_nema", "orange")
-        .add(NEMA_FACE_IN_UNIT * m, "mount_a", "violet")
-        .add(NEMA_FACE_IN_UNIT * Rot(0, 0, 180) * m, "mount_b", "violet")
+        .add(NEMA_FACE_IN_UNIT * nema_bridge(), "bridge", "violet")
         .add(NEMA_FACE_IN_UNIT * motor(), "motor", "steelblue", alpha=0.5)
         .add(posed_foot_bolts(), "foot_bolts_m3x8", "silver")
         .add(drum_o, "drum_outer", "gray", alpha=0.3)
@@ -190,10 +190,10 @@ def scene():
     )
 
 
-def mount_scene():
+def bridge_scene():
     from .viewer import Scene
 
-    return Scene().add(nema_mount(), "mount_nema")
+    return Scene().add(nema_bridge(), "bridge_nema")
 
 
 def plate_scene():
