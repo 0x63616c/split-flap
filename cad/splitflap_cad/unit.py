@@ -403,3 +403,21 @@ def full_unit():
     for c in cuts + s_cuts:
         unit -= c
     return unit
+
+
+def scene():
+    """Printable unit; falls back to the bare plate when the vendor STEP
+    (gitignored) isn't on disk."""
+    from .viewer import Scene
+
+    try:
+        u = full_unit()
+    except FileNotFoundError:
+        u = unit_plate()
+    return Scene().add(u, "unit")
+
+
+def plate_scene():
+    from .viewer import Scene
+
+    return Scene().add(unit_plate(), "plate")

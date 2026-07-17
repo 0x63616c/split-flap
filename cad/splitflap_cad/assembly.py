@@ -49,23 +49,24 @@ def posed_hall_pcb():
     )
 
 
-def assembly_show_args():
-    """Everything posed in unit coords, as kwargs for ocp_vscode.show().
-    Vendor ghost included when the STEP is on disk, skipped otherwise."""
+def scene():
+    """Everything posed in unit coords. Vendor ghost included when the
+    STEP is on disk, skipped otherwise."""
     from .drum import posed_drum_parts
     from .unit import full_unit, unit_plate
     from .vendor import REF_STEP, reference
+    from .viewer import Scene
 
     have_step = REF_STEP.exists()
     drum_o, drum_i = posed_drum_parts()
-    plate = full_unit() if have_step else unit_plate()
-    objects = [plate, posed_motor(), posed_hall_pcb(), drum_o, drum_i]
-    names = ["unit_plate", "motor", "hall_pcb", "drum_outer", "drum_inner"]
-    colors = ["orange", "steelblue", "green", "violet", "hotpink"]
-    alphas = [1.0, 1.0, 1.0, 0.8, 0.8]
+    s = (
+        Scene()
+        .add(full_unit() if have_step else unit_plate(), "unit_plate", "orange")
+        .add(posed_motor(), "motor", "steelblue")
+        .add(posed_hall_pcb(), "hall_pcb", "green")
+        .add(drum_o, "drum_outer", "violet", alpha=0.8)
+        .add(drum_i, "drum_inner", "hotpink", alpha=0.8)
+    )
     if have_step:
-        objects.append(reference())
-        names.append("reference")
-        colors.append("gray")
-        alphas.append(0.4)
-    return dict(objects=objects, names=names, colors=colors, alphas=alphas)
+        s.add(reference(), "reference", "gray", alpha=0.4)
+    return s

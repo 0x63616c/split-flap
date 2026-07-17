@@ -42,5 +42,11 @@ def vendor_plate_cutouts():
     return slab - (reference() & slab)
 
 
+def scene():
+    from .viewer import Scene
+
+    return Scene().add(reference(), "vendor_unit", alpha=0.6)
+
+
 # (the motor screw towers used to be cropped out of the STEP here too;
 # they're modeled parametrically now — unit.motor_towers)

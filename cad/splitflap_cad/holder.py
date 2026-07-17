@@ -74,24 +74,20 @@ def _flap_in_slot():
     return pose * Rot(0, 90, 0) * Rot(90, 0, 0) * flap()
 
 
-def holder_show_args() -> dict:
+def scene():
     """holder + a flap posed in slot 0; drum ghost overlaid when the
     outer part is buildable."""
-    objects, names, colors, alphas = [holder()], ["holder"], ["seagreen"], [1.0]
+    from .viewer import Scene
+
+    s = Scene().add(holder(), "holder", "seagreen")
     try:
-        objects.append(_flap_in_slot())
-        names.append("flap")
-        colors.append("white")
-        alphas.append(0.9)
+        s.add(_flap_in_slot(), "flap", "white", alpha=0.9)
     except Exception:
         pass
     try:
         from .drum import drum_outer
 
-        objects.append(Pos(0, 0, P.holder_slot_floor) * drum_outer())
-        names.append("drum_outer")
-        colors.append("orange")
-        alphas.append(0.4)
+        s.add(drum_outer(), "drum_outer", "orange", alpha=0.4, loc=Pos(0, 0, P.holder_slot_floor))
     except Exception:
         pass
-    return dict(objects=objects, names=names, colors=colors, alphas=alphas)
+    return s

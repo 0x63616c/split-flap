@@ -12,6 +12,7 @@ View it: `just cad flap` (see cad/splitflap_cad/catalog.py).
 from build123d import Polygon, extrude
 
 from .params import P
+from .viewer import Scene
 
 
 def flap():
@@ -41,3 +42,7 @@ def flap():
         align=None,
     )
     return extrude(outline, amount=P.flap_thick)
+
+
+def scene() -> Scene:
+    return Scene().add(flap(), "flap")

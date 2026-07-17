@@ -54,3 +54,9 @@ def stepper28byj():
     )
 
     return can + ears + boss + shaft + wirebox
+
+
+def scene():
+    from .viewer import Scene
+
+    return Scene().add(stepper28byj(), "stepper28byj")

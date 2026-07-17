@@ -1,137 +1,77 @@
 """THE model registry — single source of truth for every viewable model
 and printable part. Everything reads from here: `just cad list`, the
-viewer push CLI (__main__.py), the watcher's save→model auto-focus, and
-STL export.
+viewer push CLI (__main__.py), ctl's save→model auto-focus
+(src_to_model in `list --json`), and STL export.
 
-Adding a part = one Model entry (plus a PRINTABLE entry if it prints).
-Builders import lazily so listing the catalog never builds geometry.
+Pure data: a Model is (help, module stem, scene attr); a Printable is
+(module stem, part attr). Modules import lazily on build, so listing
+the catalog never builds geometry. Convention: every part module
+exports `scene()` (extra views get their own attr, e.g. plate_scene)
+and plain part builders for printables.
 
-Each builder returns kwargs for ocp_vscode.show(): at minimum
-dict(objects=[...], names=[...]), optionally colors/alphas.
+Adding a part = its module + one Model entry (+ a Printable entry if it
+prints).
 """
 
 from dataclasses import dataclass
-from typing import Callable
+from importlib import import_module
+
+
+def _attr(src: str, name: str):
+    return getattr(import_module(f".{src}", __package__), name)
 
 
 @dataclass(frozen=True)
 class Model:
     help: str  # one line; powers `just cad list` and the docs
     src: str  # module stem that builds it — maps saved file -> model
-    build: Callable[[], dict]
+    scene: str = "scene"  # module attr returning a viewer.Scene
+
+    def build(self):
+        return _attr(self.src, self.scene)()
 
 
-def _assembly():
-    from .assembly import assembly_show_args
+@dataclass(frozen=True)
+class Printable:
+    src: str  # module stem
+    part: str  # module attr returning the printable solid
 
-    return assembly_show_args()
-
-
-def _unit():
-    from .unit import full_unit, unit_plate
-
-    try:
-        u = full_unit()
-    except FileNotFoundError:
-        u = unit_plate()
-    return dict(objects=[u], names=["unit"])
-
-
-def _plate():
-    from .unit import unit_plate
-
-    return dict(objects=[unit_plate()], names=["plate"])
-
-
-def _drum():
-    from build123d import Pos, Rot
-
-    from .drum import drum_inner, drum_outer
-
-    return dict(
-        objects=[drum_outer(), Pos(90, 0, 0) * Rot(180, 0, 0) * drum_inner()],
-        names=["drum_outer", "drum_inner"],
-        colors=["orange", "steelblue"],
-    )
-
-
-def _flap():
-    from .flap import flap
-
-    return dict(objects=[flap()], names=["flap"])
-
-
-def _flap_glyph():
-    from .glyphflap import glyph_flap_demo
-
-    return glyph_flap_demo()
-
-
-def _flap_set():
-    from .glyphflap import flap_set_demo
-
-    return flap_set_demo()
-
-
-def _holder():
-    from .holder import holder_show_args
-
-    return holder_show_args()
-
-
-def _motor_byj():
-    from .stepper28byj import stepper28byj
-
-    return dict(objects=[stepper28byj()], names=["stepper28byj"])
-
-
-def _motor_nema():
-    from .motor import motor
-
-    return dict(objects=[motor()], names=["motor_nema14"])
-
-
-def _vendor():
-    from .vendor import reference
-
-    return dict(objects=[reference()], names=["vendor_unit"], alphas=[0.6])
+    def build(self):
+        return _attr(self.src, self.part)()
 
 
 MODELS = {
     "assembly": Model(
         "full unit: plate + motor + hall PCB + drum, vendor ghost overlaid",
         "assembly",
-        _assembly,
     ),
     "unit": Model(
         "printable side plate (+ vendor fins/towers when STEP on disk)",
         "unit",
-        _unit,
     ),
-    "plate": Model("side plate only — no vendor fins/towers", "unit", _plate),
-    "drum": Model("drum outer + inner, side by side", "drum", _drum),
+    "plate": Model("side plate only — no vendor fins/towers", "unit", "plate_scene"),
+    "drum": Model("drum outer + inner, side by side", "drum"),
     "holder": Model(
-        "PROTOTYPE flap-loading jig: ring + radial spikes, drum ghost",
+        "PROTOTYPE flap-loading jig: ring + radial slots, drum ghost",
         "holder",
-        _holder,
     ),
-    "flap": Model("single flap card", "flap", _flap),
+    "flap": Model("single flap card", "flap"),
     "flap-set": Model(
         "contact sheet: all 52 flap fronts + backs (backs flipped as displayed)",
         "glyphflap",
-        _flap_set,
+        "flap_set_demo",
     ),
     "flap-glyph": Model(
         "PROTOTYPE two-tone glyph flaps: assembled A + W/M + Q/? demos",
         "glyphflap",
-        _flap_glyph,
+        "glyph_flap_demo",
     ),
-    "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj", _motor_byj),
-    "motor-nema": Model("NEMA 14 reference (possible later swap)", "motor", _motor_nema),
-    "vendor": Model("vendor unit STEP, aligned to our frame", "vendor", _vendor),
+    "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj"),
+    "motor-nema": Model("NEMA 14 reference (possible later swap)", "motor"),
+    "vendor": Model("vendor unit STEP, aligned to our frame", "vendor"),
 }
 
-# saved file stem -> model name, for the watcher's auto-focus.
+# saved file stem -> model name, for ctl's save auto-focus.
 # First entry wins on shared src (unit.py saves focus the full unit,
 # not the plate-only view).
 SRC_TO_MODEL: dict = {}
@@ -141,45 +81,10 @@ for _name, _m in MODELS.items():
 
 # --- printable solids (STL export) ---
 
-
-def _p_unit():
-    from .unit import full_unit
-
-    return full_unit()
-
-
-def _p_flap():
-    from .flap import flap
-
-    return flap()
-
-
-def _p_drum_outer():
-    from .drum import drum_outer
-
-    return drum_outer()
-
-
-def _p_drum_inner():
-    from build123d import Rot
-
-    from .drum import drum_inner
-
-    # drum_inner's own frame hangs hub/barrel/fins into -Z (below the bed).
-    # Flip so the web sits flat on the bed and the barrel points up.
-    return Rot(180, 0, 0) * drum_inner()
-
-
-def _p_holder():
-    from .holder import holder
-
-    return holder()
-
-
 PRINTABLE = {
-    "unit": _p_unit,
-    "holder": _p_holder,
-    "flap": _p_flap,
-    "drum-outer": _p_drum_outer,
-    "drum-inner": _p_drum_inner,
+    "unit": Printable("unit", "full_unit"),
+    "holder": Printable("holder", "holder"),
+    "flap": Printable("flap", "flap"),
+    "drum-outer": Printable("drum", "drum_outer"),
+    "drum-inner": Printable("drum", "drum_inner_print"),
 }

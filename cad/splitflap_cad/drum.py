@@ -309,6 +309,23 @@ def drum_inner_mated():
     return Pos(0, 0, P.drum_ring_t + P.drum_barrel_len) * drum_inner()
 
 
+def drum_inner_print():
+    """drum_inner flipped for printing: its own frame hangs hub, barrel
+    and fins into -Z (below the bed); flip so the web sits flat on the
+    bed and the barrel points up."""
+    return Rot(180, 0, 0) * drum_inner()
+
+
+def scene():
+    from .viewer import Scene
+
+    return (
+        Scene()
+        .add(drum_outer(), "drum_outer", "orange")
+        .add(drum_inner(), "drum_inner", "steelblue", loc=Pos(90, 0, 0) * Rot(180, 0, 0))
+    )
+
+
 def _pose(part):
     return Pos(P.mount_x, P.byj_shaft_y, P.drum_z0) * part
 

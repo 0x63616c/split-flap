@@ -141,5 +141,5 @@ def test_every_catalog_model_builds():
     from splitflap_cad.catalog import MODELS
 
     for name, m in MODELS.items():
-        kwargs = m.build()
+        kwargs = m.build().show_args()
         assert kwargs.get("objects"), f"{name} built no objects"

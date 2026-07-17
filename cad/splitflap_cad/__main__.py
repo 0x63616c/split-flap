@@ -24,7 +24,7 @@ EXPORT_DIR = Path(__file__).parent.parent / "export"
 def _push(name, port):
     from ocp_vscode import show
 
-    kwargs = MODELS[name].build()
+    kwargs = MODELS[name].build().show_args()
     objects = kwargs.pop("objects")
     try:
         show(*objects, port=port, **kwargs)
@@ -88,7 +88,7 @@ def cmd_export(args):
     EXPORT_DIR.mkdir(exist_ok=True)
     for name in names:
         out = EXPORT_DIR / f"{name}.stl"
-        export_stl(PRINTABLE[name](), str(out))
+        export_stl(PRINTABLE[name].build(), str(out))
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
     if not args.name:
         _export_flap_artwork()

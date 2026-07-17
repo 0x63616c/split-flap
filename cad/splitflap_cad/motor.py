@@ -40,3 +40,9 @@ def motor():
             )
 
     return body + boss + shaft
+
+
+def scene():
+    from .viewer import Scene
+
+    return Scene().add(motor(), "motor_nema14")
