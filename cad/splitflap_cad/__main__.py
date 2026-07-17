@@ -13,6 +13,7 @@ watcher in the current pane and calls `show` on every source change.
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from .catalog import MODELS, PRINTABLE, SRC_TO_MODEL
@@ -65,14 +66,29 @@ def cmd_show(args):
 
 def _export_flap_artwork():
     """The flap set: per-flap colored 3MFs + plate projects that drag
-    into Bambu Studio already two-coloured (PrusaSlicer format)."""
+    into Bambu Studio already two-coloured (PrusaSlicer format).
+    Returns [(name, seconds)] timings."""
     from .flap3mf import export_plates
     from .glyphflap import export_flaps
 
+    timings = []
+    t0 = time.perf_counter()
     for out in export_flaps(EXPORT_DIR / "flaps"):
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+    timings.append(("flaps", time.perf_counter() - t0))
+    t0 = time.perf_counter()
     for out in export_plates(EXPORT_DIR / "plates"):
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+    timings.append(("plates", time.perf_counter() - t0))
+    return timings
+
+
+def _print_timings(timings):
+    print("timings:")
+    for name, t in timings:
+        print(f"  {name:<12} {t:6.1f}s")
+    if len(timings) > 1:
+        print(f"  {'total':<12} {sum(t for _, t in timings):6.1f}s")
 
 
 def cmd_export(args):
@@ -80,18 +96,22 @@ def cmd_export(args):
 
     # "flaps" = the glyph card set (3MFs, not a PRINTABLE STL entry)
     if args.name == "flaps":
-        _export_flap_artwork()
+        _print_timings(_export_flap_artwork())
         return
     names = [args.name] if args.name else list(PRINTABLE)
     for name in names:
         _check(name, PRINTABLE)
     EXPORT_DIR.mkdir(exist_ok=True)
+    timings = []
     for name in names:
+        t0 = time.perf_counter()
         out = EXPORT_DIR / f"{name}.stl"
         export_stl(PRINTABLE[name].build(), str(out))
         print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+        timings.append((name, time.perf_counter() - t0))
     if not args.name:
-        _export_flap_artwork()
+        timings += _export_flap_artwork()
+    _print_timings(timings)
 
 
 def main():
