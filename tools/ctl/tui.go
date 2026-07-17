@@ -21,7 +21,7 @@ var (
 	crumbStyle = lipgloss.NewStyle().Italic(true).Faint(true).Padding(0, 1)
 )
 
-const footerHelp = "  ↑↓ / move · esc / go back · enter / select · h / help · ctrl+c / quit"
+const footerHelp = "  [↑↓] move · [esc] go back · [enter] select · [h] help · [ctrl+c] quit"
 
 type menuItem struct {
 	label    string
@@ -458,20 +458,20 @@ func (m *appModel) View() string {
 	}
 	help := footerHelp
 	if s.canFilter {
-		help = "  ↑↓ / move · / / filter · esc / go back · enter / select · ctrl+c / quit"
+		help = "  [↑↓] move · [/] filter · [esc] go back · [enter] select · [ctrl+c] quit"
 	}
 	if s.multi {
-		help = "  ↑↓ / move · space / mark · / / filter · enter / export marked (or row) · esc / back"
+		help = "  [↑↓] move · [space] mark · [/] filter · [enter] export marked (or row) · [esc] back"
 	}
 	if s.id == "help" {
-		help = "  esc / go back · ctrl+c / quit"
+		help = "  [esc] go back · [ctrl+c] quit"
 	}
 	if s.filtering {
 		out += "\n  /" + s.query + "▌" +
 			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems)))
-		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
+		help = "  type to filter · [↑↓] move · [enter] select · [esc] clear"
 		if s.multi {
-			help = "  type to filter · ↑↓ / move · space / mark · enter / export · esc / clear"
+			help = "  type to filter · [↑↓] move · [space] mark · [enter] export · [esc] clear"
 		}
 	}
 	footer := dimStyle.Render(help)
@@ -523,11 +523,11 @@ func (m *appModel) runFooter() string {
 	case r.stopping && !r.done:
 		return warnStyle.Render("  stopping…")
 	case r.done && r.err != nil:
-		return errStyle.Render(fmt.Sprintf("  ✗ failed: %v", r.err)) + dimStyle.Render(" · esc / back")
+		return errStyle.Render(fmt.Sprintf("  ✗ failed: %v", r.err)) + dimStyle.Render(" · [esc] back")
 	case r.done:
-		return okStyle.Render("  ✓ done") + dimStyle.Render(" · esc / back")
+		return okStyle.Render("  ✓ done") + dimStyle.Render(" · [esc] back")
 	default:
-		return "  ↑↓ / scroll · esc / stop & back · ctrl+c / quit"
+		return "  [↑↓] scroll · [esc] stop & back · [ctrl+c] quit"
 	}
 }
 
