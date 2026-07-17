@@ -60,7 +60,7 @@ MODELS = {
     "bridge-nema": Model(
         "NEMA bridge alone, local frame", "unitnema", "bridge_scene"
     ),
-    "drum": Model("drum outer + inner, side by side", "drum"),
+    "drum-byj": Model("drum outer + 28BYJ-bore inner, side by side", "drum"),
     "drum-nema": Model(
         "drum outer + NEMA-bore inner, side by side", "drum", "nema_scene"
     ),
@@ -101,6 +101,6 @@ PRINTABLE = {
     "holder": Printable("holder", "holder"),
     "flap": Printable("flap", "flap"),
     "drum-outer": Printable("drum", "drum_outer"),
-    "drum-inner": Printable("drum", "drum_inner_print"),
+    "drum-inner-byj": Printable("drum", "drum_inner_print"),
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
 }

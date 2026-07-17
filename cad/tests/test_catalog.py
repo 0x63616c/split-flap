@@ -32,7 +32,7 @@ def test_printable_builders_exist():
         "bridge-nema",
         "flap",
         "drum-outer",
-        "drum-inner",
+        "drum-inner-byj",
         "drum-inner-nema",
         "holder",
     }

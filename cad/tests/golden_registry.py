@@ -97,7 +97,7 @@ BREP_PARTS = {
     "flap": _flap,
     "holder": _holder,
     "drum-outer": _drum_outer,
-    "drum-inner": _drum_inner,
+    "drum-inner-byj": _drum_inner,
     "drum-inner-nema": _drum_inner_nema,
     "motor-byj": _motor_byj,
     "hall-pcb": _hall_pcb,
