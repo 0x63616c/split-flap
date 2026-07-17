@@ -117,17 +117,19 @@ def bracket():
         * Cylinder(P.ibkt_screw_head_d / 2, cb_len)
     )
 
-    # counterbored drywall-screw holes through the tabs
+    # counterbored drywall-screw holes through the tabs: 2 per tab
+    # (#8 x 1"/1.25" — Ø4.5 clears the 4.17 shank)
     y_screw = (bw + P.ibkt_tab_w) / 2
     for ys in (-y_screw, y_screw):
-        body -= Pos(P.ibkt_plate_thick / 2, ys, h / 2) * Rot(0, 90, 0) * Cylinder(
-            P.ibkt_screw_d / 2, 2 * P.ibkt_plate_thick
-        )
-        body -= Pos(
-            P.ibkt_plate_thick - P.ibkt_screw_head_depth / 2, ys, h / 2
-        ) * Rot(0, 90, 0) * Cylinder(
-            P.ibkt_screw_head_d / 2, P.ibkt_screw_head_depth
-        )
+        for zs in (0.25 * h, 0.75 * h):
+            body -= Pos(P.ibkt_plate_thick / 2, ys, zs) * Rot(0, 90, 0) * Cylinder(
+                P.ibkt_screw_d / 2, 2 * P.ibkt_plate_thick
+            )
+            body -= Pos(
+                P.ibkt_plate_thick - P.ibkt_screw_head_depth / 2, ys, zs
+            ) * Rot(0, 90, 0) * Cylinder(
+                P.ibkt_screw_head_d / 2, P.ibkt_screw_head_depth
+            )
     return body
 
 
