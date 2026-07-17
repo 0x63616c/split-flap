@@ -14,6 +14,7 @@ var (
 	selStyle   = lipgloss.NewStyle().Reverse(true)
 	dimStyle   = lipgloss.NewStyle().Faint(true)
 	warnStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	crumbStyle = lipgloss.NewStyle().Italic(true).Faint(true).Padding(0, 1)
 )
 
 const footerHelp = "  ↑↓ / move · esc / go back · enter / select · ctrl+c / quit"
@@ -159,7 +160,8 @@ func (m *appModel) breadcrumb() string {
 
 func (m *appModel) View() string {
 	s := m.top()
-	out := titleStyle.Render(m.breadcrumb()) + "\n\n"
+	out := titleStyle.Render("ctl — split-flap tooling") + "\n"
+	out += crumbStyle.Render(m.breadcrumb()) + "\n\n"
 	for i, it := range s.items {
 		line := "  " + it.label
 		if it.disabled {
