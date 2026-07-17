@@ -595,17 +595,18 @@ class Params:
                                    # this; iPad swivel compensates)
     ibkt_embed: float = 45.0       # bar length swallowed by the pocket
     ibkt_wall: float = 4.0         # printed wall around the pocket
-    ibkt_back_wall: float = 2.5    # printed skin between pocket and wall face
+    ibkt_back_wall: float = 1.5    # printed skin between pocket and wall
+                                   # face — thin is fine, drywall backs it
     ibkt_clear: float = 0.15       # pocket gap per face — snug for screw-lock
     ibkt_plate_thick: float = 6.0  # screw-tab base plate thickness
     ibkt_tab_w: float = 16.0       # screw tab width per side
     ibkt_screw_d: float = 4.5      # drywall screw shank clearance
     ibkt_screw_head_d: float = 9.0  # pan-head counterbore diameter
-    ibkt_screw_head_depth: float = 3.0
+    ibkt_screw_head_depth: float = 4.0  # heads fully sunk
     ibkt_nose_r: float = 3.5       # top-front edge round (iPad swings past
                                    # here) — must stay < ibkt_wall
-    ibkt_lid_t: float = 5.0        # two-piece lid thickness (leaves 2mm
-                                   # web under recessed heads)
+    ibkt_lid_t: float = 6.0        # two-piece lid thickness (leaves 2mm
+                                   # web under the 4mm head recesses)
 
     @property
     def unit_back_rise(self) -> float:
