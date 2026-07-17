@@ -345,9 +345,11 @@ class Params:
                                    # wall above the 45-deg base ramp
     drum_screw_len: float = 12.0   # M3x12 button head
     drum_screw_recess_d: float = 6.2  # head recess dia (button head
-                                   # Ø5.7); head sits 1.2 deep, 0.45
-                                   # proud of the web face
-    drum_screw_recess_t: float = 1.2  # head recess depth into the web
+                                   # Ø5.7); head (h 1.65) sits fully
+                                   # below the web face
+    drum_screw_recess_t: float = 2.0  # head recess depth; deeper than
+                                   # the 1.6 web, dips 0.4 into the
+                                   # boss (Ø7.0 still backs the seat)
     drum_screw_insert_h: float = 3.2  # insert bore depth in the rib
                                    # (M3x3 insert + press slack)
     # First-slot indicator: debossed triangle next to flap slot 0 (the
@@ -355,6 +357,30 @@ class Params:
     drum_mark_depth: float = 0.6
     drum_mark_len: float = 3.0     # triangle length (radial)
     drum_mark_w: float = 3.0       # triangle base width (tangential)
+
+    # --- flap-loading holder (jig; PROTOTYPE) ---
+    # A ring that slips around the drum's flap ring with one radial spike
+    # per flap slot. Each flap rests on a spike (aligned with its slot)
+    # while you thread its side-pins into the drum, so it can't flop while
+    # the rest are loaded. Sits at the outer ring; drum axis = Z.
+    holder_clear: float = 0.6      # radial slip clearance over the drum ring OD
+    holder_ring_w: float = 9.0     # base-ring radial width
+    holder_ring_t: float = 4.0     # base-ring axial thickness
+    holder_spike_len: float = 24.0  # spike radial reach past the base-ring OD
+    holder_spike_w: float = 2.0    # spike tangential thickness
+    holder_spike_h: float = 4.0    # spike axial height
+    holder_lip_h: float = 7.0      # up-turned tip lip height (stops flap sliding off)
+    holder_lip_t: float = 1.8      # lip radial thickness
+
+    @property
+    def holder_ring_id(self) -> float:
+        """Bore that slips over the drum flap ring. Derived."""
+        return self.drum_ring_od + 2 * self.holder_clear
+
+    @property
+    def holder_spike_pitch(self) -> float:
+        """Angular spacing of spikes = the flap pitch. Derived."""
+        return 360.0 / self.drum_flap_count
     drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
                                    # round section (bore is double-D; only
                                    # the flat zone may enter it)
