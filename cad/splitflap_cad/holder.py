@@ -1,11 +1,14 @@
 """PROTOTYPE — flap-loading holder (jig).
 
 A ring that slips around the drum's flap ring, with one radial SLOT per
-flap position cut into its top face. Drop the drum into the ring, then
-drop each flap edge-first into the slot that lines up with its drum slot
-so it stands upright and can't flop while you thread the side-pins in
-and load the rest. The slot plane is radial — the flap faces
-tangentially, the same as when mounted on the drum.
+flap position cut into its top face, running the full ring width — open
+at the bore and at the OD. A small rim (inward flange, slot-floor high)
+at the bore bottom catches the drum ring so its underside sits flush
+with the slot floors. Drop the drum onto the rim, then drop each flap
+edge-first into the slot that lines up with its drum slot so it stands
+upright and can't flop while you thread the side-pins in and load the
+rest. The slot plane is radial — the flap faces tangentially, the same
+as when mounted on the drum.
 
 Frame: drum axis = Z, ring underside at z=0. Prints flat, ring-down.
 
@@ -19,21 +22,28 @@ from .params import P
 
 def _slot_cutter():
     """One radial slot cutter: a thin box open at the top face, cut
-    holder_slot_depth deep. Built along +X."""
-    r_in = P.holder_ring_id / 2 + P.holder_slot_inset
-    r_mid = r_in + P.holder_slot_len / 2
+    holder_slot_depth deep, spanning the full ring width (overshoots the
+    bore and the OD so both ends are open). Built along +X."""
+    r_in = P.holder_ring_id / 2 - 1.0
+    r_out = P.holder_ring_id / 2 + P.holder_ring_w + 1.0
     z_top = P.holder_ring_t
-    return Pos(r_mid, 0, z_top - P.holder_slot_depth / 2) * Box(
-        P.holder_slot_len, P.holder_slot_w, P.holder_slot_depth + 0.02
+    return Pos((r_in + r_out) / 2, 0, z_top - P.holder_slot_depth / 2) * Box(
+        r_out - r_in, P.holder_slot_w, P.holder_slot_depth + 0.02
     )
 
 
 def holder():
-    """The loading jig: a ring with one radial flap-slot per drum slot."""
+    """The loading jig: a ring with one radial flap-slot per drum slot
+    and a bottom rim the drum ring rests on."""
     r_id = P.holder_ring_id / 2
     r_od = r_id + P.holder_ring_w
     body = Pos(0, 0, P.holder_ring_t / 2) * (
         Cylinder(r_od, P.holder_ring_t) - Cylinder(r_id, P.holder_ring_t * 2)
+    )
+    # bottom rim: inward flange, slot-floor high, catches the drum ring
+    rim_h = P.holder_slot_floor
+    body += Pos(0, 0, rim_h / 2) * (
+        Cylinder(r_id + 0.01, rim_h) - Cylinder(r_id - P.holder_rim_w, rim_h * 2)
     )
     cutter = _slot_cutter()
     for i in range(P.drum_flap_count):
@@ -73,7 +83,7 @@ def holder_show_args() -> dict:
     try:
         from .drum import drum_outer
 
-        objects.append(drum_outer())
+        objects.append(Pos(0, 0, P.holder_slot_floor) * drum_outer())
         names.append("drum_outer")
         colors.append("orange")
         alphas.append(0.4)

@@ -369,8 +369,11 @@ class Params:
     holder_slot_depth: float = 5.0  # how deep a flap edge drops in
     holder_slot_floor: float = 3.0  # material left under a slot
     holder_slot_clear: float = 0.4  # slot width over flap thickness (slip fit)
-    holder_slot_len: float = 16.0  # slot radial length
-    holder_slot_inset: float = 1.5  # gap from the bore to the slot start
+    # slots run the full ring width, bore to OD, open at both ends
+    holder_rim_w: float = 2.0      # bottom rim: inward flange the drum
+                                   # ring rests on; rim height = the slot
+                                   # floor, so the drum ring underside
+                                   # sits flush with the slot floors
 
     @property
     def holder_ring_id(self) -> float:
