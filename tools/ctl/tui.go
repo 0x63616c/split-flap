@@ -368,7 +368,7 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 0:
 			m.stack = append(m.stack, viewScreen())
 		case 1:
-			m.stack = append(m.stack, exportScreen())
+			m.stack = append(m.stack, pickScreen("pick-export", m.cat, true))
 		case 2:
 			m.stack = append(m.stack, listScreen(m.cat))
 		}
@@ -378,13 +378,6 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 			m.stack = append(m.stack, pickScreen("pick-view", m.cat, false))
 		case 1:
 			return m.startRun("view (follow)", startView(""))
-		}
-	case "export":
-		switch s.cursor {
-		case 0:
-			return m.startRun("export all", startExport(m.root, ""))
-		case 1:
-			m.stack = append(m.stack, pickScreen("pick-export", m.cat, true))
 		}
 	case "pick-view":
 		return m.startRun("view "+s.names[s.cursor], startView(s.names[s.cursor]))
@@ -594,17 +587,11 @@ func viewScreen() screen {
 	}}
 }
 
-func exportScreen() screen {
-	return screen{id: "export", title: "export", items: []menuItem{
-		{label: "all printables", help: "every STL + flap 3MFs/plates"},
-		{label: "one model", help: "single STL"},
-	}}
-}
-
 func pickScreen(id string, cat catalog, printable bool) screen {
 	var names []string
 	if printable {
 		names = append(names, cat.Printable...)
+		names = append(names, "flaps") // glyph artwork: 3MFs + plates
 	} else {
 		for n := range cat.Models {
 			names = append(names, n)
