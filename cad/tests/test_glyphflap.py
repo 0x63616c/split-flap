@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from splitflap_cad.glyphflap import CHARSET, _glyph_face, char_slug, flap_at
+from splitflap_cad.glyphflap import CHARSET, _glyph_halves, char_slug, flap_at
 from splitflap_cad.params import P
 from splitflap_cad.flap3mf import _mesh_part
 
@@ -20,16 +20,18 @@ def test_slugs_unique_and_safe():
 
 
 def test_all_glyphs_render_and_fit():
-    """Every non-blank glyph renders and sits within the flap: inside the
-    width cap and between the pivot-edge margin and the top keepout."""
-    lo = P.glyph_bottom_margin
-    hi = P.flap_h - P.glyph_top_keepout
+    budget = P.flap_h - P.glyph_top_keepout
     for ch in CHARSET[1:]:
-        face = _glyph_face(ch)
-        assert face is not None, ch
-        bb = face.bounding_box()
-        assert bb.size.X <= P.glyph_w_max + 1e-6, ch
-        assert bb.min.Y >= lo - 1.0 and bb.max.Y <= hi + 1.0, ch
+        top, bottom = _glyph_halves(ch)
+        assert top is not None or bottom is not None, ch
+        if top is not None:
+            bb = top.bounding_box()
+            assert bb.size.X <= P.glyph_w_max + 1e-6, ch
+            assert bb.max.Y <= budget + 1e-6, ch
+        if bottom is not None:
+            bb = bottom.bounding_box()
+            assert bb.size.X <= P.glyph_w_max + 1e-6, ch
+            assert -bb.min.Y <= budget + 1e-6, ch
 
 
 def _non_manifold_edges(tris):

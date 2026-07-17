@@ -105,7 +105,7 @@ def _mesh_object_xml(mesh_id: int, shape, center) -> tuple[str, int]:
     return xml, len(tris)
 
 
-def export_plates(out_dir: Path, per_plate: int = 25) -> list[Path]:
+def export_plates(out_dir: Path, per_plate: int = 26) -> list[Path]:
     """Write plate-batched Bambu-native project 3MFs for all flaps."""
     out_dir.mkdir(parents=True, exist_ok=True)
     n = len(CHARSET)
@@ -120,7 +120,10 @@ def export_plates(out_dir: Path, per_plate: int = 25) -> list[Path]:
 
 def _write_plate(path: Path, idxs: list[int]) -> None:
     center = (0.0, P.flap_h / 2, P.flap_thick / 2)
+    # 5 columns x up-to-6 rows, grid centred on the 256mm bed.
     cols, pitch_x, pitch_y = 5, 48.0, 42.0
+    rows = (len(idxs) + cols - 1) // cols
+    bed = 128.0
 
     mesh_xmls, comp_objs, items, cfg_objs, instances = [], [], [], [], []
     mesh_id = 0
@@ -156,11 +159,17 @@ def _write_plate(path: Path, idxs: list[int]) -> None:
             "   <components>\n" + "\n".join(comps) + "\n   </components>\n  </object>"
         )
         r, c = divmod(k, cols)
-        x = 128 + (c - 2) * pitch_x
-        y = 128 + (2 - r) * pitch_y
+        x = bed + (c - (cols - 1) / 2) * pitch_x
+        y = bed + ((rows - 1) / 2 - r) * pitch_y
+        # Character i spans flap i's front + flap i+1's back. Printing
+        # odd flaps front-down and even flaps back-down puts both halves
+        # of every character on the SAME plate side (each char gets one
+        # uniform finish on a textured bed). 180° about X through the
+        # mesh centre keeps the footprint in place.
+        rot = "1 0 0 0 -1 0 0 0 -1" if i % 2 else "1 0 0 0 1 0 0 0 1"
         items.append(
             f'  <item objectid="{obj_id}" p:UUID="{_UUID.format(0x20000 + obj_id)}" '
-            f'transform="1 0 0 0 1 0 0 0 1 {_f(x)} {_f(y)} {_f(P.flap_thick / 2)}" printable="1"/>'
+            f'transform="{rot} {_f(x)} {_f(y)} {_f(P.flap_thick / 2)}" printable="1"/>'
         )
         cfg_objs.append(
             f'  <object id="{obj_id}">\n'

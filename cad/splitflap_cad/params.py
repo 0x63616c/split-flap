@@ -33,11 +33,12 @@ class Params:
     # separates the halves on the display. Gap/keepout are scottbez1
     # starting values — PLACEHOLDERS until drum geometry pins them (#7).
     glyph_font: str = "GeistMono-SemiBold.ttf"  # file in cad/fonts/
-    glyph_cap_h: float = 22.0      # whole-character cap height (fits one flap)
+    glyph_half_h: float = 24.5     # half-character cap height per flap (0.7 * flap_h)
     glyph_w_max: float = 33.0      # max glyph width; wider glyphs squeeze to fit
+    glyph_gap_comp: float = 1.0    # half the physical hinge gap (preview pose only;
+                                   # artwork always runs flush to the card edge)
     glyph_top_keepout: float = 3.7  # flap tip hidden behind the resting stack
-    glyph_bottom_margin: float = 2.0  # keep the glyph off the pivot edge
-    glyph_inlay_depth: float = 0.4  # white inlay depth (2 layers @ 0.2)
+    glyph_inlay_depth: float = 0.4  # white inlay depth per face (2 layers @ 0.2)
 
     # --- unit side plate (holds motor, wires, drum, hall sensor) ---
     # Module is assembled lying on its left side; this plate is the base.
