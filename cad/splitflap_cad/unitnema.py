@@ -90,10 +90,13 @@ def nema_bridge():
     foot_out = wall_out + P.nema_foot_len
     z_foot_top = -drop + P.nema_foot_h
     for side in (-1, +1):
-        # Wall: up the body flat, plate top to the face plane.
+        # Wall: up the body flat, plate top to the face plane — plan
+        # clipped to the DECK's radius so the side profile follows the
+        # deck contour exactly (only feet + wedges run wider).
         wall = Pos(side * (wall_in + wall_out) / 2, 0, -drop / 2) * Box(
             P.nema_leg_t, P.nema_wall_w, drop
         )
+        wall &= Pos(0, 0, -drop) * extrude(Circle(P.nema_flange_r), amount=drop)
         # Foot + 45° back wedge (no flat ceiling printed deck-down).
         foot = Pos(
             side * (wall_in + foot_out) / 2, 0, (-drop + z_foot_top) / 2
