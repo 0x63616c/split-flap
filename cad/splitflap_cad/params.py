@@ -53,15 +53,19 @@ class Params:
     unit_wall_thick: float = 3.0   # back wall thickness
     unit_back_height: float = 53.0  # total height from plate bottom (matches vendor ref)
 
-    # --- NEMA 14 stepper (vendor part, from datasheet drawing) ---
+    # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A
+    # bipolar, 1.8deg, shaft 20.5 x Ø5, 4-lead). Face dims are standard
+    # NEMA 14; body/shaft lengths from the listing. Flat length/depth
+    # and boss height NOT in the listing — placeholders, VERIFY WITH
+    # CALIPERS when the motor arrives, before printing drum or bridge.
     motor_body_w: float = 35.2      # square faceplate side (MAX)
-    motor_body_len: float = 34.0    # body length, face to face
+    motor_body_len: float = 21.0    # body length, face to face (pancake)
     motor_boss_d: float = 22.0      # pilot boss diameter (22.0 -0.05)
-    motor_boss_len: float = 2.0     # boss protrusion past mounting face
+    motor_boss_len: float = 2.0     # boss protrusion past mounting face (VERIFY)
     motor_shaft_d: float = 5.0      # shaft diameter (5.0 -0.012)
-    motor_shaft_len: float = 24.0   # shaft length past mounting face
-    motor_flat_len: float = 16.5    # D-flat length, from shaft tip
-    motor_flat_across: float = 4.5  # remaining thickness across the flat
+    motor_shaft_len: float = 20.5   # shaft length past mounting face
+    motor_flat_len: float = 15.0    # D-flat length, from shaft tip (VERIFY)
+    motor_flat_across: float = 4.5  # remaining thickness across the flat (VERIFY)
     motor_hole_pitch: float = 26.0  # M3 mount holes, square pattern
     motor_screw_d: float = 3.0      # M3 nominal (tapped in motor)
     motor_screw_depth: float = 4.5  # tapped depth MIN
@@ -352,10 +356,10 @@ class Params:
                                    # that the single insert/tip bore
                                    # keeps ~1mm wall above the 45-deg
                                    # base ramp
-    drum_screw_rib_taper_wall: float = 1.0  # full-width rib column kept
-                                   # around the bore; inward of that the
-                                   # flanks taper at 45 deg in plan,
-                                   # shedding the wedge's dead corner
+    drum_screw_rib_bore_wall: float = 1.0  # wall kept around the bore at
+                                   # the rib's flat inner face — the rib
+                                   # is truncated there (the wedge tip
+                                   # inward of the bore held nothing)
     drum_screw_len: float = 12.0   # M3x12 button head
     drum_screw_recess_d: float = 6.2  # head recess dia (button head
                                    # Ø5.7); head (h 1.65) sits fully
