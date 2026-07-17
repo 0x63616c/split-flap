@@ -146,9 +146,20 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m *appModel) breadcrumb() string {
+	out := ""
+	for i, s := range m.stack {
+		if i > 0 {
+			out += " › "
+		}
+		out += s.title
+	}
+	return out
+}
+
 func (m *appModel) View() string {
 	s := m.top()
-	out := titleStyle.Render(s.title) + "\n\n"
+	out := titleStyle.Render(m.breadcrumb()) + "\n\n"
 	for i, it := range s.items {
 		line := "  " + it.label
 		if it.disabled {
@@ -168,7 +179,7 @@ func (m *appModel) View() string {
 // --- screens -----------------------------------------------------------
 
 func rootScreen() screen {
-	return screen{id: "root", title: "ctl — split-flap tooling", items: []menuItem{
+	return screen{id: "root", title: "ctl", items: []menuItem{
 		{label: "cad — viewers & exports"},
 		{label: "bench (coming soon)", disabled: true},
 	}}
@@ -183,14 +194,14 @@ func cadScreen() screen {
 }
 
 func viewScreen() screen {
-	return screen{id: "view", title: "cad · view", items: []menuItem{
+	return screen{id: "view", title: "view", items: []menuItem{
 		{label: "specific model"},
 		{label: "last saved model"},
 	}}
 }
 
 func exportScreen() screen {
-	return screen{id: "export", title: "cad · export", items: []menuItem{
+	return screen{id: "export", title: "export", items: []menuItem{
 		{label: "all printables"},
 		{label: "one model"},
 	}}
@@ -231,7 +242,7 @@ func listScreen(cat catalog) screen {
 	for _, n := range cat.Printable {
 		items = append(items, menuItem{label: "  " + n, disabled: true})
 	}
-	return screen{id: "list", title: "cad · models", items: items}
+	return screen{id: "list", title: "models", items: items}
 }
 
 // --- entrypoints -------------------------------------------------------
