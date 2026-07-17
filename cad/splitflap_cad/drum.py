@@ -15,7 +15,6 @@ from build123d import (
     Axis,
     Box,
     Circle,
-    Cone,
     Cylinder,
     GeomType,
     Polygon,
@@ -343,14 +342,6 @@ def drum_inner():
     body -= Rot(0, 0, P.drum_screw_ang) * Pos(
         P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t / 2
     ) * Cylinder(P.drum_screw_recess_d / 2, P.drum_screw_recess_t)
-    # The web's outer face is the print bed face, so the recess ceiling
-    # (the 6.2 -> 3.4 step) would print as an unsupported annulus. Ease
-    # it with a 45-deg cone from recess dia down to the bore — the head
-    # self-centres on the cone instead of a flat seat.
-    cham = (P.drum_screw_recess_d - P.screw_hole_d) / 2
-    body -= Rot(0, 0, P.drum_screw_ang) * Pos(
-        P.drum_screw_r, 0, P.drum_ring_t - P.drum_screw_recess_t - cham / 2
-    ) * Cone(P.screw_hole_d / 2, P.drum_screw_recess_d / 2, cham)
     return body
 
 

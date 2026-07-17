@@ -359,18 +359,18 @@ class Params:
     drum_mark_w: float = 3.0       # triangle base width (tangential)
 
     # --- flap-loading holder (jig; PROTOTYPE) ---
-    # A ring that slips around the drum's flap ring with one radial spike
-    # per flap slot. Each flap rests on a spike (aligned with its slot)
-    # while you thread its side-pins into the drum, so it can't flop while
-    # the rest are loaded. Sits at the outer ring; drum axis = Z.
+    # A ring that slips around the drum's flap ring, with one radial SLOT
+    # per flap position cut into its top face. Each flap drops edge-first
+    # into the slot aligned with its drum slot, standing upright so it
+    # can't flop while you thread the side-pins in and load the rest.
+    # Slot plane is radial (flap faces tangentially, like on the drum).
     holder_clear: float = 0.6      # radial slip clearance over the drum ring OD
-    holder_ring_w: float = 9.0     # base-ring radial width
-    holder_ring_t: float = 4.0     # base-ring axial thickness
-    holder_spike_len: float = 24.0  # spike radial reach past the base-ring OD
-    holder_spike_w: float = 2.0    # spike tangential thickness
-    holder_spike_h: float = 4.0    # spike axial height
-    holder_lip_h: float = 7.0      # up-turned tip lip height (stops flap sliding off)
-    holder_lip_t: float = 1.8      # lip radial thickness
+    holder_ring_w: float = 22.0    # ring radial width (holds the slots)
+    holder_slot_depth: float = 5.0  # how deep a flap edge drops in
+    holder_slot_floor: float = 2.0  # material left under a slot
+    holder_slot_clear: float = 0.4  # slot width over flap thickness (slip fit)
+    holder_slot_len: float = 16.0  # slot radial length
+    holder_slot_inset: float = 1.5  # gap from the bore to the slot start
 
     @property
     def holder_ring_id(self) -> float:
@@ -378,8 +378,18 @@ class Params:
         return self.drum_ring_od + 2 * self.holder_clear
 
     @property
-    def holder_spike_pitch(self) -> float:
-        """Angular spacing of spikes = the flap pitch. Derived."""
+    def holder_ring_t(self) -> float:
+        """Ring thickness = slot depth + floor beneath it. Derived."""
+        return self.holder_slot_depth + self.holder_slot_floor
+
+    @property
+    def holder_slot_w(self) -> float:
+        """Slot width = flap thickness + slip clearance. Derived."""
+        return self.flap_thick + self.holder_slot_clear
+
+    @property
+    def holder_slot_pitch(self) -> float:
+        """Angular spacing of slots = the flap pitch. Derived."""
         return 360.0 / self.drum_flap_count
     drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
                                    # round section (bore is double-D; only
