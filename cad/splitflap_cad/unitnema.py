@@ -10,10 +10,11 @@ by an M3x8 from above into a flush heat-set insert. Full-height well
 channels through the deck rim and wall faces give the bolts + hex key
 a straight vertical drop onto spot-faced seats.
 
-Printability: print deck-face down. Walls rise vertically; each foot
-is topped by a 45° back wedge (no flat ceiling in print). The whole
-plan is clipped to a cylinder about the shaft so every outer edge runs
-concentric with the drum, inside the barrel wall sweep.
+Printability: print deck-face down. Walls and bolt bosses rise
+vertically; the only ceiling is each bolt seat, a small flat bridge
+over its U-slot. The plan is clipped to a cylinder about the shaft so
+every outer edge runs concentric with the drum, inside the barrel
+wall sweep.
 
 Hall/homing mount: OPEN. The 28BYJ hall post spot is buried under the
 motor body and a horizontal board above the face would cross the shaft;
@@ -26,9 +27,8 @@ Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 View it: `just cad unit-nema` (see cad/splitflap_cad/catalog.py).
 """
 
-from build123d import Box, Circle, Cylinder, Polygon, Pos, Rot, extrude
+from build123d import Box, Circle, Cylinder, Pos, extrude
 
-from .geo import radial_plate
 from .params import P
 from .shell import (
     back_wall,
@@ -66,11 +66,10 @@ def nema_plate():
 def nema_bridge():
     """The bridge, one printed part (local frame: shaft axis at the
     motor face plane, +Z up): a ring DECK over the whole face (pilot
-    bore + all 4 M3 clearance holes) joining a wall + foot + back wedge
-    down each ±X body flat. Every outer edge is clipped concentric with
-    the drum. Each foot bolt gets a full-height Ø well channel cut
-    through deck rim, wall face and wedge — the bolt + hex key drop
-    straight in from above onto a spot-faced seat."""
+    bore + all 4 M3 clearance holes) joining a wall + full-height bolt
+    boss down each ±X body flat. Every outer edge is clipped concentric
+    with the drum. Each bolt gets an open-back U-slot down its boss —
+    bolt + hex key drop straight in from above onto a flat seat."""
     wall_in = P.motor_body_w / 2 + P.nema_body_clear
     wall_out = wall_in + P.nema_leg_t
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
@@ -87,41 +86,38 @@ def nema_bridge():
             )
 
     body = deck
-    foot_out = wall_out + P.nema_foot_len
-    z_foot_top = -drop + P.nema_foot_h
+    boss_out = wall_out + P.nema_foot_len
+    z_seat = -drop + P.nema_foot_h
     for side in (-1, +1):
-        # Wall: up the body flat, plate top to the face plane — plan
-        # clipped to the DECK's radius so the side profile follows the
-        # deck contour exactly (only feet + wedges run wider).
+        # Wall: up the body flat, plate top to the face plane. Width
+        # sits fully inside the deck contour — no arc taper, full
+        # thickness end to end.
         wall = Pos(side * (wall_in + wall_out) / 2, 0, -drop / 2) * Box(
             P.nema_leg_t, P.nema_wall_w, drop
         )
-        wall &= Pos(0, 0, -drop) * extrude(Circle(P.nema_flange_r), amount=drop)
-        # Foot + 45° back wedge (no flat ceiling printed deck-down).
-        foot = Pos(
-            side * (wall_in + foot_out) / 2, 0, (-drop + z_foot_top) / 2
-        ) * Box(foot_out - wall_in, P.nema_foot_w, P.nema_foot_h)
-        wedge = radial_plate(
-            Polygon(
-                (wall_out, z_foot_top),
-                (foot_out, z_foot_top),
-                (wall_out, z_foot_top + P.nema_foot_len),
-                align=None,
-            ),
-            P.nema_foot_w,
-        )
-        if side < 0:
-            wedge = Rot(0, 0, 180) * wedge
-        body += wall + foot + wedge
+        # Bolt boss: full-height column on the wall's outer face, plate
+        # to deck — solid material all round the bolt path (a mere
+        # scallop left knife-edge slivers in the wall).
+        boss = Pos(
+            side * (wall_out + boss_out) / 2, 0, -drop / 2
+        ) * Box(boss_out - wall_out, P.nema_foot_w, drop)
+        body += wall + boss
 
-        # Foot bolt path: full-height well channel from above the deck
-        # down to the spot-faced head seat on the foot top, then M3
-        # clearance on through the foot.
+        # Bolt path: open-back U-slot down the column (Ø well + a slot
+        # out the back face — no thin outer skin), stopping on the flat
+        # head seat; M3 clearance continues through to the insert. The
+        # seat prints as a small flat bridge over the slot — fine at
+        # this size.
         x_screw = side * P.nema_screw_x_off
         chan_top = P.nema_flange_t + 1  # punch past the deck top
-        body -= Pos(x_screw, 0, (z_foot_top + chan_top) / 2) * Cylinder(
-            P.nema_seat_well_d / 2, chan_top - z_foot_top
+        chan_h = chan_top - z_seat
+        chan = Pos(x_screw, 0, (z_seat + chan_top) / 2) * Cylinder(
+            P.nema_seat_well_d / 2, chan_h
         )
+        chan += Pos(
+            side * (abs(x_screw) + P.nema_foot_len) , 0, (z_seat + chan_top) / 2
+        ) * Box(2 * P.nema_foot_len, P.nema_seat_well_d, chan_h)
+        body -= chan
         body -= Pos(x_screw, 0, -drop + P.nema_foot_h / 2) * Cylinder(
             P.screw_hole_d / 2, P.nema_foot_h * 3
         )

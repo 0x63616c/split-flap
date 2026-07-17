@@ -91,10 +91,12 @@ class Params:
     # Everything inside the barrel wall sweep, r 26.5 about the shaft.
     nema_body_clear: float = 0.25    # gap per side around the body
     nema_leg_t: float = 3.0          # wall thickness along X
-    nema_wall_w: float = 32.0        # wall width along Y (spans the 26mm
-                                     # hole line + head seats; corners
-                                     # fall outside nema_mount_r and get
-                                     # clipped to the arc)
+    nema_wall_w: float = 18.0        # wall width along Y — kept inside
+                                     # the deck contour (corners r 22.7
+                                     # < 22.9) so the arc clip never
+                                     # tapers the wall ends to knife
+                                     # edges; the deck carries the motor
+                                     # screw seats, not the walls
     nema_flange_t: float = 2.0       # flange over the face (M3x6 = 4.0
                                      # engaged of the motor's 4.5 min
                                      # tap; top z 26 vs rails z 26.3)
