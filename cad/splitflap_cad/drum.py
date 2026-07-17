@@ -16,7 +16,6 @@ from build123d import (
     Box,
     Circle,
     Cylinder,
-    GeomType,
     Polygon,
     Pos,
     Rectangle,
@@ -30,6 +29,13 @@ from build123d import (
 
 from .geo import polar, polar_locs, radial_plate, slot0_marker
 from .params import P
+from .select import (
+    bottom_edges,
+    diametral_edges_at_z,
+    reach_over,
+    reach_under,
+    vertical_edges_near_radius,
+)
 
 
 def _slot_cutter():
@@ -227,19 +233,11 @@ def drum_inner():
     ) * Box(bore_r * 2, flat_w, P.drum_bore_depth)
     # lead-in chamfer around the bore mouth so the shaft self-centres on
     # insertion: the bore-opening edge loop on the hub's bottom face
-    mouth = [
-        e
-        for e in hub.edges().group_by(Axis.Z)[0]
-        if e.bounding_box().max.X < bore_r + 1
-    ]
-    hub = chamfer(mouth, P.drum_bore_chamfer)
+    hub = chamfer(reach_under(bottom_edges(hub), bore_r + 1), P.drum_bore_chamfer)
     # outer rim of the bottom face: break the sharp edge
-    rim = [
-        e
-        for e in hub.edges().group_by(Axis.Z)[0]
-        if e.bounding_box().max.X > P.drum_hub_d / 2 - 1
-    ]
-    hub = chamfer(rim, P.drum_hub_edge_chamfer)
+    hub = chamfer(
+        reach_over(bottom_edges(hub), P.drum_hub_d / 2 - 1), P.drum_hub_edge_chamfer
+    )
     body += hub
 
     # Reinforce the fin junctions in ONE fillet call so OCC blends the
@@ -249,29 +247,15 @@ def drum_inner():
     #   underside (straight z=0 edges within a fin half-thickness of a
     #   diametral plane are exactly those; window borders run
     #   drum_web_window_fin_gap further out, the barrel ring is curved)
-    hub_r = P.drum_hub_d / 2
-    junction = [
-        e
-        for e in body.edges().filter_by(Axis.Z)
-        if abs((e.center().X**2 + e.center().Y**2) ** 0.5 - hub_r) < 0.3
-        and e.center().Z < -0.1
-    ]
-
-    def _diam_dist(e):
-        c, d = e.center(), e.tangent_at(0)
-        return abs(c.X * d.Y - c.Y * d.X)
-
-    roots = [
-        e
-        for e in body.edges().filter_by(GeomType.LINE)
-        if abs(e.center().Z) < 0.1
-        and _diam_dist(e) < P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1
-        # stay in the fin's radial zone: the flap slots' straight side
-        # edges are also near-diametral lines at z=0, but they sit out in
-        # the ring band (r~32) — filleting them rounds the slots and
-        # explodes the mesh.
-        and (e.center().X**2 + e.center().Y**2) ** 0.5 < P.drum_wall_r_in
-    ]
+    # (r_max = wall_r_in keeps the flap slots' near-diametral side edges
+    # out in the ring band from being rounded — that explodes the mesh)
+    junction = vertical_edges_near_radius(body, P.drum_hub_d / 2, z_below=-0.1)
+    roots = diametral_edges_at_z(
+        body,
+        0,
+        half_t=P.drum_fin_t_key / 2 + P.drum_fin_clear + 0.1,
+        r_max=P.drum_wall_r_in,
+    )
     body = fillet(junction + roots, P.drum_fin_hub_fillet)
 
     # Homing magnet: boss under the web's solid 45-deg quadrant drops the
