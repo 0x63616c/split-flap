@@ -593,7 +593,7 @@ class Params:
     ibkt_embed: float = 45.0       # bar length swallowed by the pocket
     ibkt_wall: float = 4.0         # printed wall around the pocket
     ibkt_back_wall: float = 2.5    # printed skin between pocket and wall face
-    ibkt_clear: float = 0.3        # epoxy gap per face
+    ibkt_clear: float = 0.15       # pocket gap per face — snug for screw-lock
     ibkt_plate_thick: float = 6.0  # screw-tab base plate thickness
     ibkt_tab_w: float = 16.0       # screw tab width per side
     ibkt_screw_d: float = 4.5      # drywall screw shank clearance
