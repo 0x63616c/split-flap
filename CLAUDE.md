@@ -12,5 +12,14 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   cad/splitflap_cad/ re-renders every open view (params.py included). Build
   fail → in-pane log + cmux notify, viewer keeps last good. Assembly is just
   a model — `just cad view assembly`. Strays: `pkill -f ocp_vscode`.
-- New part: builder + MODELS entry in `catalog.py`. All dims in `params.py`. No `__main__` blocks or justfile recipes per part.
+- New part: module with part builder(s) + `scene()` (returns `viewer.Scene`),
+  one `Model` entry in `catalog.py` (+ `Printable` if it prints). All dims in
+  `params.py` (edge breaks ≤1mm may inline); local→unit poses in `frames.py`;
+  shared idioms in `geo.py` (polar arrays, radial plates, slot-0 marker) and
+  `select.py` (named edge selectors). No `__main__` blocks or justfile recipes
+  per part.
+- Geometry is golden-guarded: fast fingerprint tests every run; `pytest -m
+  slow` = XOR vs `cad/tests/golden/*.brep` + full catalog build. Intended
+  shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
+  Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
 - `cad/reference/Unit.stp` = vendor ghost, gitignored. Motor = 28BYJ-48.

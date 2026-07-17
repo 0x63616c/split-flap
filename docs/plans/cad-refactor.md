@@ -1,5 +1,14 @@
 # CAD refactor plan — abstractions + golden geometry harness
 
+> **STATUS: EXECUTED 2026-07-16** (all phases). Notes vs plan:
+> - full_unit is fingerprint-only (BREP would embed vendor geometry).
+> - unit-plate defeats OCC XOR on its identical twin (coincident-face
+>   boolean breakdown) — detected by signature, per-cell volume grid
+>   compares instead.
+> - Mesher 3MF churn was random lib3mf UUIDs, not zip dates — both
+>   pinned via threemf.py; exports now byte-deterministic (verified).
+> - Params split into sub-dataclasses: still deliberately NOT done.
+
 Goal: restructure `cad/splitflap_cad` for easier authoring with **provably
 identical geometry**. Each phase = own commit(s), geometry tests green
 between all of them.
