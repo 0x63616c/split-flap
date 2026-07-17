@@ -432,18 +432,24 @@ func (m *appModel) View() string {
 	}
 	for i, it := range s.items {
 		label := it.label
+		marked := false
 		if s.multi {
 			mark := "[ ] "
 			if s.selected[s.names[i]] {
-				mark = "[x] "
+				mark, marked = "[x] ", true
 			}
 			label = mark + label
 		}
 		line := "  " + label
-		if it.disabled {
+		switch {
+		case it.disabled:
 			line = dimStyle.Render(line)
-		} else if i == s.cursor {
+		case i == s.cursor && marked:
+			line = okStyle.Reverse(true).Render("> " + label)
+		case i == s.cursor:
 			line = selStyle.Render("> " + label)
+		case marked:
+			line = okStyle.Render(line)
 		}
 		if it.help != "" {
 			pad := maxw - len([]rune(it.label)) + 3
