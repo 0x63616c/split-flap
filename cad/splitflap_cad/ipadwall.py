@@ -209,12 +209,8 @@ def bracket_body():
     xb, zb = _pocket_frame()
     h, bw, plate_w, x_part, y_screw = _sandwich_frame()
 
-    body = _rounded_slab(h, plate_w, P.ibkt_plate_thick)
-    walls = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(
-        Polygon((0, 0), (x_part, 0), (x_part, h), (0, h), align=None),
-        amount=bw,
-    )
-    body += walls
+    # one slab out to the bar's front face — flat, no stepped boss
+    body = _rounded_slab(h, plate_w, x_part)
     # the channel: pocket cut, open at the front (lid closes it)
     cut_len = P.ibkt_embed + 20
     body -= (
