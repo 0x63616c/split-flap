@@ -55,6 +55,16 @@ def char_slug(ch: str) -> str:
     return _SLUG.get(ch, ch)
 
 
+def flap_slug(i: int) -> str:
+    """Slug naming BOTH faces flap i carries: front = top of CHARSET[i],
+    back = bottom of CHARSET[i+1] (wraps). Two alnum chars concat (`GH`);
+    anything else joins with `_` (`9_colon`, `comma_blank`)."""
+    front, back = CHARSET[i], CHARSET[(i + 1) % len(CHARSET)]
+    if front.isalnum() and back.isalnum():
+        return front + back
+    return f"{char_slug(front)}_{char_slug(back)}"
+
+
 @lru_cache
 def _font_path() -> str:
     p = _FONT / P.glyph_font
@@ -153,33 +163,13 @@ def flap_at(i: int):
 
 
 def export_flaps(out_dir: Path) -> list[Path]:
-    """Write every flap as a two-body colored 3MF (black card + white
-    glyph inlays) into out_dir. Bambu Studio maps body colors to
-    filaments on import. Colors go on leaf Solids — Mesher drops colors
-    set on a Compound."""
-    from build123d import Color, Mesher
+    """Per-flap 3MFs. Delegates to the Bambu-native writer (see flap3mf)
+    so a single flap drags in already two-toned — the plain Mesher/Color
+    path Bambu ignores on import (colour must live in
+    model_settings.config as per-part extruder keys)."""
+    from .flap3mf import export_flaps as _export
 
-    from .threemf import canonicalize_3mf
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    written = []
-    for i, ch in enumerate(CHARSET):
-        card, glyphs = flap_at(i)
-        path = out_dir / f"flap_{i:02d}_{char_slug(ch)}.3mf"
-        m = Mesher()
-        for s in card.solids():
-            s.color = Color("black")
-            s.label = "card"
-            m.add_shape(s)
-        if glyphs is not None:
-            for s in glyphs.solids():
-                s.color = Color("white")
-                s.label = "glyph"
-                m.add_shape(s)
-        m.write(str(path))
-        canonicalize_3mf(path)  # lib3mf UUIDs are random per run
-        written.append(path)
-    return written
+    return _export(out_dir)
 
 
 def flap_set_demo():

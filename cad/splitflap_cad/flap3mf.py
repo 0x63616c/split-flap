@@ -26,7 +26,7 @@ profile and takes only the extruder assignment. Load with File > Open
 
 from pathlib import Path
 
-from .glyphflap import CHARSET, char_slug, flap_at
+from .glyphflap import CHARSET, flap_at, flap_slug
 from .params import P
 from .threemf import write_zip_entries
 
@@ -122,6 +122,23 @@ def export_plates(out_dir: Path, per_plate: int = 13) -> list[Path]:
     return written
 
 
+def export_flaps(out_dir: Path) -> list[Path]:
+    """Per-flap Bambu-native project 3MFs — same two-tone extruder
+    structure as the plates (single flap = one-flap plate), so each drags
+    in already coloured. Named flap_<i>_<front><back> to show BOTH faces
+    it carries (front = top of CHARSET[i], back = bottom of CHARSET[i+1])."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # Drop old names (single-char slugs, or stale wrap pairs) before rewrite.
+    for stale in out_dir.glob("flap_*.3mf"):
+        stale.unlink()
+    written = []
+    for i in range(len(CHARSET)):
+        path = out_dir / f"flap_{i:02d}_{flap_slug(i)}.3mf"
+        _write_plate(path, [i])
+        written.append(path)
+    return written
+
+
 def _write_plate(path: Path, idxs: list[int]) -> None:
     center = (0.0, P.flap_h / 2, P.flap_thick / 2)
     # 5 columns x up-to-6 rows, grid centred on the 256mm bed.
@@ -133,7 +150,7 @@ def _write_plate(path: Path, idxs: list[int]) -> None:
     mesh_id = 0
     for k, i in enumerate(idxs):
         card, glyphs = flap_at(i)
-        name = f"flap_{i:02d}_{char_slug(CHARSET[i])}"
+        name = f"flap_{i:02d}_{flap_slug(i)}"
         parts = [("card", card, 1)]
         if glyphs is not None:
             parts.append(("glyph", glyphs, 2))
