@@ -26,4 +26,4 @@ def test_src_map_covers_all_models():
 
 
 def test_printable_builders_exist():
-    assert set(PRINTABLE) == {"unit", "flap", "drum-outer", "drum-inner"}
+    assert set(PRINTABLE) == {"unit", "flap", "drum-outer", "drum-inner", "holder"}

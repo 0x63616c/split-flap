@@ -73,6 +73,12 @@ def _flap_set():
     return flap_set_demo()
 
 
+def _holder():
+    from .holder import holder_show_args
+
+    return holder_show_args()
+
+
 def _motor_byj():
     from .stepper28byj import stepper28byj
 
@@ -104,6 +110,11 @@ MODELS = {
     ),
     "plate": Model("side plate only — no vendor fins/towers", "unit", _plate),
     "drum": Model("drum outer + inner, side by side", "drum", _drum),
+    "holder": Model(
+        "PROTOTYPE flap-loading jig: ring + radial spikes, drum ghost",
+        "holder",
+        _holder,
+    ),
     "flap": Model("single flap card", "flap", _flap),
     "flap-set": Model(
         "contact sheet: all 52 flap fronts + backs (backs flipped as displayed)",
@@ -159,8 +170,15 @@ def _p_drum_inner():
     return Rot(180, 0, 0) * drum_inner()
 
 
+def _p_holder():
+    from .holder import holder
+
+    return holder()
+
+
 PRINTABLE = {
     "unit": _p_unit,
+    "holder": _p_holder,
     "flap": _p_flap,
     "drum-outer": _p_drum_outer,
     "drum-inner": _p_drum_inner,
