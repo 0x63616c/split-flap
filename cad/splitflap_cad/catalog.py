@@ -87,12 +87,7 @@ MODELS = {
         "ipadwall",
     ),
     "ipad-bracket": Model(
-        "SIDE QUEST printed wall bracket alone (angled lock-screw pocket)",
-        "ipadwall",
-        "bracket_scene",
-    ),
-    "ipad-bracket-2pc": Model(
-        "SIDE QUEST two-piece bracket option, exploded: channel body + lid",
+        "SIDE QUEST two-piece bracket, exploded: channel body + full-face lid",
         "ipadwall",
         "two_piece_scene",
     ),
@@ -117,5 +112,6 @@ PRINTABLE = {
     "drum-outer": Printable("drum", "drum_outer"),
     "drum-inner-byj": Printable("drum", "drum_inner_print"),
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
-    "ipad-bracket": Printable("ipadwall", "bracket"),
+    "ipad-body": Printable("ipadwall", "bracket_body"),
+    "ipad-lid": Printable("ipadwall", "bracket_lid"),
 }

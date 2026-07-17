@@ -1,33 +1,25 @@
 """iPad wall mount — side quest, not part of the split-flap.
 
 The iPad carries a seamless magnetic charging mount with a flat-iron
-bar off its back; the bar's wall end is a 50 x 75 x 5 plate sitting
-16 deg off the wall plane (the swivel's default). A printed bracket
-screws to drywall and swallows the bar's wall end in a matching 16 deg
-pocket, where it gets epoxied.
+bar off its back; the bar's wall end is a 50 x 75 x 5 plate. The mount
+is a flat two-piece printed sandwich: a wall body with an open channel
+the bar lies into, and a full-footprint lid clamped by the same four
+#8 screws that hold the whole thing to the drywall. A centre lock
+screw pins the bar itself. No epoxy needed, both parts print flat
+(body wall-face down — the channel opens up, no bridging; lid
+front-face down).
 
 World frame: wall = YZ plane at x=0, +X out of the wall, +Z up. The
-bar's wall end is DOWN (nearest the wall); it runs up-and-out at the
-tilt angle, swivel + iPad at its top end. So the bracket's pocket
-opens on its TOP face — the bar drops in, gravity seats it, epoxy
-holds it.
+bar's wall end is DOWN; it runs up at ibar_tilt_deg off the wall
+(currently 0 = parallel), iPad rigid on its top end.
 
-View: `just cad view ipad-wall` (full viz) or `ipad-bracket` (part).
+View: `just cad view ipad-wall` (full viz) or `ipad-bracket`
+(exploded parts). Prints: ipad-body, ipad-lid.
 """
 
 import math
 
-from build123d import (
-    Axis,
-    Box,
-    Cylinder,
-    Polygon,
-    Pos,
-    RectangleRounded,
-    Rot,
-    extrude,
-    fillet,
-)
+from build123d import Box, Cylinder, Pos, RectangleRounded, Rot, extrude
 
 from .params import P
 from .viewer import Scene
@@ -37,9 +29,7 @@ def _pocket_frame():
     """(xb, zb): world position of the pocket/bar bottom-end centre.
 
     xb keeps ibkt_back_wall of printed skin between the pocket's back
-    face and the wall; zb leaves ibkt_wall of floor under the bar, and
-    the pocket mouth lands on the bracket's top face.
-    """
+    face and the wall; zb leaves ibkt_wall of floor under the bar."""
     t = math.radians(P.ibar_tilt_deg)
     half = P.ibar_thick / 2 + P.ibkt_clear
     xb = P.ibkt_back_wall + half * math.cos(t)
@@ -49,8 +39,7 @@ def _pocket_frame():
 
 def _bar_pose():
     """Location posing a bar (local: bottom-end centre at origin,
-    running +Z) into the world at the swivel tilt (leaning out going
-    up)."""
+    running +Z) into the world at the pocket tilt."""
     xb, zb = _pocket_frame()
     return Pos(xb, 0, zb) * Rot(0, P.ibar_tilt_deg, 0)
 
@@ -72,116 +61,8 @@ def ipad():
     return Box(P.ipad_thick, P.ipad_w, P.ipad_h)
 
 
-def bracket():
-    """Printable wall bracket: screw-tab base plate + wedge boss whose
-    front face parallels the bar, minus the tilted epoxy pocket and two
-    counterbored drywall-screw holes."""
-    t = math.radians(P.ibar_tilt_deg)
-    half = P.ibar_thick / 2 + P.ibkt_clear
-    xb, zb = _pocket_frame()
-    h = zb + P.ibkt_embed * math.cos(t)  # floor + embedded bar rise
-
-    def xc(z):  # bar centreline X at height z
-        return xb + (z - zb) * math.tan(t)
-
-    # wedge boss: side profile extruded across the pocket width
-    face_off = half / math.cos(t) + P.ibkt_wall  # centreline -> front face
-    profile = Polygon(
-        (0, 0),
-        (xc(0) + face_off, 0),
-        (xc(h) + face_off, h),
-        (0, h),
-        align=None,
-    )
-    bw = P.ibar_w + 2 * P.ibkt_clear + 2 * P.ibkt_wall
-    boss = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=bw)
-    # round both front edges (top + bottom) in the side profile — the
-    # iPad swings past the top one, the bottom just matches
-    front = boss.edges().filter_by(Axis.Y).sort_by(Axis.X)[-2:]
-    boss = fillet(front, radius=P.ibkt_nose_r)
-
-    plate_w = bw + 2 * P.ibkt_tab_w
-    plate = (
-        Pos(0, 0, h / 2)
-        * Rot(0, 90, 0)
-        * extrude(RectangleRounded(h, plate_w, 8), amount=P.ibkt_plate_thick)
-    )
-    body = boss + plate
-
-    # epoxy pocket: bar cross-section + clearance, punched out past the
-    # top face along the tilted axis
-    cut_len = P.ibkt_embed + 20
-    pocket = (
-        _bar_pose()
-        * Pos(0, 0, cut_len / 2)
-        * Box(2 * half, P.ibar_w + 2 * P.ibkt_clear, cut_len)
-    )
-    body -= pocket
-
-    # centre lock screw: normal to the bar (so at the 16 deg tilt),
-    # through front wall + bar + back skin — clamps the bar mechanically,
-    # epoxy optional. Head recessed into the wedge's front face, which
-    # parallels the bar, so the head seats flat.
-    mid = _bar_pose() * Pos(0, 0, P.ibkt_embed / 2)
-    body -= mid * Rot(0, 90, 0) * Cylinder(P.ibkt_screw_d / 2, 80)
-    d_face = half + P.ibkt_wall * math.cos(t)  # bar centreline -> front face
-    cb_len = P.ibkt_screw_head_depth + 10  # recess + overshoot clear of the face
-    body -= (
-        mid
-        * Pos(d_face - P.ibkt_screw_head_depth + cb_len / 2, 0, 0)
-        * Rot(0, 90, 0)
-        * Cylinder(P.ibkt_screw_head_d / 2, cb_len)
-    )
-
-    # counterbored drywall-screw holes through the tabs: 2 per tab
-    # (#8 x 1"/1.25" — Ø4.5 clears the 4.17 shank)
-    y_screw = (bw + P.ibkt_tab_w) / 2
-    for ys in (-y_screw, y_screw):
-        for zs in (0.25 * h, 0.75 * h):
-            body -= Pos(P.ibkt_plate_thick / 2, ys, zs) * Rot(0, 90, 0) * Cylinder(
-                P.ibkt_screw_d / 2, 2 * P.ibkt_plate_thick
-            )
-            body -= Pos(
-                P.ibkt_plate_thick - P.ibkt_screw_head_depth / 2, ys, zs
-            ) * Rot(0, 90, 0) * Cylinder(
-                P.ibkt_screw_head_d / 2, P.ibkt_screw_head_depth
-            )
-    return body
-
-
-def scene() -> Scene:
-    """Full viz: wall ghost, bracket, bar in its pocket, iPad rigid on
-    the bar's top end — back face ipad_gap off the bar front (the mount
-    stack; swivel locked), parallel to the bar."""
-    pose = _bar_pose()
-    wall = Pos(-1.5, 0, 80) * Box(3.0, 420, 420)
-    ipad_loc = pose * Pos(
-        P.ibar_thick / 2 + P.ipad_gap + P.ipad_thick / 2, 0, P.ibar_len
-    )
-    return (
-        Scene()
-        .add(wall, "wall", color="lightgray", alpha=0.15)
-        .add(bracket(), "bracket", color="orange", alpha=0.8)
-        .add(bar(), "bar", color="gray", loc=pose)
-        .add(ipad(), "ipad", color="black", alpha=0.5, loc=ipad_loc)
-    )
-
-
-def bracket_scene() -> Scene:
-    return Scene().add(bracket(), "bracket")
-
-
-# --- two-piece variant: flat sandwich, assumes ibar_tilt_deg == 0 ---
-# Body = wall plate + open channel the bar lies into; lid = full-
-# footprint front plate matching the body's rounded outline. The four
-# #8 wall screws pass through lid + body into the wall, clamping the
-# whole sandwich; the centre lock screw still pins the bar. Both parts
-# print flat: body wall-face down (channel opens up, no bridging), lid
-# front-face down.
-
-
 def _sandwich_frame():
-    """Shared two-piece numbers: (h, bw, plate_w, x_part, screw ys/zs)."""
+    """Shared bracket numbers: (h, bw, plate_w, x_part, y_screw)."""
     half = P.ibar_thick / 2 + P.ibkt_clear
     xb, zb = _pocket_frame()
     h = zb + P.ibkt_embed  # tilt 0: embedded rise = embed
@@ -202,14 +83,19 @@ def _rounded_slab(h, w, thick):
     )
 
 
+def _screw_grid(h, y_screw):
+    """The four wall-screw (y, z) centres."""
+    return [(ys, zs) for ys in (-y_screw, y_screw) for zs in (0.25 * h, 0.75 * h)]
+
+
 def bracket_body():
-    """Two-piece body: wall plate + open channel. Plain through-holes —
-    heads recess in the lid, screws run on into the wall."""
+    """Body: one flush slab out to the bar's front face, open channel
+    the bar lies into. Plain through-holes — heads recess in the lid,
+    screws run on into the wall."""
     half = P.ibar_thick / 2 + P.ibkt_clear
     xb, zb = _pocket_frame()
     h, bw, plate_w, x_part, y_screw = _sandwich_frame()
 
-    # one slab out to the bar's front face — flat, no stepped boss
     body = _rounded_slab(h, plate_w, x_part)
     # the channel: pocket cut, open at the front (lid closes it)
     cut_len = P.ibkt_embed + 20
@@ -219,11 +105,8 @@ def bracket_body():
         * Box(2 * half, P.ibar_w + 2 * P.ibkt_clear, cut_len)
     )
     # four wall-screw shanks + centre lock-screw shank, all plain
-    for ys in (-y_screw, y_screw):
-        for zs in (0.25 * h, 0.75 * h):
-            body -= Pos(0, ys, zs) * Rot(0, 90, 0) * Cylinder(
-                P.ibkt_screw_d / 2, 60
-            )
+    for ys, zs in _screw_grid(h, y_screw):
+        body -= Pos(0, ys, zs) * Rot(0, 90, 0) * Cylinder(P.ibkt_screw_d / 2, 60)
     body -= Pos(xb, 0, zb + P.ibkt_embed / 2) * Rot(0, 90, 0) * Cylinder(
         P.ibkt_screw_d / 2, 60
     )
@@ -231,15 +114,15 @@ def bracket_body():
 
 
 def bracket_lid():
-    """Two-piece lid: full-footprint front plate, same rounded outline
-    as the body. Recessed heads for the four wall screws + the centre
-    lock screw."""
+    """Lid: full-footprint front plate, same rounded outline as the
+    body. Recessed heads for the four wall screws + the centre lock
+    screw."""
     xb, zb = _pocket_frame()
     h, bw, plate_w, x_part, y_screw = _sandwich_frame()
 
     lid = Pos(x_part, 0, 0) * _rounded_slab(h, plate_w, P.ibkt_lid_t)
     x_front = x_part + P.ibkt_lid_t
-    holes = [(ys, zs) for ys in (-y_screw, y_screw) for zs in (0.25 * h, 0.75 * h)]
+    holes = _screw_grid(h, y_screw)
     holes.append((0, zb + P.ibkt_embed / 2))  # centre lock screw
     for ys, zs in holes:
         lid -= Pos(0, ys, zs) * Rot(0, 90, 0) * Cylinder(P.ibkt_screw_d / 2, 60)
@@ -251,9 +134,28 @@ def bracket_lid():
     return lid
 
 
+def scene() -> Scene:
+    """Full viz: wall ghost, assembled sandwich, bar, iPad rigid on the
+    bar's top end — back face ipad_gap off the bar front (the mount
+    stack; swivel locked), parallel to the bar."""
+    pose = _bar_pose()
+    wall = Pos(-1.5, 0, 80) * Box(3.0, 420, 420)
+    ipad_loc = pose * Pos(
+        P.ibar_thick / 2 + P.ipad_gap + P.ipad_thick / 2, 0, P.ibar_len
+    )
+    return (
+        Scene()
+        .add(wall, "wall", color="lightgray", alpha=0.15)
+        .add(bracket_body(), "body", color="orange", alpha=0.8)
+        .add(bracket_lid(), "lid", color="steelblue", alpha=0.8)
+        .add(bar(), "bar", color="gray", loc=pose)
+        .add(ipad(), "ipad", color="black", alpha=0.5, loc=ipad_loc)
+    )
+
+
 def two_piece_scene() -> Scene:
-    """Two-piece sandwich, exploded: body + bar in the open channel,
-    full-face lid floated out front."""
+    """The sandwich exploded: body + bar in the open channel, lid
+    floated out front."""
     return (
         Scene()
         .add(bracket_body(), "body", color="orange", alpha=0.9)
