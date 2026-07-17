@@ -72,73 +72,80 @@ class Params:
     pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
     screw_clearance: float = 0.2  # radial gap around M3 screws
 
-    # --- NEMA harness (pocket in the plate + printed bridge clamp) ---
-    # The pancake motor sits face-UP on the plate, body inside the drum
-    # barrel's interior, shaft on the same axis as the 28BYJ variant
-    # (mount_x, byj_shaft_y). Its tapped holes open upward, so a printed
-    # BRIDGE drops over the face: deck with a pilot-boss bore + 4 M3
-    # clearance holes (motor's own screws clamp deck to face), legs down
-    # the body's +-X flats, feet on the plate held by M3 screws from
-    # below the plate into heat-set inserts. The hall board mounts on
-    # bosses on the deck (the 28BYJ hall post location is buried under
-    # the motor body).
-    # Envelope (plate top z=3): body top/face z 23; deck top z 25.5 —
-    # under the drum guide rails (sweep r>=23.15 from z~26.3) and the
-    # inner-web fins (bottom edge z 28.3 at the rim, higher inboard).
-    # Feet stay under z 4.2 (outer drum ring underside sweeps z~4.7,
-    # annulus from r 26.5). Everything else inside barrel wall r 26.5.
-    nema_pocket_clear: float = 0.25  # pocket gap per side around the body
-    nema_pocket_depth: float = 1.0   # body recess into the plate (locates
-                                     # XY + blocks twist; 2mm floor left)
-    nema_bridge_t: float = 2.5       # deck thickness (M3x6 through it =
-                                     # 3.5 engaged, under the 4.5 min tap)
-    nema_bridge_r: float = 21.0      # deck outer radius about the shaft;
-                                     # capped so the foot screws' hex key
-                                     # (Ø2.5 at r 22.75) passes the rim
-                                     # with 0.5 — motor holes' heads
-                                     # (r 18.4 + Ø5.7) overhang 0.25, ok
-    nema_leg_t: float = 3.0          # leg thickness along X
-    nema_leg_w: float = 12.0         # leg width along Y
-    nema_foot_len: float = 4.5       # foot run along X past the leg face
-                                     # (outer face r 25.35 at y0: foot
-                                     # corners must stay inside the
-                                     # barrel wall sweep, r 26.5)
-    nema_foot_h: float = 4.0         # foot height (screw passes through)
-    nema_foot_corner: float = 2.0    # plan chamfer on the foot's outer
-                                     # corners (buys wall clearance)
+    # --- NEMA harness (two printed side mounts) ---
+    # The pancake motor sits face-UP flat on the plate (no pocket), body
+    # inside the drum barrel's interior, shaft on the same axis as the
+    # 28BYJ variant (mount_x, byj_shaft_y). Its tapped holes open
+    # upward, so a printed MOUNT clamps each ±X body flat: wall up the
+    # side, flange over the face edge carrying that side's two M3
+    # clearance holes (the motor's own screws clamp flange to face),
+    # foot on the plate held by an M3x8 from above into a flush
+    # heat-set insert. Both mounts are the SAME part rotated 180° about
+    # the shaft — print it twice, flange face on the bed, no overhangs
+    # (the foot screw seat is a spot-faced well in a 45° back wedge).
+    # The whole mount plan is clipped to a cylinder about the shaft
+    # (nema_mount_r) so every outer edge runs concentric with the drum.
+    # Envelope (plate top z=3): body top/face z 24; flange top z 26 —
+    # under the drum guide rails (sweep r>=23.15 from z~26.3; flange
+    # kept inside r 22.9) and the web fins (bottom z 28.3 at the rim).
+    # Everything inside the barrel wall sweep, r 26.5 about the shaft.
+    nema_body_clear: float = 0.25    # gap per side around the body
+    nema_leg_t: float = 3.0          # wall thickness along X
+    nema_wall_w: float = 32.0        # wall width along Y (spans the 26mm
+                                     # hole line + head seats; corners
+                                     # fall outside nema_mount_r and get
+                                     # clipped to the arc)
+    nema_flange_t: float = 2.0       # flange over the face (M3x6 = 4.0
+                                     # engaged of the motor's 4.5 min
+                                     # tap; top z 26 vs rails z 26.3)
+    nema_flange_in: float = 10.0     # flange inner edge |X - shaft|
+                                     # (hole line 13 minus head + slack)
+    nema_flange_r: float = 22.9      # flange plan clip radius — tighter
+                                     # than the body clip: flange top z26
+                                     # grazes the rail-sweep band (r
+                                     # 23.15 from z 26.3), so it stays
+                                     # inside it with 0.25
+    nema_mount_r: float = 25.5       # wall/foot plan clip radius about
+                                     # the shaft (barrel wall sweeps
+                                     # r 26.5 from z 6.3; 1.0 gap)
+    nema_foot_len: float = 4.5       # foot run along X past the wall
+                                     # face; outer face lands ON the
+                                     # clip arc at y0
+    nema_foot_w: float = 12.0        # foot width along Y
+    nema_foot_h: float = 5.5         # foot height (screw passes through:
+                                     # M3x8 = 5.5 foot + 2.5 into the
+                                     # flush insert, tip 0.5 shy of the
+                                     # module's outer face)
     nema_screw_inset: float = 2.6    # foot screw axis inset from the
                                      # foot's outer face — as far out as
                                      # the button head seats (Ø5.7 lands
-                                     # ~flush), so the hex key clears the
-                                     # leg face (0.65) and deck rim (0.5)
+                                     # ~flush), so the hex key clears
+                                     # the wall face (0.65)
+    nema_seat_well_d: float = 7.0    # spot-faced well down the 45° back
+                                     # wedge onto the foot top: flat
+                                     # seat for the bolt head, hex key
+                                     # drops straight in
     nema_insert_depth: float = 3.0   # M3x3 heat-set insert straight into
                                      # the plate from the top, flush —
                                      # the plate IS the boss; module
-                                     # outer face stays untouched. M3x6
-                                     # screw: 4 foot + 2 engaged, tip
-                                     # stays inside the plate.
+                                     # outer face stays untouched.
+    # scene-mock bolt dims (button head M3, matching the assortment)
+    bolt_head_d: float = 5.7
+    bolt_head_h: float = 1.65
+    nema_foot_bolt_l: float = 8.0    # M3x8 in the foot joint
 
     @property
     def nema_screw_x_off(self) -> float:
         """Foot screw axis |X - shaft|. Derived."""
         return (
-            self.motor_body_w / 2 + self.nema_pocket_clear
+            self.motor_body_w / 2 + self.nema_body_clear
             + self.nema_leg_t + self.nema_foot_len - self.nema_screw_inset
         )
-    nema_hall_boss_h: float = 1.5    # hall PCB bosses on the deck
-    nema_hall_pilot_depth: float = 3.5  # M2 self-tap pilot (boss + deck)
 
     @property
     def nema_face_z(self) -> float:
-        """Motor mounting face height: body stands in the pocket.
-        Derived."""
-        return self.unit_plate_thick - self.nema_pocket_depth + self.motor_body_len
-
-    @property
-    def nema_hall_elem_y(self) -> float:
-        """Hall element centre Y for the NEMA variant: board points -Y
-        from the shaft, element on the magnet sweep circle. Derived."""
-        return self.byj_shaft_y - self.drum_magnet_r
+        """Motor mounting face height: body flat on the plate. Derived."""
+        return self.unit_plate_thick + self.motor_body_len
 
     @property
     def pilot_hole_d(self) -> float:
@@ -366,14 +373,15 @@ class Params:
     drum_hub_d: float = 16.8       # shaft hub outer diameter
     drum_hub_len: float = 15.8     # hub length below the web underside
     drum_bore_depth: float = 9.0   # double-D shaft bore depth (28BYJ)
-    drum_bore_depth_nema: float = 14.0  # single-D bore depth, NEMA
-                                   # variant: swallows the pancake's
-                                   # 20.5 shaft so the drum sits at the
-                                   # SAME axial spot as the 28BYJ build
-                                   # (tip z 43.5 vs bore end z 44.5;
-                                   # hub floor left: 15.8 - 14 = 1.8).
-                                   # Needs the shaft flat >= ~13.5 long
-                                   # — VERIFY with the motor in hand.
+    drum_bore_depth_nema: float = 17.5  # single-D bore, NEMA variant:
+                                   # >= hub_len + ring_t so it punches
+                                   # OPEN through hub and web — the
+                                   # shaft can slide in as deep as
+                                   # needed and the drum still sits at
+                                   # the same axial spot as the 28BYJ
+                                   # build. Bore must only see the
+                                   # shaft's flat zone: flat >= ~14
+                                   # long — VERIFY with motor in hand.
     drum_bore_clear: float = 0.2   # shaft bore clearance (dia and flats)
     drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
                                    # round section (bore is double-D; only

@@ -29,7 +29,7 @@ def test_printable_builders_exist():
     assert set(PRINTABLE) == {
         "unit",
         "unit-nema",
-        "bridge-nema",
+        "mount-nema",
         "flap",
         "drum-outer",
         "drum-inner",
