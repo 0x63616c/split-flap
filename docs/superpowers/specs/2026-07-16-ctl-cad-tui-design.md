@@ -32,6 +32,11 @@ watcher, no registry, no pane orchestration.
 
 ## Commands
 
+Root TUI menu is a namespace list from day one: `cad` (built now);
+`bench` (sim UI, flash+drive, serial-port utils — planned, NOT built in
+this pass); python REPL later. `test`/`install` may appear as cad menu
+items running the same uv commands.
+
 - `just cad` (no args) → TUI menu, `cad` section:
   - **view** → pick "watch a specific model" (list from catalog) or
     "watch last saved model", then runs view mode in place.
