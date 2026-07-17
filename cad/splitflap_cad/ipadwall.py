@@ -17,7 +17,7 @@ View: `just cad view ipad-wall` (full viz) or `ipad-bracket` (part).
 
 import math
 
-from build123d import Box, Cylinder, Polygon, Pos, Rot, extrude
+from build123d import Box, Cylinder, Polygon, Pos, RectangleRounded, Rot, extrude
 
 from .params import P
 from .viewer import Scene
@@ -87,8 +87,10 @@ def bracket():
     boss = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=bw)
 
     plate_w = bw + 2 * P.ibkt_tab_w
-    plate = Pos(P.ibkt_plate_thick / 2, 0, h / 2) * Box(
-        P.ibkt_plate_thick, plate_w, h
+    plate = (
+        Pos(0, 0, h / 2)
+        * Rot(0, 90, 0)
+        * extrude(RectangleRounded(h, plate_w, 8), amount=P.ibkt_plate_thick)
     )
     body = boss + plate
 
