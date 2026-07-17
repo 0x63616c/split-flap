@@ -72,6 +72,50 @@ class Params:
     pilot_clearance: float = 0.3  # radial gap around the Ø22 pilot boss
     screw_clearance: float = 0.2  # radial gap around M3 screws
 
+    # --- NEMA harness (pocket in the plate + printed bridge clamp) ---
+    # The pancake motor sits face-UP on the plate, body inside the drum
+    # barrel's interior, shaft on the same axis as the 28BYJ variant
+    # (mount_x, byj_shaft_y). Its tapped holes open upward, so a printed
+    # BRIDGE drops over the face: deck with a pilot-boss bore + 4 M3
+    # clearance holes (motor's own screws clamp deck to face), legs down
+    # the body's +-X flats, feet on the plate held by M3 screws from
+    # below the plate into heat-set inserts. The hall board mounts on
+    # bosses on the deck (the 28BYJ hall post location is buried under
+    # the motor body).
+    # Envelope (plate top z=3): body top/face z 23; deck top z 25.5 —
+    # under the drum guide rails (sweep r>=23.15 from z~26.3) and the
+    # inner-web fins (bottom edge z 28.3 at the rim, higher inboard).
+    # Feet stay under z 4.2 (outer drum ring underside sweeps z~4.7,
+    # annulus from r 26.5). Everything else inside barrel wall r 26.5.
+    nema_pocket_clear: float = 0.25  # pocket gap per side around the body
+    nema_pocket_depth: float = 1.0   # body recess into the plate (locates
+                                     # XY + blocks twist; 2mm floor left)
+    nema_bridge_t: float = 2.5       # deck thickness (M3x6 through it =
+                                     # 3.5 engaged, under the 4.5 min tap)
+    nema_bridge_r: float = 21.5      # deck outer radius about the shaft
+    nema_leg_t: float = 3.0          # leg thickness along X
+    nema_leg_w: float = 16.0         # leg width along Y
+    nema_foot_len: float = 9.0       # foot run along X past the leg face
+    nema_foot_h: float = 4.0         # foot height (insert lives in this)
+    nema_insert_depth: float = 3.5   # M3 insert bore depth into the foot
+    nema_cbore_d: float = 6.4        # screw-head recess in the plate
+                                     # bottom (button head Ø5.7 x 1.65)
+    nema_cbore_depth: float = 1.8
+    nema_hall_boss_h: float = 1.5    # hall PCB bosses on the deck
+    nema_hall_pilot_depth: float = 3.5  # M2 self-tap pilot (boss + deck)
+
+    @property
+    def nema_face_z(self) -> float:
+        """Motor mounting face height: body stands in the pocket.
+        Derived."""
+        return self.unit_plate_thick - self.nema_pocket_depth + self.motor_body_len
+
+    @property
+    def nema_hall_elem_y(self) -> float:
+        """Hall element centre Y for the NEMA variant: board points -Y
+        from the shaft, element on the magnet sweep circle. Derived."""
+        return self.byj_shaft_y - self.drum_magnet_r
+
     @property
     def pilot_hole_d(self) -> float:
         """Through-hole for the motor's pilot boss. Derived."""

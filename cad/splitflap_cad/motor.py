@@ -1,4 +1,6 @@
-"""NEMA 14 stepper — reference model of the vendor part, from the datasheet.
+"""NEMA 14 pancake stepper — reference model of the ordered vendor part
+(YEJMKJ 35x21mm 7Ncm; dims from the listing, flat/boss marked VERIFY in
+params.py until measured).
 
 Not printed; exists so mounts can be designed and fit-checked against it.
 Origin is the shaft axis at the mounting face, shaft pointing +Z.
