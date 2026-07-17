@@ -92,21 +92,39 @@ class Params:
                                      # XY + blocks twist; 2mm floor left)
     nema_bridge_t: float = 2.5       # deck thickness (M3x6 through it =
                                      # 3.5 engaged, under the 4.5 min tap)
-    nema_bridge_r: float = 21.5      # deck outer radius about the shaft
+    nema_bridge_r: float = 21.0      # deck outer radius about the shaft;
+                                     # capped so the foot screws' hex key
+                                     # (Ø2.5 at r 22.75) passes the rim
+                                     # with 0.5 — motor holes' heads
+                                     # (r 18.4 + Ø5.7) overhang 0.25, ok
     nema_leg_t: float = 3.0          # leg thickness along X
-    nema_leg_w: float = 16.0         # leg width along Y
-    nema_foot_len: float = 4.0       # foot run along X past the leg face
-                                     # (short: foot outer corners must
-                                     # stay inside the barrel wall sweep,
-                                     # r 26.5 — long low feet under the
-                                     # ring can't hold an insert)
-    nema_foot_h: float = 6.0         # foot height (insert lives in this)
+    nema_leg_w: float = 12.0         # leg width along Y
+    nema_foot_len: float = 4.5       # foot run along X past the leg face
+                                     # (outer face r 25.35 at y0: foot
+                                     # corners must stay inside the
+                                     # barrel wall sweep, r 26.5)
+    nema_foot_h: float = 4.0         # foot height (screw passes through)
     nema_foot_corner: float = 2.0    # plan chamfer on the foot's outer
                                      # corners (buys wall clearance)
-    nema_insert_depth: float = 3.5   # M3 insert bore depth into the foot
-    nema_cbore_d: float = 6.4        # screw-head recess in the plate
-                                     # bottom (button head Ø5.7 x 1.65)
-    nema_cbore_depth: float = 1.8
+    nema_screw_inset: float = 2.6    # foot screw axis inset from the
+                                     # foot's outer face — as far out as
+                                     # the button head seats (Ø5.7 lands
+                                     # ~flush), so the hex key clears the
+                                     # leg face (0.65) and deck rim (0.5)
+    nema_insert_depth: float = 3.0   # M3x3 heat-set insert straight into
+                                     # the plate from the top, flush —
+                                     # the plate IS the boss; module
+                                     # outer face stays untouched. M3x6
+                                     # screw: 4 foot + 2 engaged, tip
+                                     # stays inside the plate.
+
+    @property
+    def nema_screw_x_off(self) -> float:
+        """Foot screw axis |X - shaft|. Derived."""
+        return (
+            self.motor_body_w / 2 + self.nema_pocket_clear
+            + self.nema_leg_t + self.nema_foot_len - self.nema_screw_inset
+        )
     nema_hall_boss_h: float = 1.5    # hall PCB bosses on the deck
     nema_hall_pilot_depth: float = 3.5  # M2 self-tap pilot (boss + deck)
 

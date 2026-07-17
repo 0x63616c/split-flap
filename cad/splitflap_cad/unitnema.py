@@ -40,14 +40,8 @@ from .shell import (
 )
 
 
-def _foot_screw_offsets():
-    """|X - shaft| of each foot's plate-screw axis (foot centre)."""
-    leg_in = P.motor_body_w / 2 + P.nema_pocket_clear
-    return leg_in + P.nema_leg_t + P.nema_foot_len / 2
-
-
 def nema_plate():
-    """Return the NEMA unit side plate Part: shell + pocket + foot screws."""
+    """Return the NEMA unit side plate Part: shell + pocket + foot inserts."""
     plate = base_plate()
 
     # Body pocket: square recess in the plate top locating the motor
@@ -60,18 +54,14 @@ def nema_plate():
         fp, amount=-P.nema_pocket_depth
     )
 
-    # Bridge foot screws: M3 clearance through the plate, head recessed
-    # into the plate's outer (bottom) face, threads into a heat-set
-    # insert in the bridge foot above.
-    x_off = _foot_screw_offsets()
+    # Bridge foot inserts: M3x3 heat-set straight into the plate from
+    # the top, flush — the screws come down through the feet, so the
+    # module's outer (bottom) face stays untouched.
     for side in (-1, +1):
-        x = P.mount_x + side * x_off
-        plate -= Pos(x, P.byj_shaft_y, P.unit_plate_thick / 2) * Cylinder(
-            P.screw_hole_d / 2, P.unit_plate_thick * 2
-        )
-        plate -= Pos(x, P.byj_shaft_y, P.nema_cbore_depth / 2) * Cylinder(
-            P.nema_cbore_d / 2, P.nema_cbore_depth
-        )
+        x = P.mount_x + side * P.nema_screw_x_off
+        plate -= Pos(
+            x, P.byj_shaft_y, P.unit_plate_thick - P.nema_insert_depth / 2
+        ) * Cylinder(P.byj_insert_d / 2, P.nema_insert_depth)
 
     return (
         plate + back_wall() + stop_rod() + flap_guard() + front_lip()
@@ -93,11 +83,10 @@ def nema_bridge():
 
     # Legs: down the body's ±X flats to the plate top (the face sits
     # nema_face_z - plate_thick above it), hugging the body with the
-    # pocket clearance. Each leg bottoms out in a thicker ankle/foot
-    # block housing the heat-set insert vertically; the block stays
-    # compact so its corners keep clear of the barrel wall sweep
-    # (r 26.5 about the shaft from z 6.3 up) — plan-chamfered outer
-    # corners buy the last bit of gap.
+    # pocket clearance. Each leg bottoms out in a foot block the screw
+    # passes through; the block stays compact so its corners keep clear
+    # of the barrel wall sweep (r 26.5 about the shaft from z 6.3 up) —
+    # plan-chamfered outer corners buy the last bit of gap.
     leg_in = P.motor_body_w / 2 + P.nema_pocket_clear
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
     legs_feet = None
@@ -114,13 +103,12 @@ def nema_bridge():
         foot = Pos(side * (leg_in + foot_span / 2), 0, -drop) * extrude(
             fp, amount=P.nema_foot_h
         )
-        # heat-set insert bore up from the foot's underside (the plate
-        # screw comes from below the plate)
+        # M3 clearance through-hole — screw drops in from above into the
+        # flush insert in the plate; axis sits as far outboard as the
+        # button head seats, so the hex key clears the leg face
         foot -= Pos(
-            side * (leg_in + P.nema_leg_t + P.nema_foot_len / 2),
-            0,
-            -drop + P.nema_insert_depth / 2,
-        ) * Cylinder(P.byj_insert_d / 2, P.nema_insert_depth)
+            side * P.nema_screw_x_off, 0, -drop + P.nema_foot_h / 2
+        ) * Cylinder(P.screw_hole_d / 2, P.nema_foot_h * 2)
         lf = leg + foot
         legs_feet = lf if legs_feet is None else legs_feet + lf
 
@@ -152,7 +140,11 @@ def full_unit_nema():
 
 def scene():
     """NEMA unit: plate (+ fins when the STEP is on disk), bridge posed,
-    motor ghost face-up in the pocket."""
+    motor ghost face-up in the pocket, drum ghost around it.
+
+    Drum pose is the 28BYJ-derived one for now — right axial spot in the
+    box; the NEMA drum (deeper bore for the 20.5 shaft) is future work."""
+    from .drum import posed_drum_parts
     from .frames import NEMA_FACE_IN_UNIT
     from .motor import motor
     from .viewer import Scene
@@ -161,11 +153,14 @@ def scene():
         u = full_unit_nema()
     except FileNotFoundError:
         u = nema_plate()
+    drum_o, drum_i = posed_drum_parts()
     return (
         Scene()
         .add(u, "unit_nema", "orange")
         .add(NEMA_FACE_IN_UNIT * nema_bridge(), "bridge", "violet")
         .add(NEMA_FACE_IN_UNIT * motor(), "motor", "steelblue", alpha=0.5)
+        .add(drum_o, "drum_outer", "gray", alpha=0.3)
+        .add(drum_i, "drum_inner", "hotpink", alpha=0.3)
     )
 
 
