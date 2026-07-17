@@ -8,8 +8,10 @@
 #   just cad down          stop watcher + both viewers
 #
 # Two viewers: :3939 = full assembly (top pane), :3940 = focus model
-# (bottom pane). The watcher rebuilds + re-pushes both on every .py save
-# in cad/splitflap_cad/; focus = pinned model, else the saved file's model.
+# (middle pane), plus a thin terminal pane tailing the watch log at the
+# bottom (heights ~3:3:1). The watcher rebuilds + re-pushes both on every
+# .py save in cad/splitflap_cad/; focus = pinned model, else the saved
+# file's model.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -34,12 +36,15 @@ watch_loop() {
     # but *.py keeps __pycache__ writes from re-triggering the loop.
     fswatch -o -l 0.5 -e '.*' -i '\.py$' "$SRC_DIR" | while read -r _; do
         f=$(ls -t "$SRC_DIR"/*.py | head -1)
-        echo "--- $(date '+%H:%M:%S') $(basename "$f")"
+        echo "--- $(date '+%F %H:%M:%S') $(basename "$f")"
         out=$(CLI sync "$f" 2>&1) && rc=0 || rc=$?
-        echo "$out"
+        # local-time prefix on every line so the log pane reads as a timeline
+        echo "$out" | sed "s/^/[$(date '+%H:%M:%S')] /"
         if [ "$rc" != 0 ]; then
-            # loud failure: panes keep the LAST GOOD model, so tell the user
-            err=$(echo "$out" | grep -E '^[A-Za-z_.]*(Error|Exception)' | tail -1)
+            # loud failure: panes keep the LAST GOOD model, so tell the user.
+            # `|| true`: grep exits 1 on no match (e.g. OCC's Standard_Failure
+            # tracebacks) and set -e would kill the whole watch loop.
+            err=$(echo "$out" | grep -E '^[A-Za-z_.]*(Error|Exception|Failure)' | tail -1 || true)
             command -v cmux >/dev/null 2>&1 && cmux notify \
                 --title "CAD build failed: $(basename "$f")" \
                 --body "${err:-see $WATCH_LOG}" 2>/dev/null || true
@@ -158,6 +163,63 @@ ensure_panes() {
     fi
 
     echo "panes: assembly=$([ -n "$top" ] && echo "$top" || echo '?') focus=$([ -n "$bottom" ] && echo "$bottom" || echo '?')"
+
+    # viewer restarted -> existing pages hold dead websockets and silently
+    # miss every push (stuck on the OCP demo logo). Reload so the coming
+    # `CLI sync` lands on live pages.
+    if [ "$started_viewer" = 1 ]; then
+        for s in $top $bottom; do
+            cmux browser --surface "$s" reload >/dev/null 2>&1 || true
+        done
+    fi
+
+    ensure_log_pane "$top" "$bottom"
+}
+
+surface_pane() {
+    # pane containing surface $1
+    cmux list-panes 2>/dev/null | grep -o 'pane:[0-9]*' | while read -r p; do
+        cmux list-pane-surfaces --pane "$p" 2>/dev/null | grep -q "$1 " && echo "$p" && break
+    done
+}
+
+LOG_TAB_TITLE="cad watch log"
+
+ensure_log_pane() {
+    # thin terminal pane under the focus viewer, tailing $WATCH_LOG.
+    # Heights end up ~3:3:1 (assembly:focus:log). Idempotent via tab title;
+    # sizing only runs on creation so it never fights manual adjustments.
+    local assembly_surface=$1 focus_surface=$2
+    [ -n "$focus_surface" ] || return 0
+    if cmux tree 2>/dev/null | grep -q "\"$LOG_TAB_TITLE\""; then
+        echo "log pane up"
+        return 0
+    fi
+
+    local focus_pane log_surface
+    focus_pane=$(surface_pane "$focus_surface")
+    [ -n "$focus_pane" ] || return 0
+    log_surface=$(cmux new-surface --type terminal --pane "$focus_pane" --focus false 2>/dev/null |
+        grep -o 'surface:[0-9]*' | head -1)
+    [ -n "$log_surface" ] || return 0
+    cmux split-off --surface "$log_surface" down --focus false >/dev/null 2>&1 || true
+    cmux rename-tab --surface "$log_surface" "$LOG_TAB_TITLE" >/dev/null 2>&1 || true
+    cmux send --surface "$log_surface" "exec tail -n 20 -F $WATCH_LOG" >/dev/null 2>&1 || true
+    cmux send-key --surface "$log_surface" enter >/dev/null 2>&1 || true
+    echo "log pane created ($log_surface)"
+
+    # size 3:3:1 — webview innerHeight gives pane pixel heights; the fresh
+    # split halved the focus region, so log ~= focus right now.
+    local a f t u
+    a=$(cmux browser --surface "$assembly_surface" eval innerHeight 2>/dev/null) || a=""
+    f=$(cmux browser --surface "$focus_surface" eval innerHeight 2>/dev/null) || f=""
+    if [ -n "$a" ] && [ -n "$f" ]; then
+        t=$((a + f + f)) u=$((t / 7))
+        # bottom edge of focus down: log shrinks to ~1u
+        [ $((f - u)) -gt 0 ] && cmux resize-pane --pane "$focus_pane" -D --amount $((f - u)) >/dev/null 2>&1 || true
+        # top edge of focus up: assembly shrinks to ~3u, focus grows to ~3u
+        [ $((a - 3 * u)) -gt 0 ] && cmux resize-pane --pane "$focus_pane" -U --amount $((a - 3 * u)) >/dev/null 2>&1 || true
+    fi
 }
 
 ensure_panes
