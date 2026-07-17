@@ -88,19 +88,22 @@ def nema_bridge():
     body = deck
     boss_out = wall_out + P.nema_foot_len
     z_seat = -drop + P.nema_foot_h
+    rise = drop + P.nema_flange_t  # plate top -> deck TOP, flush with it
+    z_mid = (P.nema_flange_t - drop) / 2
     for side in (-1, +1):
-        # Wall: up the body flat, plate top to the face plane. Width
-        # sits fully inside the deck contour — no arc taper, full
-        # thickness end to end.
-        wall = Pos(side * (wall_in + wall_out) / 2, 0, -drop / 2) * Box(
-            P.nema_leg_t, P.nema_wall_w, drop
+        # Wall: up the body flat, plate top to the deck top — the plan
+        # reads as the deck circle with a tab out each side. Width sits
+        # fully inside the deck contour — no arc taper, full thickness
+        # end to end.
+        wall = Pos(side * (wall_in + wall_out) / 2, 0, z_mid) * Box(
+            P.nema_leg_t, P.nema_wall_w, rise
         )
         # Bolt boss: full-height column on the wall's outer face, plate
-        # to deck — solid material all round the bolt path (a mere
+        # to deck top — solid material all round the bolt path (a mere
         # scallop left knife-edge slivers in the wall).
         boss = Pos(
-            side * (wall_out + boss_out) / 2, 0, -drop / 2
-        ) * Box(boss_out - wall_out, P.nema_foot_w, drop)
+            side * (wall_out + boss_out) / 2, 0, z_mid
+        ) * Box(boss_out - wall_out, P.nema_foot_w, rise)
         body += wall + boss
 
         # Bolt path: open-back U-slot down the column (Ø well + a slot
