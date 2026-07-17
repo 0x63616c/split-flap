@@ -600,6 +600,8 @@ class Params:
     ibkt_screw_d: float = 4.5      # drywall screw shank clearance
     ibkt_screw_head_d: float = 9.0  # pan-head counterbore diameter
     ibkt_screw_head_depth: float = 3.0
+    ibkt_nose_r: float = 3.5       # top-front edge round (iPad swings past
+                                   # here) — must stay < ibkt_wall
 
     @property
     def unit_back_rise(self) -> float:

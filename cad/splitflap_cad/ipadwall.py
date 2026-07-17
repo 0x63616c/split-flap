@@ -17,7 +17,17 @@ View: `just cad view ipad-wall` (full viz) or `ipad-bracket` (part).
 
 import math
 
-from build123d import Box, Cylinder, Polygon, Pos, RectangleRounded, Rot, extrude
+from build123d import (
+    Axis,
+    Box,
+    Cylinder,
+    Polygon,
+    Pos,
+    RectangleRounded,
+    Rot,
+    extrude,
+    fillet,
+)
 
 from .params import P
 from .viewer import Scene
@@ -85,6 +95,9 @@ def bracket():
     )
     bw = P.ibar_w + 2 * P.ibkt_clear + 2 * P.ibkt_wall
     boss = Pos(0, bw / 2, 0) * Rot(90, 0, 0) * extrude(profile, amount=bw)
+    # round the top-front nose — the iPad swings past this edge
+    nose = boss.edges().filter_by(Axis.Y).sort_by(Axis.X)[-1]
+    boss = fillet(nose, radius=P.ibkt_nose_r)
 
     plate_w = bw + 2 * P.ibkt_tab_w
     plate = (
