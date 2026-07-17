@@ -196,7 +196,7 @@ func (m *appModel) View() string {
 // --- screens -----------------------------------------------------------
 
 func rootScreen() screen {
-	return screen{id: "root", title: "ctl", items: []menuItem{
+	return screen{id: "root", title: "home", items: []menuItem{
 		{label: "cad", help: "viewers & exports"},
 		{label: "bench", help: "(coming soon)", inert: true},
 	}}
