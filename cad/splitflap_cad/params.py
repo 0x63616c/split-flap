@@ -338,8 +338,9 @@ class Params:
     # 1.5 deg finward): rib flank -> magnet boss 0.5, screw boss ->
     # magnet boss ~0.45 (fatter and they'd merge), rib corner clears
     # the key-fin rails by ~1mm,
-    # rib base ≈ drum z 21.4 clears the hall board sweep (board top
-    # unit z 25.1 ≈ drum z 20.4, and the board sits at ~270 deg anyway).
+    # rib base (pennant deep point) ≈ drum z 25.4 clears the hall board
+    # sweep (board top unit z 25.1 ≈ drum z 20.4, and the board sits at
+    # ~270 deg anyway).
     drum_screw_ang: float = 21.0   # bore axis angle from the key fin
     drum_screw_r: float = 22.75    # bore axis radius
     drum_screw_boss_d: float = 9.4  # boss dia; edge (r 27.45) reaches

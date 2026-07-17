@@ -324,6 +324,10 @@ func (m *appModel) View() string {
 	}
 	s := m.top()
 	out := header
+	if s.filtering {
+		out += "  /" + s.query + "▌" +
+			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems))) + "\n\n"
+	}
 	maxw := 0
 	for _, it := range s.items {
 		if it.help != "" && len([]rune(it.label)) > maxw {
@@ -354,8 +358,6 @@ func (m *appModel) View() string {
 		help = "  ↑↓ / move · / / filter · esc / go back · enter / select · ctrl+c / quit"
 	}
 	if s.filtering {
-		out += "\n  /" + s.query + "▌" +
-			dimStyle.Render(fmt.Sprintf("   %d/%d", len(s.items), len(s.allItems)))
 		help = "  type to filter · ↑↓ / move · enter / select · esc / clear"
 	}
 	footer := dimStyle.Render(help)
