@@ -617,8 +617,9 @@ class Params:
     ugrom_flange_t: float = 2.0
     ugrom_slot_w: float = 11.0     # USB-C-shaped stadium slot: the molded
     ugrom_slot_h: float = 6.5      # plug threads straight through, no slit
-    ugrom_rib_n: int = 4           # rib rings gripping the gypsum
-    ugrom_rib_proud: float = 1.0   # crest past barrel OD — 0.75/side bite
+    ugrom_rib_n: int = 3           # rib rings gripping the gypsum
+    ugrom_rib_proud: float = 0.75  # crest past barrel OD — grips but
+                                   # still removable (1.0 was one-way)
     ugrom_rib_l: float = 2.5       # ramp length; step faces the flange
 
     @property
