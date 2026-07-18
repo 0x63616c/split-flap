@@ -621,7 +621,10 @@ class Params:
     ugrom_flange_d: float = 46.0   # face flange OD — 4mm cover past the hole
     ugrom_flange_t: float = 2.0
     ugrom_slot_w: float = 11.0     # USB-C-shaped stadium slot: the molded
-    ugrom_slot_h: float = 6.0      # plug threads straight through, no slit
+    ugrom_slot_h: float = 7.0      # plug threads straight through, no slit
+    ugrom_rib_n: int = 3           # barb rings gripping the gypsum
+    ugrom_rib_proud: float = 0.8   # crest past barrel OD — 0.3/side bite
+    ugrom_rib_l: float = 2.5       # ramp length; step faces the flange
 
     @property
     def unit_back_rise(self) -> float:
