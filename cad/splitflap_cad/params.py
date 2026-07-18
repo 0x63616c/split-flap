@@ -62,10 +62,13 @@ class Params:
     # — they decide whether two modules latch, so they never get rounded.
     # Everything else is ours to draw. fin_depth doubles as the corner tabs'
     # Y width, which puts every hole dead-centre in an 8.78 square footprint.
+    #
+    # Every tab is >= fin_flat_t thick because every tab holds a magnet. The
+    # vendor's tabs tapered to 3 at the mating edge, which is fine for a
+    # screw and not for a pocket that needs a floor behind it.
     fin_depth: float = 8.78        # how far the tabs stand off the wall face
-    fin_tab_t: float = 3.0         # flat plate thickness (bottom + stack tabs)
     fin_top_tab_h: float = 10.0    # top corner tab height at the wall face;
-                                   # ramps down to fin_tab_t at the outer edge
+                                   # ramps down to fin_flat_t at the outer edge
     fin_stack_z_top: float = 30.5  # stack tab top face
     fin_stack_h: float = 14.0469   # stack tab height at the wall face; the
                                    # ramp below it is 45 deg (= fin_depth run)
@@ -157,9 +160,9 @@ class Params:
         return self.drum_magnet_t + self.fin_magnet_clear
 
     @property
-    def fin_boss_h(self) -> float:
-        """Material depth a magnet needs: pocket + floor behind it. The
-        flat tabs are thinner than this, so they get a boss. Derived."""
+    def fin_flat_t(self) -> float:
+        """Tab thickness — every tab is at least this, set by what a
+        magnet needs behind it: pocket plus floor. Derived."""
         return self.fin_pocket_h + self.fin_magnet_floor
 
     @property

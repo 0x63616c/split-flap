@@ -154,17 +154,17 @@ def with_fins(body):
 
     Pockets open at the mating faces so two modules meet magnet-to-
     magnet; a poke hole through the floor lets a magnet be pushed back
-    out. Where the pocket goes is fins.magnet_locs() — one source for
-    both the bosses and these cuts, so they cannot drift apart.
+    out. Sites come from fins.magnet_locs(), the same list fins.py builds
+    the tabs around, so a pocket can't land where there's no material.
     """
     from .fins import fins, magnet_locs
 
     unit = body + fins()
-    for loc, _flat in magnet_locs():
+    for loc in magnet_locs():
         unit -= (
             loc
             * Pos(0, 0, P.fin_pocket_h / 2)
             * Cylinder((P.drum_magnet_d + P.drum_magnet_clear) / 2, P.fin_pocket_h)
         )
-        unit -= loc * Pos(0, 0, P.fin_boss_h) * Cylinder(P.drum_poke_d / 2, 10)
+        unit -= loc * Pos(0, 0, P.fin_flat_t) * Cylinder(P.drum_poke_d / 2, 10)
     return unit
