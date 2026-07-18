@@ -38,7 +38,7 @@ from .shell import (
     flap_guard,
     front_lip,
     stop_rod,
-    with_vendor_fins,
+    with_fins,
 )
 
 
@@ -156,24 +156,20 @@ def posed_foot_bolts():
 
 
 def full_unit_nema():
-    """The printable NEMA unit: parametric body + verbatim vendor
-    interconnect fins with magnet-pocket mods. Needs the STEP on disk."""
-    return with_vendor_fins(nema_plate())
+    """The printable NEMA unit: parametric body + interconnect fins."""
+    return with_fins(nema_plate())
 
 
 def scene():
-    """NEMA unit: plate (+ fins when the STEP is on disk), bridge
-    posed, motor ghost face-up, foot bolts, drum ghost around it
-    (NEMA-bore inner; same axial pose as the 28BYJ build)."""
+    """NEMA unit: plate + fins, bridge posed, motor ghost face-up, foot
+    bolts, drum ghost around it (NEMA-bore inner; same axial pose as the
+    28BYJ build)."""
     from .drum import posed_drum_parts
     from .frames import NEMA_FACE_IN_UNIT
     from .motor import motor
     from .viewer import Scene
 
-    try:
-        u = full_unit_nema()
-    except FileNotFoundError:
-        u = nema_plate()
+    u = full_unit_nema()
     drum_o, drum_i = posed_drum_parts("nema")
     return (
         Scene()

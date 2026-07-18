@@ -1,11 +1,11 @@
 """Registry of parts under golden-geometry guard (see test_geometry.py).
 
-Two tiers:
-- BREP + fingerprint: fully-ours parts — exact geometry committed to
-  golden/, XOR-diffable.
-- fingerprint only: parts embedding vendor geometry (full_unit carries
-  verbatim STEP fins; the STEP is gitignored, license unclear, so its
-  shape must not be committed) — volume/area/bbox/COM guard only.
+Every part is BREP + fingerprint: exact geometry committed to golden/,
+XOR-diffable. The FINGERPRINT_ONLY tier existed for the two full units,
+which used to carry verbatim vendor STEP fins we couldn't commit; the
+fins are parametric now, so both are guarded like everything else. The
+tier stays as an empty dict for whenever third-party geometry shows up
+again.
 
 Builders are lazy; importing this module builds nothing.
 """
@@ -125,12 +125,11 @@ BREP_PARTS = {
     "ipad-body": _ipad_body,
     "ipad-lid": _ipad_lid,
     "usb-grommet": _usb_grommet,
+    "unit-full": _full_unit,
+    "unit-nema-full": _full_unit_nema,
 }
 
-FINGERPRINT_ONLY = {
-    "unit-full": _full_unit,  # vendor fins embedded — no BREP committed
-    "unit-nema-full": _full_unit_nema,  # ditto
-}
+FINGERPRINT_ONLY = {}
 
 ALL_PARTS = {**BREP_PARTS, **FINGERPRINT_ONLY}
 

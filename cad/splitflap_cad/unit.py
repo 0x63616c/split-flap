@@ -31,7 +31,7 @@ from .shell import (
     front_lip,
     stop_rod,
     window_profile,
-    with_vendor_fins,
+    with_fins,
 )
 
 
@@ -198,23 +198,15 @@ def unit_plate():
 
 
 def full_unit():
-    """The printable unit: parametric body (incl. our motor towers) +
-    verbatim vendor interconnect fins. Plate lightening windows are our
-    own (plate_windows), cut in unit_plate; the tabs' screw holes become
-    magnet pockets. Needs the STEP on disk."""
-    return with_vendor_fins(unit_plate())
+    """The printable unit: parametric body (incl. our motor towers and
+    plate lightening windows) plus the interconnect fins."""
+    return with_fins(unit_plate())
 
 
 def scene():
-    """Printable unit; falls back to the bare plate when the vendor STEP
-    (gitignored) isn't on disk."""
     from .viewer import Scene
 
-    try:
-        u = full_unit()
-    except FileNotFoundError:
-        u = unit_plate()
-    return Scene().add(u, "unit")
+    return Scene().add(full_unit(), "unit")
 
 
 def plate_scene():

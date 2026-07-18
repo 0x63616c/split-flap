@@ -14,10 +14,23 @@ Bare geometry only. shell.with_fins() unions these onto a body and turns
 the holes into magnet pockets.
 """
 
-from build123d import Plane, Polygon, Pos, extrude, mirror
+from build123d import Cylinder, Plane, Polygon, Pos, Rot, extrude, mirror
 
 from .geo import radial_plate
 from .params import P
+
+
+def _boss(loc):
+    """Magnet boss: a disc inscribed in the tab's square footprint,
+    standing fin_boss_h off the mating face into the module. `loc` puts
+    its base on that face, axis pointing inward.
+
+    The flat tabs are fin_tab_t thick — under half what a magnet needs
+    behind it — so the material has to come from somewhere. A disc
+    concentric with the magnet is the honest shape for that: it's thick
+    exactly where the pocket is and nowhere else.
+    """
+    return loc * Pos(0, 0, P.fin_boss_h / 2) * Cylinder(P.fin_depth / 2, P.fin_boss_h)
 
 
 def _corner_tab_bottom():
@@ -70,14 +83,40 @@ def _stack_tab():
     return Pos(0, y_face - P.fin_tab_t / 2, 0) * radial_plate(profile, P.fin_tab_t)
 
 
-def fins():
-    """All five tabs, mirrored onto both +-Y edges.
+def magnet_locs():
+    """Every magnet axis, posed on its mating face pointing into the
+    module: (location, is_flat_tab). THE latch interface — shell.py cuts
+    pockets here and fins() bosses the flat tabs to suit.
 
-    The vendor had no -Y stacking tab; we mirror one on so a stack mates
-    top-to-bottom instead of only in one direction.
+    The top corner tabs are already deep enough at the axis, so they
+    take no boss.
     """
+    out = []
+    for y_s in (+1, -1):
+        y = y_s * P.fin_hole_y
+        out.append((Pos(P.fin_hole_x, y, 0), True))  # bottom, +Z inward
+        out.append(
+            (Pos(P.fin_hole_x, y, P.unit_back_height) * Rot(180, 0, 0), False)
+        )  # top, -Z inward
+        out.append(
+            (
+                Pos(P.fin_hole_x, y_s * P.unit_plate_h / 2, P.fin_stack_hole_z)
+                * Rot(-y_s * 90, 0, 0)
+            , True)
+        )  # stack, inward along -y_s
+    return out
+
+
+def fins():
+    """All five tabs plus the -Y stacking tab the vendor lacks (mirrored
+    on so a stack mates top-to-bottom, not just one way), with magnet
+    bosses on the flat ones."""
     half = _corner_tab_bottom() + _corner_tab_top() + _stack_tab()
-    return half + mirror(half, Plane.XZ)
+    body = half + mirror(half, Plane.XZ)
+    for loc, flat in magnet_locs():
+        if flat:
+            body += _boss(loc)
+    return body
 
 
 def scene():

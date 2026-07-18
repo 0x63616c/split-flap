@@ -69,6 +69,9 @@ class Params:
     fin_stack_z_top: float = 30.5  # stack tab top face
     fin_stack_h: float = 14.0469   # stack tab height at the wall face; the
                                    # ramp below it is 45 deg (= fin_depth run)
+    fin_magnet_floor: float = 1.5  # material behind the magnet, pierced by a
+                                   # poke hole so it can be pushed back out
+    fin_magnet_clear: float = 0.3  # pocket depth over magnet thickness
 
     # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A
     # bipolar, 1.8deg, 4-lead). Dims from the vendor's product drawing;
@@ -158,6 +161,17 @@ class Params:
     nema_foot_bolt_l: float = 8.0    # M3x8 in the foot joint
 
     @property
+    def fin_pocket_h(self) -> float:
+        """Magnet pocket depth from the mating face. Derived."""
+        return self.drum_magnet_t + self.fin_magnet_clear
+
+    @property
+    def fin_boss_h(self) -> float:
+        """Material depth a magnet needs: pocket + floor behind it. The
+        flat tabs are thinner than this, so they get a boss. Derived."""
+        return self.fin_pocket_h + self.fin_magnet_floor
+
+    @property
     def fin_wall_face(self) -> float:
         """Back wall outer face — where the fins root. Derived."""
         return -self.unit_plate_w / 2
@@ -178,6 +192,12 @@ class Params:
         """Corner magnet axis |Y| — centred across the corner tabs' Y
         width. INTERFACE. Derived."""
         return self.unit_plate_h / 2 - self.fin_depth / 2
+
+    @property
+    def fin_stack_hole_z(self) -> float:
+        """Stack magnet axis Z — mid back height, so a stacked pair meets
+        symmetrically. INTERFACE. Derived."""
+        return self.unit_back_height / 2
 
     @property
     def nema_screw_x_off(self) -> float:

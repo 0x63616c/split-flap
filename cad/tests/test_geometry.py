@@ -65,8 +65,19 @@ def test_fingerprint(name, goldens):
         )
 
 
-def _residual(a, b) -> float:
-    d = a - b
+def _boolean_broke(exc: Exception) -> bool:
+    """OCC gave up rather than returning a shape."""
+    return "Null TopoDS_Shape" in str(exc)
+
+
+def _residual(a, b) -> float | None:
+    """|a - b| in mm³, or None if OCC's boolean broke down."""
+    try:
+        d = a - b
+    except ValueError as exc:
+        if _boolean_broke(exc):
+            return None
+        raise
     return 0.0 if d is None else abs(d.volume)
 
 
@@ -111,18 +122,26 @@ def test_xor_vs_golden_brep(name):
     golden = import_brep(str(path))
     new = build(name)
     extra, missing = _residual(new, golden), _residual(golden, new)
-    if extra < XOR_TOL and missing < XOR_TOL:
+    if extra is not None and missing is not None and extra < XOR_TOL and missing < XOR_TOL:
         return
     # boolean breakdown (not a real diff): identical twins with fully
-    # coincident faces can defeat BOPAlgo — residual comes back as the
-    # WHOLE part on both sides while the intersection comes back empty.
-    # A genuine geometry change never looks like that. Fall back to the
-    # per-cell volume comparison.
-    broke = (
-        abs(extra - new.volume) < 1.0
-        and abs(missing - golden.volume) < 1.0
-        and (new & golden).volume < XOR_TOL
-    )
+    # coincident faces defeat BOPAlgo. It shows up two ways — the op
+    # raises on a null result, or it "succeeds" with the WHOLE part as
+    # the residual on both sides and an empty intersection. A genuine
+    # geometry change never looks like either. Fall back to the per-cell
+    # volume comparison.
+    broke = extra is None or missing is None
+    if not broke:
+        try:
+            broke = (
+                abs(extra - new.volume) < 1.0
+                and abs(missing - golden.volume) < 1.0
+                and (new & golden).volume < XOR_TOL
+            )
+        except ValueError as exc:
+            if not _boolean_broke(exc):
+                raise
+            broke = True
     if broke:
         worst = _grid_mismatch(new, golden)
         assert worst < XOR_TOL, (
