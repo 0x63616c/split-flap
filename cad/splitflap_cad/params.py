@@ -443,7 +443,16 @@ class Params:
                                    # build. Bore must only see the
                                    # shaft's flat zone: flat >= ~14
                                    # long — VERIFY with motor in hand.
-    drum_bore_clear: float = 0.2   # shaft bore clearance (dia and flats)
+    drum_bore_clear: float = 0.25  # shaft bore clearance (dia and flats).
+                                   # 0.2 pressed on but fought back; this
+                                   # is one printer-noise step looser, no
+                                   # more — the fit must stay a press.
+    drum_bore_vent_d: float = 2.0  # coaxial vent from the bore floor up
+                                   # through web top face. The byj bore is
+                                   # blind (depth < hub_len + ring_t), so
+                                   # without this the shaft pistons against
+                                   # trapped air. NEMA bore is already
+                                   # through, so the cut is a no-op there.
     drum_flat_clear: float = 0.5   # hub bore bottom above the shaft's
                                    # round section (bore is double-D; only
                                    # the flat zone may enter it)

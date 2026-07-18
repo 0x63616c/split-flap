@@ -267,6 +267,11 @@ def drum_inner(shaft: str = "byj"):
     hub -= Pos(0, 0, bore_z) * Cylinder(bore_r, depth) & Pos(
         0, slab_y, bore_z
     ) * Box(bore_r * 2, flat_w, depth)
+    # Vent: coaxial hole from the bore floor out through the web's top
+    # face, so pressing the shaft home doesn't compress trapped air. Cut
+    # the full hub+web height — inside the bore it changes nothing, above
+    # the floor it is the vent. (nema's bore is already through; there
+    # this only widens what is left of the round section.)
     # lead-in chamfer around the bore mouth so the shaft self-centres on
     # insertion: the bore-opening edge loop on the hub's bottom face
     hub = chamfer(reach_under(bottom_edges(hub), bore_r + 1), P.drum_bore_chamfer)
@@ -275,6 +280,15 @@ def drum_inner(shaft: str = "byj"):
         reach_over(bottom_edges(hub), P.drum_hub_d / 2 - 1), P.drum_hub_edge_chamfer
     )
     body += hub
+
+    # Vent: coaxial hole from the bore floor out through the web's top
+    # face, so pressing the shaft home doesn't compress trapped air.
+    # Spans the whole hub+web height — inside the bore it changes
+    # nothing, above the bore floor it is the vent. (The nema bore
+    # already punches through, so there this is a no-op.)
+    body -= Pos(0, 0, (P.drum_ring_t - P.drum_hub_len) / 2) * Cylinder(
+        P.drum_bore_vent_d / 2, P.drum_hub_len + P.drum_ring_t
+    )
 
     # Reinforce the fin junctions in ONE fillet call so OCC blends the
     # shared corners (sequential fillets fail where they meet):
