@@ -17,17 +17,49 @@ ROOT = Path(__file__).parent.parent
 PCB = ROOT / "layouts/default/default.kicad_pcb"
 
 # address -> (x, y, rot_deg)  origin top-left, y down, mm
-# Board 36x48. XIAO socket rows 15.24mm apart, USB end at top edge.
+# Board 45x60 — fits behind a module (plate is 95x118) with room to spare, so
+# parts are spaced for hand-soldering rather than packed. XIAO socket rows
+# 15.24mm apart, USB end at top edge.
 PLACEMENT = {
-    "xiao_left": (10.38, 10.5, 270),   # D0..D6, pin1 at top
-    "xiao_right": (25.62, 10.5, 270),  # 5V..D7, pin1 at top
-    "uln": (18.0, 30.0, 90),
-    "c_hf": (24.7, 30.0, 90),
-    "c_bulk": (30.5, 30.5, 90),
-    "j_motor": (10.5, 43.0, 180),
-    "j_hall": (27.0, 42.5, 0),
+    "xiao_left": (14.88, 14.0, 270),   # D0..D6, pin1 at top
+    "xiao_right": (30.12, 14.0, 270),  # 5V..D7, pin1 at top
+    "uln": (18.0, 34.0, 90),
+    "c_hf": (25.5, 34.0, 90),
+    "c_bulk": (30.5, 34.5, 90),
+    # rot 0 (was 180): latch faces the board edge so the motor cable exits
+    # off-board instead of over the chip. Pin order along +x is 5..1.
+    "j_motor": (13.0, 44.0, 0),
+    "j_hall": (30.0, 50.5, 0),
 }
-BOARD_W, BOARD_H = 36.0, 48.0
+BOARD_W, BOARD_H = 45.0, 60.0
+
+# M3 clearance holes, one per corner — heat-set inserts in the back shell.
+MOUNT_HOLES = [(3.5, 3.5), (41.5, 3.5), (3.5, 56.5), (41.5, 56.5)]
+MOUNT_DIA = 3.2
+
+# Board-level silk: (text, x, y, size, rot). Per-footprint refdes/polarity/pin-1
+# silk already comes from the footprints — this is the stuff that makes the
+# board self-documenting when you're plugging connectors into it.
+SILK = [
+    ("XIAO ESP32-C6", 22.5, 2.6, 1.0, 0),
+    ("USB ^", 22.5, 4.4, 0.8, 0),
+    ("SPLIT-FLAP DRIVER v1", 22.5, 25.6, 1.1, 0),
+    ("IN1-4 = D0-D3", 8.0, 29.5, 0.8, 0),
+    ("HALL DO = D8", 8.0, 31.3, 0.8, 0),
+    ("28BYJ-48 MOTOR", 13.5, 54.2, 0.9, 0),
+    ("+5V", 7.92, 41.4, 0.8, 0),
+    ("HALL", 30.0, 46.8, 0.9, 0),
+]
+
+# Footprint-local refdes overrides, for the ones whose stock position lands on
+# their own pad or a neighbour's. Local coords; the footprint rotation is
+# applied on top, so these are pre-rotation.
+REFDES_LOCAL = {
+    "xiao_left": (-8.99, 2.5),   # J3 — off the pad column, to its left
+    "xiao_right": (-8.99, 2.5),  # J4 — ditto
+    "c_hf": (-8.0, -2.0),        # C2 — open space below, well clear of C1
+    "c_bulk": (-7.0, 0.0),       # C1 — stock position lands inside its own pad 1
+}
 
 
 def rot(x, y, deg):
@@ -62,6 +94,14 @@ def main():
             for obj in list(fp.pads) + list(fp.fp_texts) + list(fp.propertys):
                 obj.at.r = ((obj.at.r or 0) + delta) % 360
 
+        if addr in REFDES_LOCAL:
+            ref = next(p for p in fp.propertys if p.name == "Reference")
+            ref.at.x, ref.at.y = REFDES_LOCAL[addr]
+            # these fields ship right-justified; with the footprint rotated that
+            # throws KiCad's extent calc off, so centre them
+            if ref.effects:
+                ref.effects.justify = None
+
     # board outline
     while len(k.gr_lines):
         k.gr_lines.pop(len(k.gr_lines) - 1)
@@ -79,6 +119,33 @@ def main():
         )
         k.gr_lines.append(line)
 
+    # M3 mounting holes as Edge.Cuts circles (routed, not drilled — no NPTH
+    # footprint library here, and fab treats an inner edge cut as a hole)
+    while len(k.gr_circles):
+        k.gr_circles.pop(len(k.gr_circles) - 1)
+    for hx, hy in MOUNT_HOLES:
+        k.gr_circles.append(kicad.pcb.Circle(
+            center=kicad.pcb.Xy(x=hx, y=hy),
+            end=kicad.pcb.Xy(x=hx + MOUNT_DIA / 2, y=hy),
+            stroke=kicad.pcb.Stroke(width=0.1, type="default"),
+            fill="none",
+            layer="Edge.Cuts",
+        ))
+
+    # board-level silkscreen
+    while len(k.gr_texts):
+        k.gr_texts.pop(len(k.gr_texts) - 1)
+    for text, tx, ty, size, rot in SILK:
+        k.gr_texts.append(kicad.pcb.Text(
+            text=text,
+            at=kicad.pcb.Xyr(x=tx, y=ty, r=rot),
+            layer=kicad.pcb.TextLayer(layer="F.SilkS"),
+            effects=kicad.pcb.Effects(
+                font=kicad.pcb.Font(size=kicad.pcb.Wh(w=size, h=size),
+                                    thickness=round(size * 0.15, 3)),
+            ),
+        ))
+
     route(k)
     kicad.dumps(pcb, PCB)
     render(pcb)
@@ -91,38 +158,43 @@ def main():
 SIG, PWR = 0.4, 0.8
 VIA_SIZE, VIA_DRILL = 0.6, 0.3
 
-# d-signal vertical lanes on B.Cu between ULN and c_hf, one x per signal
+# Layer discipline: B.Cu carries the four d-signal lanes and both power spines;
+# F.Cu carries every power branch, so branches cross the lanes on the far side.
 ROUTES = [
-    # dN: xiao_left pad (THT) -> B.Cu right + down lane -> via -> F.Cu stub to ULN input
-    ("xiao_left.1", SIG, [("B", 10.38, 2.88), ("B", 23.75, 2.88), ("B", 23.75, 34.45), ("via",), ("F", 20.74, 34.45)]),
-    ("xiao_left.2", SIG, [("B", 10.38, 5.42), ("B", 23.0, 5.42), ("B", 23.0, 33.17), ("via",), ("F", 20.74, 33.17)]),
-    ("xiao_left.3", SIG, [("B", 10.38, 7.96), ("B", 22.25, 7.96), ("B", 22.25, 31.9), ("via",), ("F", 20.74, 31.9)]),
-    ("xiao_left.4", SIG, [("B", 10.38, 10.5), ("B", 21.5, 10.5), ("B", 21.5, 30.63), ("via",), ("F", 20.74, 30.63)]),
-    # OUTn: ULN output (SMD) -> F.Cu left + via -> B.Cu down to motor pad
-    ("uln.16", SIG, [("F", 15.26, 34.45), ("F", 5.5, 34.45), ("via",), ("B", 5.5, 43.0)]),
-    ("uln.15", SIG, [("F", 15.26, 33.17), ("F", 8.0, 33.17), ("via",), ("B", 8.0, 43.0)]),
-    ("uln.14", SIG, [("F", 15.26, 31.9), ("F", 10.5, 31.9), ("via",), ("B", 10.5, 43.0)]),
-    ("uln.13", SIG, [("F", 15.26, 30.63), ("F", 13.0, 30.63), ("via",), ("B", 13.0, 43.0)]),
-    # 5V spine: xiao_right.1 -> right of headers -> down -> around j_hall -> under
-    # connectors -> up into j_motor.5
-    ("xiao_right.1", PWR, [("B", 25.62, 2.88), ("B", 28.8, 2.88), ("B", 28.8, 35.0), ("B", 31.6, 35.0), ("B", 31.6, 46.5), ("B", 15.5, 46.5), ("B", 15.5, 43.0)]),
-    # 5V branch: bottom run up into j_hall.1
-    ("j_hall.1", PWR, [("B", 24.5, 46.5), ("B", 24.5, 42.5)]),
-    # 5V branch: via off spine -> F.Cu over the chip to COM (pin 9)
-    ("uln.9", PWR, [("B", 28.8, 22.6), ("via",), ("F", 14.2, 22.6), ("F", 14.2, 25.55), ("F", 15.26, 25.55)]),
-    # 5V branch: via off spine -> F.Cu left into c_hf.1
-    ("c_hf.1", PWR, [("B", 28.8, 30.6), ("via",), ("F", 24.7, 30.7)]),
-    # 5V branch: via on spine -> F.Cu right into c_bulk.POS
-    ("c_bulk.1", PWR, [("B", 28.8, 33.17), ("via",), ("F", 30.5, 33.17)]),
-    # GND spine: xiao_right.2 -> down -> j_hall.2
-    ("xiao_right.2", PWR, [("B", 25.62, 5.42), ("B", 27.2, 5.42), ("B", 27.2, 40.0), ("B", 27.0, 42.5)]),
-    # GND branch: via off spine -> F.Cu to ULN E (pin 8)
-    ("uln.8", PWR, [("B", 27.2, 23.7), ("via",), ("F", 20.74, 23.7), ("F", 20.74, 25.55)]),
-    # GND branch: via off spine -> F.Cu left to c_hf.2 and right to c_bulk.NEG
-    ("c_hf.2", PWR, [("B", 27.2, 29.3), ("via",), ("F", 24.7, 29.3)]),
-    ("c_bulk.2", PWR, [("F", 27.2, 29.3), ("F", 29.2, 27.83), ("F", 30.5, 27.83)]),
-    # hall DO: xiao_right.6 (THT) -> F.Cu down the right edge into j_hall.3
-    ("xiao_right.6", SIG, [("F", 25.62, 15.58), ("F", 34.4, 23.0), ("F", 34.4, 40.5), ("F", 29.5, 42.5)]),
+    # dN: xiao_left pad (THT) -> B.Cu right + down its own lane -> via -> F.Cu
+    # stub to the ULN input. Lanes sit between the ULN's right pads (x 20.74)
+    # and c_hf (x 25.5).
+    ("xiao_left.1", SIG, [("B", 14.88, 6.38), ("B", 24.0, 6.38), ("B", 24.0, 38.45), ("via",), ("F", 20.74, 38.45)]),
+    ("xiao_left.2", SIG, [("B", 14.88, 8.92), ("B", 23.25, 8.92), ("B", 23.25, 37.17), ("via",), ("F", 20.74, 37.17)]),
+    ("xiao_left.3", SIG, [("B", 14.88, 11.46), ("B", 22.5, 11.46), ("B", 22.5, 35.9), ("via",), ("F", 20.74, 35.9)]),
+    ("xiao_left.4", SIG, [("B", 14.88, 14.0), ("B", 21.75, 14.0), ("B", 21.75, 34.63), ("via",), ("F", 20.74, 34.63)]),
+    # OUTn: ULN output (SMD) -> short F.Cu stub left -> via -> B.Cu diagonal
+    # down to its motor pad. Stub x staggers so the diagonals stay parallel.
+    ("uln.16", SIG, [("F", 15.26, 38.45), ("F", 14.0, 38.45), ("via",), ("B", 18.08, 44.0)]),
+    ("uln.15", SIG, [("F", 15.26, 37.17), ("F", 12.0, 37.17), ("via",), ("B", 15.54, 44.0)]),
+    ("uln.14", SIG, [("F", 15.26, 35.9), ("F", 10.2, 35.9), ("via",), ("B", 13.0, 44.0)]),
+    ("uln.13", SIG, [("F", 15.26, 34.63), ("F", 8.4, 34.63), ("via",), ("B", 10.46, 44.0)]),
+    # 5V spine: xiao_right.1 -> right corridor (x 37.5) -> along the bottom ->
+    # up into j_motor.5
+    ("xiao_right.1", PWR, [("B", 30.12, 6.38), ("B", 37.5, 6.38), ("B", 37.5, 54.0), ("B", 7.92, 54.0), ("B", 7.92, 44.0)]),
+    # 5V branch: via off spine -> F.Cu left, then down into j_hall.1
+    ("j_hall.1", PWR, [("B", 37.5, 47.0), ("via",), ("F", 27.5, 47.0), ("F", 27.5, 50.5)]),
+    # 5V branch: via off spine -> F.Cu left above the chip, down into COM (pin 9)
+    ("uln.9", PWR, [("B", 37.5, 23.5), ("via",), ("F", 14.2, 23.5), ("F", 14.2, 29.55), ("F", 15.26, 29.55)]),
+    # 5V branch: via off spine -> F.Cu left below c_bulk, up into c_hf.1
+    ("c_hf.1", PWR, [("B", 37.5, 40.5), ("via",), ("F", 25.5, 40.5), ("F", 25.5, 34.7)]),
+    # 5V branch: via off spine -> F.Cu left into c_bulk.POS
+    ("c_bulk.1", PWR, [("B", 37.5, 37.17), ("via",), ("F", 30.5, 37.17)]),
+    # GND spine: xiao_right.2 -> inner right corridor (x 35.0) -> j_hall.2
+    ("xiao_right.2", PWR, [("B", 30.12, 8.92), ("B", 35.0, 8.92), ("B", 35.0, 45.5), ("B", 30.0, 45.5), ("B", 30.0, 50.5)]),
+    # GND branch: via off spine -> F.Cu left, down into ULN E (pin 8)
+    ("uln.8", PWR, [("B", 35.0, 26.5), ("via",), ("F", 20.74, 26.5), ("F", 20.74, 29.55)]),
+    # GND branch: via off spine -> F.Cu left, down into c_hf.2
+    ("c_hf.2", PWR, [("B", 35.0, 29.0), ("via",), ("F", 25.5, 29.0), ("F", 25.5, 33.3)]),
+    # GND branch: via off spine -> F.Cu left into c_bulk.NEG
+    ("c_bulk.2", PWR, [("B", 35.0, 31.83), ("via",), ("F", 30.5, 31.83)]),
+    # hall DO: xiao_right.6 (D8) -> F.Cu out to the right margin, down, into j_hall.3
+    ("xiao_right.6", SIG, [("F", 30.12, 19.08), ("F", 40.0, 22.0), ("F", 40.0, 48.0), ("F", 32.5, 50.5)]),
 ]
 
 LAYERS = {"F": "F.Cu", "B": "B.Cu"}
