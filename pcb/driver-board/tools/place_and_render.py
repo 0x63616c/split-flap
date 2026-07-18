@@ -22,7 +22,7 @@ PLACEMENT = {
     "xiao_left": (10.38, 10.5, 270),   # D0..D6, pin1 at top
     "xiao_right": (25.62, 10.5, 270),  # 5V..D7, pin1 at top
     "uln": (18.0, 30.0, 90),
-    "c_hf": (24.5, 30.0, 90),
+    "c_hf": (24.7, 30.0, 90),
     "c_bulk": (30.5, 30.5, 90),
     "j_motor": (10.5, 43.0, 180),
     "j_hall": (27.0, 42.5, 0),
@@ -94,10 +94,10 @@ VIA_SIZE, VIA_DRILL = 0.6, 0.3
 # d-signal vertical lanes on B.Cu between ULN and c_hf, one x per signal
 ROUTES = [
     # dN: xiao_left pad (THT) -> B.Cu right + down lane -> via -> F.Cu stub to ULN input
-    ("xiao_left.1", SIG, [("B", 10.38, 2.88), ("B", 23.4, 2.88), ("B", 23.4, 34.45), ("via",), ("F", 20.74, 34.45)]),
-    ("xiao_left.2", SIG, [("B", 10.38, 5.42), ("B", 22.8, 5.42), ("B", 22.8, 33.17), ("via",), ("F", 20.74, 33.17)]),
-    ("xiao_left.3", SIG, [("B", 10.38, 7.96), ("B", 22.2, 7.96), ("B", 22.2, 31.9), ("via",), ("F", 20.74, 31.9)]),
-    ("xiao_left.4", SIG, [("B", 10.38, 10.5), ("B", 21.6, 10.5), ("B", 21.6, 30.63), ("via",), ("F", 20.74, 30.63)]),
+    ("xiao_left.1", SIG, [("B", 10.38, 2.88), ("B", 23.75, 2.88), ("B", 23.75, 34.45), ("via",), ("F", 20.74, 34.45)]),
+    ("xiao_left.2", SIG, [("B", 10.38, 5.42), ("B", 23.0, 5.42), ("B", 23.0, 33.17), ("via",), ("F", 20.74, 33.17)]),
+    ("xiao_left.3", SIG, [("B", 10.38, 7.96), ("B", 22.25, 7.96), ("B", 22.25, 31.9), ("via",), ("F", 20.74, 31.9)]),
+    ("xiao_left.4", SIG, [("B", 10.38, 10.5), ("B", 21.5, 10.5), ("B", 21.5, 30.63), ("via",), ("F", 20.74, 30.63)]),
     # OUTn: ULN output (SMD) -> F.Cu left + via -> B.Cu down to motor pad
     ("uln.16", SIG, [("F", 15.26, 34.45), ("F", 5.5, 34.45), ("via",), ("B", 5.5, 43.0)]),
     ("uln.15", SIG, [("F", 15.26, 33.17), ("F", 8.0, 33.17), ("via",), ("B", 8.0, 43.0)]),
@@ -111,7 +111,7 @@ ROUTES = [
     # 5V branch: via off spine -> F.Cu over the chip to COM (pin 9)
     ("uln.9", PWR, [("B", 28.8, 22.6), ("via",), ("F", 14.2, 22.6), ("F", 14.2, 25.55), ("F", 15.26, 25.55)]),
     # 5V branch: via off spine -> F.Cu left into c_hf.1
-    ("c_hf.1", PWR, [("B", 28.8, 30.6), ("via",), ("F", 24.5, 30.7)]),
+    ("c_hf.1", PWR, [("B", 28.8, 30.6), ("via",), ("F", 24.7, 30.7)]),
     # 5V branch: via on spine -> F.Cu right into c_bulk.POS
     ("c_bulk.1", PWR, [("B", 28.8, 33.17), ("via",), ("F", 30.5, 33.17)]),
     # GND spine: xiao_right.2 -> down -> j_hall.2
@@ -119,7 +119,7 @@ ROUTES = [
     # GND branch: via off spine -> F.Cu to ULN E (pin 8)
     ("uln.8", PWR, [("B", 27.2, 23.7), ("via",), ("F", 20.74, 23.7), ("F", 20.74, 25.55)]),
     # GND branch: via off spine -> F.Cu left to c_hf.2 and right to c_bulk.NEG
-    ("c_hf.2", PWR, [("B", 27.2, 29.3), ("via",), ("F", 24.5, 29.3)]),
+    ("c_hf.2", PWR, [("B", 27.2, 29.3), ("via",), ("F", 24.7, 29.3)]),
     ("c_bulk.2", PWR, [("F", 27.2, 29.3), ("F", 29.2, 27.83), ("F", 30.5, 27.83)]),
     # hall DO: xiao_right.6 (THT) -> F.Cu down the right edge into j_hall.3
     ("xiao_right.6", SIG, [("F", 25.62, 15.58), ("F", 34.4, 23.0), ("F", 34.4, 40.5), ("F", 29.5, 42.5)]),
