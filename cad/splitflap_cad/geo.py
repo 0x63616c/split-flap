@@ -5,7 +5,7 @@ part knowledge beyond the slot-0 marker style (which is deliberately
 one style everywhere).
 """
 
-from build123d import Box, Cylinder, Polygon, Pos, Rot, extrude
+from build123d import Polygon, Pos, Rot, extrude
 
 from .params import P
 
@@ -52,23 +52,3 @@ def slot0_marker(apex_r: float, z_face: float, cut: str = "down", point: str = "
     )
     z0 = z_face - P.drum_mark_depth if cut == "down" else z_face
     return Pos(0, 0, z0) * extrude(tri, amount=P.drum_mark_depth)
-
-
-def slit_grommet(
-    barrel_d: float,
-    barrel_l: float,
-    flange_d: float,
-    flange_t: float,
-    cable_d: float,
-    slit_w: float,
-):
-    """Wall-hole cable grommet: flange + barrel, centre cable hole, open
-    side slit so a molded connector never has to thread through — the
-    cable snaps in sideways. Local frame: axis Z, flange back face at
-    z=0, barrel running +Z (into the wall). Print flange down."""
-    g = Pos(0, 0, flange_t / 2) * Cylinder(flange_d / 2, flange_t)
-    g += Pos(0, 0, flange_t + barrel_l / 2) * Cylinder(barrel_d / 2, barrel_l)
-    total = flange_t + barrel_l
-    g -= Pos(0, 0, total / 2) * Cylinder(cable_d / 2, 2 * total)
-    g -= Pos(flange_d / 2, 0, total / 2) * Box(flange_d, slit_w, 2 * total)
-    return g

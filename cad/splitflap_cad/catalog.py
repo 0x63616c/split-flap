@@ -91,11 +91,6 @@ MODELS = {
         "ipadwall",
         "two_piece_scene",
     ),
-    "ipad-grommet": Model(
-        "SIDE QUEST 1-inch wall-hole cable grommet, side slit",
-        "ipadwall",
-        "grommet_scene",
-    ),
     "usb-grommet": Model(
         "SIDE QUEST 38mm USB wall-hole grommet, side slit",
         "usbgrommet",
@@ -123,6 +118,5 @@ PRINTABLE = {
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
     "ipad-body": Printable("ipadwall", "bracket_body"),
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
-    "ipad-grommet": Printable("ipadwall", "grommet"),
     "usb-grommet": Printable("usbgrommet", "usb_grommet"),
 }

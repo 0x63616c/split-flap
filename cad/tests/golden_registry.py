@@ -104,12 +104,6 @@ def _ipad_lid():
     return bracket_lid()
 
 
-def _ipad_grommet():
-    from splitflap_cad.ipadwall import grommet
-
-    return grommet()
-
-
 def _usb_grommet():
     from splitflap_cad.usbgrommet import usb_grommet
 
@@ -130,7 +124,6 @@ BREP_PARTS = {
     "bridge-nema": _nema_bridge,
     "ipad-body": _ipad_body,
     "ipad-lid": _ipad_lid,
-    "ipad-grommet": _ipad_grommet,
     "usb-grommet": _usb_grommet,
 }
 

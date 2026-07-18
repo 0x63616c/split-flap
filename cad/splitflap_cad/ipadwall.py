@@ -21,7 +21,6 @@ import math
 
 from build123d import Box, Cylinder, Pos, RectangleRounded, Rot, extrude
 
-from .geo import slit_grommet
 from .params import P
 from .viewer import Scene
 
@@ -152,23 +151,6 @@ def scene() -> Scene:
         .add(bar(), "bar", color="gray", loc=pose)
         .add(ipad(), "ipad", color="black", alpha=0.5, loc=ipad_loc)
     )
-
-
-def grommet():
-    """Cable grommet for the 1" wall hole — see geo.slit_grommet for the
-    frame and slit rationale."""
-    return slit_grommet(
-        P.igrom_barrel_d,
-        P.igrom_barrel_l,
-        P.igrom_flange_d,
-        P.igrom_flange_t,
-        P.igrom_cable_d,
-        P.igrom_slit_w,
-    )
-
-
-def grommet_scene() -> Scene:
-    return Scene().add(grommet(), "grommet")
 
 
 def two_piece_scene() -> Scene:
