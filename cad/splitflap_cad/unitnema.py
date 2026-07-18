@@ -107,10 +107,15 @@ def plate_windows():
 
     # -X strip beside the bridge. Its bottom is the wire channel, not the
     # bridge: the channel runs out to the -X edge right through here.
+    # Its top is the +Y band, NOT bridge_hi — the bridge doesn't reach
+    # this far -X, so the disc leaves the strip free to run right up into
+    # the band above and merge with it into one opening. It stops a
+    # window margin short instead, the same web the [][] pairs keep.
+    strip_hi = lo - m
     cuts.append(
         (
-            (x_lo + bridge_x_lo) / 2, (chan_hi + bridge_hi) / 2,
-            bridge_x_lo - x_lo, bridge_hi - chan_hi,
+            (x_lo + bridge_x_lo) / 2, (chan_hi + strip_hi) / 2,
+            bridge_x_lo - x_lo, strip_hi - chan_hi,
         )
     )
 
