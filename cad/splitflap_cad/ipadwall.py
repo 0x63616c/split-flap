@@ -21,6 +21,7 @@ import math
 
 from build123d import Box, Cylinder, Pos, RectangleRounded, Rot, extrude
 
+from .geo import slit_grommet
 from .params import P
 from .viewer import Scene
 
@@ -154,22 +155,16 @@ def scene() -> Scene:
 
 
 def grommet():
-    """Cable grommet for the 1" wall hole, local frame: axis Z, flange
-    back face at z=0, barrel running +Z (into the wall). Centre hole
-    passes the cable; the open side slit lets the cable snap in
-    sideways (molded connectors can't be threaded). Print flange down."""
-    g = Pos(0, 0, P.igrom_flange_t / 2) * Cylinder(
-        P.igrom_flange_d / 2, P.igrom_flange_t
+    """Cable grommet for the 1" wall hole — see geo.slit_grommet for the
+    frame and slit rationale."""
+    return slit_grommet(
+        P.igrom_barrel_d,
+        P.igrom_barrel_l,
+        P.igrom_flange_d,
+        P.igrom_flange_t,
+        P.igrom_cable_d,
+        P.igrom_slit_w,
     )
-    g += Pos(0, 0, P.igrom_flange_t + P.igrom_barrel_l / 2) * Cylinder(
-        P.igrom_barrel_d / 2, P.igrom_barrel_l
-    )
-    total = P.igrom_flange_t + P.igrom_barrel_l
-    g -= Pos(0, 0, total / 2) * Cylinder(P.igrom_cable_d / 2, 2 * total)
-    g -= Pos(P.igrom_flange_d / 2, 0, total / 2) * Box(
-        P.igrom_flange_d, P.igrom_slit_w, 2 * total
-    )
-    return g
 
 
 def grommet_scene() -> Scene:

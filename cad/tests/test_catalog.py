@@ -38,4 +38,5 @@ def test_printable_builders_exist():
         "ipad-body",
         "ipad-lid",
         "ipad-grommet",
+        "usb-grommet",
     }

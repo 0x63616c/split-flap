@@ -110,6 +110,12 @@ def _ipad_grommet():
     return grommet()
 
 
+def _usb_grommet():
+    from splitflap_cad.usbgrommet import usb_grommet
+
+    return usb_grommet()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -125,6 +131,7 @@ BREP_PARTS = {
     "ipad-body": _ipad_body,
     "ipad-lid": _ipad_lid,
     "ipad-grommet": _ipad_grommet,
+    "usb-grommet": _usb_grommet,
 }
 
 FINGERPRINT_ONLY = {

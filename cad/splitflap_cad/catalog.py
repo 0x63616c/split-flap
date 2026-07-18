@@ -96,6 +96,10 @@ MODELS = {
         "ipadwall",
         "grommet_scene",
     ),
+    "usb-grommet": Model(
+        "SIDE QUEST 38mm USB wall-hole grommet, side slit",
+        "usbgrommet",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -120,4 +124,5 @@ PRINTABLE = {
     "ipad-body": Printable("ipadwall", "bracket_body"),
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
     "ipad-grommet": Printable("ipadwall", "grommet"),
+    "usb-grommet": Printable("usbgrommet", "usb_grommet"),
 }
