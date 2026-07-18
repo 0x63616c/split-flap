@@ -156,6 +156,7 @@ type appModel struct {
 	gen      int         // invalidates stale disarm ticks
 	cube     *demoModel  // non-nil while the demo screen is on the stack
 	bench    *benchModel // non-nil while the bench screen is on the stack
+	credits  *creditsModel
 }
 
 func (m *appModel) top() *screen { return &m.stack[len(m.stack)-1] }
@@ -219,6 +220,12 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.cube.step()
 		return m, cubeTick()
+	case creditsFrameMsg:
+		if m.credits == nil || m.top().id != "credits" {
+			return m, nil // left the crawl — let the frame loop die
+		}
+		m.credits.step()
+		return m, creditsTick()
 	case tea.KeyMsg:
 		return m.key(msg)
 	}
@@ -273,6 +280,9 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	if m.top().id == "bench" {
 		return m.benchKey(msg)
+	}
+	if m.top().id == "credits" {
+		return m.creditsKey(msg)
 	}
 	s := m.top()
 	if s.filtering {
@@ -402,6 +412,28 @@ func (m *appModel) demoRune(r rune) {
 	}
 }
 
+// startCredits pushes the crawl and starts its frame loop.
+func (m *appModel) startCredits() (tea.Model, tea.Cmd) {
+	m.credits = newCreditsModel()
+	m.stack = append(m.stack, screen{id: "credits", title: "credits"})
+	return m, creditsTick()
+}
+
+// creditsKey handles keys while the crawl is on top: p pauses, r rewinds,
+// esc drops back to the menu and stops the frame loop.
+func (m *appModel) creditsKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "p", " ":
+		m.credits.paused = !m.credits.paused
+	case "r":
+		m.credits.t = 0
+	case "esc":
+		m.stack = m.stack[:len(m.stack)-1]
+		m.credits = nil
+	}
+	return m, nil
+}
+
 // runKey handles keys while the run screen is on top.
 func (m *appModel) runKey(key string) (tea.Model, tea.Cmd) {
 	r := m.run
@@ -459,6 +491,8 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 			m.stack = append(m.stack, benchScreen())
 		case 2:
 			return m.startDemo("demo", "")
+		case 3:
+			return m.startCredits()
 		}
 	case "cad":
 		switch s.cursor {
@@ -535,6 +569,9 @@ func (m *appModel) View() string {
 	if m.top().id == "bench" {
 		return header + m.benchView()
 	}
+	if m.top().id == "credits" {
+		return header + m.creditsView()
+	}
 	s := m.top()
 	out := header
 	maxw := 0
@@ -599,6 +636,30 @@ func (m *appModel) View() string {
 		footer = warnStyle.Render("  press ctrl+c again to quit")
 	}
 	return out + "\n" + footer + "\n"
+}
+
+type creditsFrameMsg struct{}
+
+func creditsTick() tea.Cmd {
+	return tea.Tick(time.Second/creditsFPS, func(time.Time) tea.Msg { return creditsFrameMsg{} })
+}
+
+// creditsView renders the crawl in the same slot the demo uses.
+func (m *appModel) creditsView() string {
+	w, h := m.width, m.demoAvail()
+	if w == 0 {
+		w = 80
+	}
+	out := ""
+	for _, line := range m.credits.render(w, h) {
+		out += line + "\n"
+	}
+	roll := "rolling"
+	if m.credits.paused {
+		roll = warnStyle.Render("paused")
+	}
+	return out + "\n  " + dimStyle.Render("[p] ") + roll +
+		dimStyle.Render(" · [r] rewind · [esc] back")
 }
 
 type cubeFrameMsg struct{}
@@ -733,7 +794,7 @@ func rootScreen() screen {
 		{label: "cad", help: "viewers & exports"},
 		{label: "bench", help: "drive the breadboard module over serial"},
 		{label: "demo", help: "a cube, tumbling, for no reason at all"},
-		{label: "credits", help: "(coming soon)", inert: true},
+		{label: "credits", help: "a long time ago, on a breadboard far, far away"},
 	}}
 }
 
