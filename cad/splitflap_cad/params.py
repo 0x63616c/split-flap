@@ -143,18 +143,12 @@ class Params:
                                      # body square — print tolerance, the
                                      # pocket locates, it does not press
     nema_leg_t: float = 3.0          # wall thickness along X
-    nema_flange_t: float = 2.625     # deck thickness AWAY from the screws
-                                     # (0.75 x the original 3.5)
-    nema_screw_boss_t: float = 3.5   # thickness AT each screw hole: the
-                                     # motor taps are only 2.5 MIN deep,
-                                     # so an M3x6 must engage exactly
-                                     # 6 - 3.5 = 2.5. Thinning the deck
-                                     # under the head would make the screw
-                                     # bottom out before it clamped, so
-                                     # each hole keeps a local boss at the
-                                     # full old thickness and only the
-                                     # material between them gets thinner.
-    nema_screw_boss_d: float = 8.0   # boss diameter about each screw axis
+    nema_flange_t: float = 3.5       # deck thickness, flat — no local
+                                     # bosses. The motor taps are only
+                                     # 2.5 MIN deep, so an M3x6 engages
+                                     # exactly 6 - 3.5 = 2.5; thinning
+                                     # the deck would make the screw
+                                     # bottom out before it clamped.
     # Wire route. The pancake's leads leave the body edge flush, so the
     # motor is rotated to present them at -Y — the only free azimuth,
     # since the bridge legs and feet own +-X out to r 25.35. The buried
@@ -166,6 +160,12 @@ class Params:
                                      # reaches back UNDER the body edge,
                                      # so the leads turn down instead of
                                      # being pinched at the corner
+    nema_wire_entry_w: float = 11.0  # feed trench width — wider than the
+                                     # buried channel it feeds. Both the
+                                     # motor leads and the hall leads
+                                     # land in here, so it is sized to
+                                     # swallow two bundles side by side,
+                                     # not to hold one
     # --- NEMA homing: bare hall head on the deck top ---
     # No PCB in this variant — a bare TO-92 head drops into a pocket in
     # the bridge deck's top face, on the drum's magnet sweep circle. The
@@ -175,19 +175,30 @@ class Params:
     # deck top at 25.43, so the head's 1.5 body leaves a ~2.0 air gap.
     nema_hall_az: float = -90.0      # azimuth about the shaft, degrees
                                      # (-90 = -Y, same side as the wires)
-    nema_hall_pocket_w: float = 4.4  # across the head, +0.4 on hall_elem_w
-    nema_hall_pocket_l: float = 3.4  # along the leads, +0.4 on hall_elem_l
-    nema_hall_pocket_d: float = 0.4  # sunk into the deck top — enough to
-                                     # locate the head, not to bury it.
-                                     # THIS is the air-gap tuning knob:
-                                     # deeper pocket = bigger gap = weaker
-                                     # signal. At 0.4 the head top lands
-                                     # 2.43 under the magnet face. Bench-
+    nema_hall_pocket_w: float = 5.0  # across the head
+    nema_hall_pocket_l: float = 4.0  # along the leads
+    nema_hall_pocket_d: float = 1.5  # sunk the head's full body depth, so
+                                     # it seats flush with the deck top
+                                     # instead of perching on it. THIS is
+                                     # the air-gap knob: deeper = bigger
+                                     # gap = weaker signal. Flush leaves
+                                     # 2.66 to the magnet face. Bench-
                                      # verify with the real magnet before
                                      # trusting it.
-    nema_hall_wire_w: float = 2.4    # lead groove across the deck top,
-                                     # radially outward to the deck edge
-    nema_hall_wire_d: float = 1.2    # lead groove depth
+    # Leads drop straight DOWN through the deck, they do not run out to
+    # the rim: the deck edge is r 25.5 and the barrel wall sweeps 26.5,
+    # so a rim exit would pinch the wires against the turning drum in a
+    # 1.0 gap. The hole sits at the sweep radius, offset tangentially
+    # from the pocket — outboard of it would leave only 0.7 of rim wall,
+    # and inboard of r 17.6 is the motor body's top face, blocked. At
+    # the sweep radius there is open air all the way down to the plate
+    # (the legs are +-X only), so the leads fall clear to the trench.
+    # The hole OVERLAPS the pocket — one connected cavity, so the leads
+    # bend from the head straight down without threading a separate
+    # opening. Offset 9 deg at r 20.5 is a 3.22 arc, against a 2.5 + 2.25
+    # half-width sum, so they merge with ~1.5 to spare.
+    nema_hall_lead_d: float = 4.5    # lead hole through the deck
+    nema_hall_lead_az_off: float = 9.0  # degrees from the pocket centre
     nema_mount_r: float = 25.5       # wall/foot plan clip radius about
                                      # the shaft (barrel wall sweeps
                                      # r 26.5 from z 6.3; 1.0 gap)

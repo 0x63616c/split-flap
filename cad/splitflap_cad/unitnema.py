@@ -13,10 +13,9 @@ a straight vertical drop onto spot-faced seats.
 
 Deck, legs and feet share ONE plan radius (nema_mount_r), so the
 outline is a single arc — no ledge and no lens-tip points where a
-wider leg used to overhang a narrower deck. The deck is thin
-(nema_flange_t) except for a local boss at each screw hole holding the
-full nema_screw_boss_t, because the motor's taps are only 2.5 deep and
-an M3x6 through thinner material would bottom out before it clamped.
+wider leg used to overhang a narrower deck. The deck is flat
+nema_flange_t throughout: the motor's taps are only 2.5 deep, so an
+M3x6 through anything thinner would bottom out before it clamped.
 
 Printability: print deck-face down. Walls and bolt bosses rise
 vertically; the only ceiling is each bolt seat, a small flat bridge
@@ -26,13 +25,17 @@ wall sweep.
 
 Homing: a BARE hall head (no PCB) drops into a pocket in the deck's
 top face, on the drum's magnet sweep circle (drum_magnet_r) at the -Y
-azimuth, leads grooved radially out to the deck edge. The deck is a
-full disc over r <= mount_r, so it is the only solid thing that
-reaches the sweep — a post up from the plate cannot, the deck is in
-the way. Magnet boss face 28.96, deck top 25.43: the head sits in that
-gap. Motor wires leave the body edge flush at -Y, drop into an open
-trench in the plate and run out the buried wire_tunnel to the -X edge,
-clear of the ±X legs and feet.
+azimuth. Its leads drop straight DOWN through a hole beside the
+pocket, not out to the rim — the deck edge is r 25.5 and the barrel
+wall sweeps 26.5, so a rim exit would pinch the wires against the
+turning drum in a 1.0 gap. The deck is a full disc over r <= mount_r,
+so it is the only solid thing that reaches the sweep — a post up from
+the plate cannot, the deck is in the way. Magnet boss face 28.96, deck
+top 26.30: the head sits in that gap.
+
+Motor wires leave the body edge flush at -Y, drop into an open trench
+in the plate and run out the buried wire_tunnel to the -X edge, clear
+of the ±X legs and feet.
 
 Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 (same convention as motor.py); frames.py poses it at nema_face_z.
@@ -40,7 +43,7 @@ Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 View it: `just cad unit-nema` (see cad/splitflap_cad/catalog.py).
 """
 
-from build123d import Align, Box, Circle, Cylinder, Pos, Rot, extrude
+from build123d import Box, Circle, Cylinder, Pos, Rot, extrude
 
 from .params import P
 from .shell import (
@@ -76,17 +79,22 @@ def nema_plate():
     # channel. -Y is the only free azimuth: the bridge legs and feet own
     # ±X out to r 25.35, and the channel has to clear them.
     plate = wire_tunnel(plate, P.nema_wire_y, P.mount_x)
-    # Feed trench: roof open from just under the body edge to the
-    # channel, so the leads drop straight in. It runs under the barrel
-    # sweep, but the drum's lowest feature clears the plate top by 3.3,
-    # and nothing here rises above it.
+    # Feed trench: roof open from just under the body edge all the way
+    # onto the channel centreline, so BOTH bundles land in open air. The
+    # motor leads come off the body edge at the top of it; the hall
+    # leads fall out of the bridge deck at the magnet sweep radius,
+    # which is over the buried channel's roof — without this they would
+    # drop onto solid plastic. Wider than the channel: two bundles.
+    # It runs under the barrel sweep, but the drum's lowest feature
+    # clears the plate top by 3.3 and nothing here rises above it.
     y_hi = P.byj_shaft_y - P.motor_body_w / 2 + P.nema_wire_entry_bite
-    y_lo = P.nema_wire_y + P.wire_chan_w / 2
+    y_lo = P.nema_wire_y
     plate -= Pos(
         P.mount_x, (y_lo + y_hi) / 2,
         P.unit_plate_thick - (P.unit_plate_thick - P.wire_chan_skin) / 2
     ) * Box(
-        P.wire_chan_w, y_hi - y_lo, P.unit_plate_thick - P.wire_chan_skin
+        P.nema_wire_entry_w, y_hi - y_lo,
+        P.unit_plate_thick - P.wire_chan_skin,
     )
 
     # Bridge foot inserts: M3x3 heat-set straight into the plate from
@@ -116,25 +124,16 @@ def nema_bridge():
     wall_in = P.motor_body_w / 2 + P.nema_body_clear
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
 
-    # Deck: full ring on the face, clipped to the SAME radius as the legs
-    # so the plan is one arc — no ledge, no lens tips. Thin everywhere
-    # except a local boss at each screw hole, which keeps the full
-    # nema_screw_boss_t so an M3x6 still engages exactly the 2.5 the
-    # motor's tapped hole gives (thinning under the head would only make
-    # the screw bottom out early). Pilot-boss bore + 4 M3 through.
+    # Deck: full ring on the face, flat, clipped to the SAME radius as
+    # the legs so the plan is one arc — no ledge, no lens tips.
+    # Pilot-boss bore + 4 M3 through.
     deck = extrude(Circle(P.nema_mount_r), amount=P.nema_flange_t)
     half = P.motor_hole_pitch / 2
-    screw_xy = [(x, y) for x in (-half, half) for y in (-half, half)]
-    for x, y in screw_xy:
-        deck += Pos(x, y, 0) * Cylinder(
-            P.nema_screw_boss_d / 2, P.nema_screw_boss_t, align=(
-                Align.CENTER, Align.CENTER, Align.MIN
-            )
-        )
-    bore_h = P.nema_screw_boss_t * 3
+    bore_h = P.nema_flange_t * 3
     deck -= Cylinder(P.pilot_hole_d / 2, bore_h)
-    for x, y in screw_xy:
-        deck -= Pos(x, y, 0) * Cylinder(P.screw_hole_d / 2, bore_h)
+    for x in (-half, half):
+        for y in (-half, half):
+            deck -= Pos(x, y, 0) * Cylinder(P.screw_hole_d / 2, bore_h)
 
     body = deck
     z_seat = -drop + P.nema_foot_h
@@ -172,25 +171,22 @@ def nema_bridge():
     # Clip the whole plan to the mount cylinder: outer edges concentric
     # with the drum, inside the barrel wall sweep.
     body &= Pos(0, 0, -drop) * extrude(
-        Circle(P.nema_mount_r), amount=drop + P.nema_screw_boss_t
+        Circle(P.nema_mount_r), amount=drop + P.nema_flange_t
     )
 
     # Homing: pocket for a bare hall head in the deck top, centred on
-    # the drum's magnet sweep circle, plus a lead groove running
-    # radially out to the deck edge. Cut after the clip so the groove
-    # opens at the arc.
+    # the drum's magnet sweep circle. The leads drop straight DOWN
+    # through the deck beside it — NOT out to the rim, where the 1.0 gap
+    # to the barrel wall would pinch them against the turning drum. The
+    # hole is offset tangentially at the same radius: outboard would
+    # leave 0.7 of rim wall, inboard is the motor body's top face.
     body -= Rot(0, 0, P.nema_hall_az) * (
         Pos(P.drum_magnet_r, 0, P.nema_flange_t - P.nema_hall_pocket_d / 2)
         * Box(P.nema_hall_pocket_l, P.nema_hall_pocket_w, P.nema_hall_pocket_d)
-        + Pos(
-            (P.drum_magnet_r + P.nema_mount_r) / 2, 0,
-            P.nema_flange_t - P.nema_hall_wire_d / 2,
-        )
-        * Box(
-            P.nema_mount_r - P.drum_magnet_r, P.nema_hall_wire_w,
-            P.nema_hall_wire_d,
-        )
     )
+    body -= Rot(0, 0, P.nema_hall_az + P.nema_hall_lead_az_off) * Pos(
+        P.drum_magnet_r, 0, 0
+    ) * Cylinder(P.nema_hall_lead_d / 2, P.nema_flange_t * 3)
     return body
 
 
