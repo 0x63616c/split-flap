@@ -160,12 +160,22 @@ class Params:
                                      # reaches back UNDER the body edge,
                                      # so the leads turn down instead of
                                      # being pinched at the corner
-    nema_wire_entry_w: float = 11.0  # feed trench width — wider than the
+    nema_wire_entry_w: float = 16.0  # feed trench width — wider than the
                                      # buried channel it feeds. Both the
-                                     # motor leads and the hall leads
-                                     # land in here, so it is sized to
-                                     # swallow two bundles side by side,
-                                     # not to hold one
+                                     # motor leads and the hall leads land
+                                     # in here, so it is sized to swallow
+                                     # two bundles side by side, not to
+                                     # hold one. Sized for HOUSINGS, not
+                                     # bare wire: a 4-pin Dupont (10.2)
+                                     # beside a 3-pin (7.6) is 17.8, so
+                                     # they go in staggered, not abreast —
+                                     # 11.0 could not pass either one
+                                     # without stripping the crimp.
+                                     # Clear either way: the bridge feet
+                                     # stop at y -17.5 and this trench
+                                     # starts at -22.6; the legs only
+                                     # exist at |dx| > 17.6 from the shaft
+                                     # and this reaches 8.0
     # --- NEMA homing: bare hall head on the deck top ---
     # No PCB in this variant — a bare TO-92 head drops into a pocket in
     # the bridge deck's top face, on the drum's magnet sweep circle. The
