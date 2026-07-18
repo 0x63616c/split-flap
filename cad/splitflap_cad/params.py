@@ -265,7 +265,7 @@ class Params:
     # The crescent is 17.6 deep for a 15-wide board: corner/can margins
     # are a few tenths — check both when touching anything here.
     # Support: one narrow post block spans both screw holes (M2
-    # self-tap); the board cantilevers from it over the pad's wire-slot
+    # heat-set inserts); the board cantilevers from it over the pad's wire-slot
     # corridor (wire_chan_w about mount_x, toward -Y), which must stay
     # open so the motor wires can slide under the board into the pad
     # hole.
@@ -290,8 +290,11 @@ class Params:
     hall_elem_t: float = 1.5       # element body thickness
     hall_post_chamfer: float = 1.0  # edge break on the posts
     hall_post_w: float = 7.5       # screw post width across X
-    hall_pilot_d: float = 1.6      # M2 self-tap pilot bore
-    hall_pilot_depth: float = 8.0  # pilot depth from the post top
+    hall_insert_d: float = 2.9     # M2 heat-set insert bore — insert is
+                                   # 3.0 OD x 3.0 tall, 0.1 undersize so
+                                   # the melt grips
+    hall_insert_depth: float = 8.0  # bore depth from the post top: 3 of
+                                    # insert + screw-tip clearance
 
     @property
     def hall_post_l(self) -> float:

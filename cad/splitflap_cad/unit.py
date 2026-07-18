@@ -172,8 +172,8 @@ def unit_plate():
     plate -= plate_windows()
 
     # Hall sensor mount: the PCB screws flat onto one narrow post block
-    # spanning both holes on the hole line (-X edge, M2 self-tap
-    # pilots); the rest of the board cantilevers over the pad's
+    # spanning both holes on the hole line (-X edge, M2 heat-set
+    # inserts); the rest of the board cantilevers over the pad's
     # wire-slot corridor, which stays open so the motor wires slide
     # under the board into the pad hole. The hall element hangs off the
     # -X edge on bent legs, under the magnet sweep; header wires leave
@@ -188,8 +188,8 @@ def unit_plate():
     hall = _post(P.hall_x, P.hall_y, P.hall_post_w, P.hall_post_l)
     for dy in (-P.hall_hole_pitch / 2, P.hall_hole_pitch / 2):
         hall -= Pos(
-            P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_pilot_depth / 2
-        ) * Cylinder(P.hall_pilot_d / 2, P.hall_pilot_depth)
+            P.hall_x, P.hall_y + dy, P.hall_seat - P.hall_insert_depth / 2
+        ) * Cylinder(P.hall_insert_d / 2, P.hall_insert_depth)
 
     return (
         plate + back_wall() + stop_rod() + pad + motor_towers() + flap_guard()
