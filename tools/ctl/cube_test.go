@@ -29,11 +29,11 @@ func TestRenderCubeGrid(t *testing.T) {
 	}
 }
 
-// At fill 1.0 the projection guarantees a fit: no point on the bounding
-// sphere can land outside the grid, whatever the orientation.
-func TestCanvasFillOneAlwaysFits(t *testing.T) {
+// The shipped fill must guarantee a fit: no point on the bounding sphere can
+// land outside the grid, whatever the orientation.
+func TestViewFillAlwaysFits(t *testing.T) {
 	r := cubeHalf * math.Sqrt(3)
-	c := newCanvas(60, 25, r, 1.0)
+	c := newCanvas(60, 25, r, viewFill)
 	for i := 0; i < 40; i++ {
 		ang := [3]float64{float64(i) * 0.5, float64(i) * 0.31, float64(i) * 0.17}
 		for corner := 0; corner < 8; corner++ {
@@ -46,19 +46,8 @@ func TestCanvasFillOneAlwaysFits(t *testing.T) {
 	}
 }
 
-// The demo trades that guarantee for presence: viewFill draws a quarter
-// larger, and the odd clipped corner is the accepted cost.
-func TestViewFillDrawsLarger(t *testing.T) {
-	r := cubeHalf * math.Sqrt(3)
-	fit := newCanvas(60, 25, r, 1.0).scale
-	got := newCanvas(60, 25, r, viewFill).scale / fit
-	if math.Abs(got-1.25) > 1e-9 {
-		t.Fatalf("viewFill scales by %v, want 1.25", got)
-	}
-}
-
-// Oversizing must clip cleanly rather than corrupt the grid: every row stays
-// exactly w wide however far the model overhangs.
+// Whatever the fill, a row stays exactly w wide — an overhanging model must
+// clip cleanly rather than corrupt the grid.
 func TestRenderCubeClipsCleanly(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		ang := [3]float64{float64(i) * 0.5, float64(i) * 0.31, float64(i) * 0.17}
