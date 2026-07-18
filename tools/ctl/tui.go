@@ -153,7 +153,7 @@ type appModel struct {
 	quitting bool       // confirmed quit, waiting for the run to stop
 	armed    bool       // first ctrl+c pressed, waiting for confirm
 	gen      int        // invalidates stale disarm ticks
-	cube     *cubeModel // non-nil while the demo screen is on the stack
+	cube     *demoModel // non-nil while the demo screen is on the stack
 }
 
 func (m *appModel) top() *screen { return &m.stack[len(m.stack)-1] }
@@ -336,6 +336,8 @@ func (m *appModel) demoKey(key string) (tea.Model, tea.Cmd) {
 	switch key {
 	case "w":
 		m.cube.wire = !m.cube.wire
+	case "tab", "right", "l":
+		m.cube.next()
 	case "esc":
 		m.stack = m.stack[:len(m.stack)-1]
 		m.cube = nil
@@ -397,7 +399,7 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 0:
 			m.stack = append(m.stack, cadScreen())
 		case 2:
-			m.cube = newCubeModel(time.Now().UnixNano())
+			m.cube = newDemoModel(time.Now().UnixNano(), m.root)
 			m.stack = append(m.stack, screen{id: "demo", title: "demo"})
 			return m, cubeTick()
 		}
@@ -538,14 +540,20 @@ func (m *appModel) demoView() string {
 		w = 80
 	}
 	out := ""
-	for _, line := range renderCube(w, h, m.cube.ang, m.cube.wire) {
+	for _, line := range m.cube.render(w, h) {
 		out += line + "\n"
 	}
 	wire := "off"
 	if m.cube.wire {
 		wire = "on"
 	}
-	return out + "\n" + dimStyle.Render("  [w] wireframe: "+wire+" · [esc] go back · [ctrl+c] quit") + "\n"
+	s := m.cube.scene()
+	name := okStyle.Render(s.label)
+	if len(m.cube.scenes) > 1 {
+		name += dimStyle.Render(fmt.Sprintf(" (%d/%d)", m.cube.idx+1, len(m.cube.scenes)))
+	}
+	return out + "\n  " + name +
+		dimStyle.Render("  ·  [tab] next · [w] wireframe: "+wire+" · [esc] back") + "\n"
 }
 
 // logAvail is how many log lines fit between the header and the footer.

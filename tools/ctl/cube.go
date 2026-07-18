@@ -1,13 +1,10 @@
 package main
 
-import (
-	"math"
-	"math/rand"
-)
+import "math"
 
 // The demo screen: a shaded ASCII cube tumbling under its own drifting spin.
 // Rendering is a pure function of (size, angles, wireframe) so it can be
-// tested without a terminal; the model below only owns the animation state.
+// tested without a terminal; demo.go owns the animation state.
 
 const (
 	cubeDist    = 5.0           // camera distance from the cube's centre
@@ -183,46 +180,4 @@ func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *canvas {
 	}
 
 	return c
-}
-
-// cubeModel is the demo screen's animation state: an angle per axis plus a
-// spin rate that drifts towards a fresh random target every few seconds, so
-// the tumble never settles into a visible loop.
-type cubeModel struct {
-	ang, vel, target [3]float64
-	ticks            int
-	wire             bool
-	rng              *rand.Rand
-}
-
-const (
-	cubeFPS      = 20
-	cubeRerollAt = 5 * cubeFPS // ticks between spin-target re-rolls
-	cubeEase     = 0.02        // how fast the spin drifts to its target
-	cubeSpinMax  = 0.06        // rad per tick
-)
-
-func newCubeModel(seed int64) *cubeModel {
-	c := &cubeModel{wire: true, rng: rand.New(rand.NewSource(seed))}
-	c.reroll()
-	c.vel = c.target
-	return c
-}
-
-func (c *cubeModel) reroll() {
-	for i := range c.target {
-		c.target[i] = (c.rng.Float64()*2 - 1) * cubeSpinMax
-	}
-}
-
-// step advances one frame.
-func (c *cubeModel) step() {
-	c.ticks++
-	if c.ticks%cubeRerollAt == 0 {
-		c.reroll()
-	}
-	for i := range c.ang {
-		c.vel[i] += (c.target[i] - c.vel[i]) * cubeEase
-		c.ang[i] = math.Mod(c.ang[i]+c.vel[i], 2*math.Pi)
-	}
 }

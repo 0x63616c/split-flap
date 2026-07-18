@@ -185,16 +185,11 @@ func (c *canvas) triangle(p0, p1, p2 [3]float64, ch rune) {
 	minY := max(int(math.Floor(math.Min(y0, math.Min(y1, y2)))), 0)
 	maxY := min(int(math.Ceil(math.Max(y0, math.Max(y1, y2)))), c.h-1)
 
-	// A triangle thinner than a cell still deserves a mark, else the mesh
-	// gets shot through with holes at terminal resolution.
 	if maxX < minX || maxY < minY {
 		return
 	}
-	if maxX == minX && maxY == minY {
-		c.set(minX, minY, 3/(z0+z1+z2), ch)
-		return
-	}
 
+	filled := 0
 	for y := minY; y <= maxY; y++ {
 		for x := minX; x <= maxX; x++ {
 			px, py := float64(x), float64(y)
@@ -205,7 +200,15 @@ func (c *canvas) triangle(p0, p1, p2 [3]float64, ch rune) {
 				continue
 			}
 			c.set(x, y, w0/z0+w1/z1+w2/z2, ch)
+			filled++
 		}
+	}
+
+	// A triangle smaller than a cell can slip between cell centres and cover
+	// nothing. At mesh densities that is most of them, and every miss is a
+	// pinhole showing the inside of the part, so fall back to its centroid.
+	if filled == 0 {
+		c.set(int(math.Round((x0+x1+x2)/3)), int(math.Round((y0+y1+y2)/3)), 3/(z0+z1+z2), ch)
 	}
 }
 

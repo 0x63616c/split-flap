@@ -103,7 +103,7 @@ func TestRenderCubeDegenerateSize(t *testing.T) {
 }
 
 func TestCubeModelTumbles(t *testing.T) {
-	c := newCubeModel(1)
+	c := newDemoModel(1, "")
 	start := c.ang
 	for i := 0; i < 30; i++ {
 		c.step()
@@ -114,7 +114,7 @@ func TestCubeModelTumbles(t *testing.T) {
 }
 
 func TestCubeModelSpinDrifts(t *testing.T) {
-	c := newCubeModel(7)
+	c := newDemoModel(7, "")
 	first := c.vel
 	for i := 0; i < cubeRerollAt*2; i++ {
 		c.step()
@@ -130,7 +130,7 @@ func TestCubeModelSpinDrifts(t *testing.T) {
 }
 
 func TestCubeModelDeterministicFromSeed(t *testing.T) {
-	a, b := newCubeModel(42), newCubeModel(42)
+	a, b := newDemoModel(42, ""), newDemoModel(42, "")
 	for i := 0; i < 200; i++ {
 		a.step()
 		b.step()
@@ -141,7 +141,7 @@ func TestCubeModelDeterministicFromSeed(t *testing.T) {
 }
 
 func TestCubeModelStartsWireframed(t *testing.T) {
-	if !newCubeModel(1).wire {
+	if !newDemoModel(1, "").wire {
 		t.Fatal("demo should open in wireframe")
 	}
 }
