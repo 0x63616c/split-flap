@@ -23,3 +23,22 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
   Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
 - No vendor geometry: every printable is ours. Motor = 28BYJ-48.
+
+## PCB
+
+- `pcb/driver-board/` = atopile project (ato 0.15.7 via uv tool, needs py3.14).
+  Circuit in `main.ato` (module SplitFlapDriver); parts vendored in `parts/`
+  (atomic parts: .ato + kicad_mod + kicad_sym, LCSC-pinned). Skills for the
+  ato language live in `.claude/skills/` — use them when touching .ato files.
+- Loop: edit `main.ato` → `ato build` (run twice after adding a component —
+  nets stamp one build late) → `tools/place_and_render.py` (atopile's python:
+  `~/.local/share/uv/tools/atopile/bin/python`) → `preview.svg`. Placement AND
+  routing are data tables in that script (address-keyed, survives rebuilds).
+  No KiCad installed; renderer is ours. `ato validate` broken upstream.
+- atopile cloud (registry/part-picker/autolayout) was down 2026-07-18 —
+  workarounds + gotchas in auto-memory `pcb-workflow`. New parts: easyeda2kicad
+  → `kicad.convert()` v5→modern → hand-write the .ato (footprint name must be
+  `<PART_DIR>:<basename>`; every property needs an `(at)`; strip circle/arc
+  from symbols). Verify LCSC stock via jlcpcb.com search API first.
+- Bench-proven pinout is law: IN1-4 = D0-D3, hall DO = D8 (internal pull-up).
+  Don't reassign without updating firmware + bench-setup memory.
