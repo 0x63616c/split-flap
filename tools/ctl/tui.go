@@ -149,10 +149,11 @@ type appModel struct {
 	root     string
 	width    int
 	height   int
-	run      *runState // non-nil while a run screen is on the stack
-	quitting bool      // confirmed quit, waiting for the run to stop
-	armed    bool      // first ctrl+c pressed, waiting for confirm
-	gen      int       // invalidates stale disarm ticks
+	run      *runState  // non-nil while a run screen is on the stack
+	quitting bool       // confirmed quit, waiting for the run to stop
+	armed    bool       // first ctrl+c pressed, waiting for confirm
+	gen      int        // invalidates stale disarm ticks
+	cube     *cubeModel // non-nil while the demo screen is on the stack
 }
 
 func (m *appModel) top() *screen { return &m.stack[len(m.stack)-1] }
@@ -191,6 +192,12 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.popRun()
 		}
 		return m, nil
+	case cubeFrameMsg:
+		if m.cube == nil || m.top().id != "demo" {
+			return m, nil // left the demo — let the frame loop die
+		}
+		m.cube.step()
+		return m, cubeTick()
 	case tea.KeyMsg:
 		return m.key(msg)
 	}
@@ -235,6 +242,9 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	m.armed = false // any other key clears the confirm prompt
 	if m.top().id == "run" {
 		return m.runKey(key)
+	}
+	if m.top().id == "demo" {
+		return m.demoKey(key)
 	}
 	s := m.top()
 	if s.filtering {
@@ -320,6 +330,19 @@ func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// demoKey handles keys while the demo screen is on top: w toggles the
+// wireframe overlay, esc drops back to the menu and stops the frame loop.
+func (m *appModel) demoKey(key string) (tea.Model, tea.Cmd) {
+	switch key {
+	case "w":
+		m.cube.wire = !m.cube.wire
+	case "esc":
+		m.stack = m.stack[:len(m.stack)-1]
+		m.cube = nil
+	}
+	return m, nil
+}
+
 // runKey handles keys while the run screen is on top.
 func (m *appModel) runKey(key string) (tea.Model, tea.Cmd) {
 	r := m.run
@@ -370,8 +393,13 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 	s := m.top()
 	switch s.id {
 	case "root":
-		if s.cursor == 0 {
+		switch s.cursor {
+		case 0:
 			m.stack = append(m.stack, cadScreen())
+		case 2:
+			m.cube = newCubeModel(time.Now().UnixNano())
+			m.stack = append(m.stack, screen{id: "demo", title: "demo"})
+			return m, cubeTick()
 		}
 	case "cad":
 		switch s.cursor {
@@ -426,6 +454,9 @@ func (m *appModel) View() string {
 		crumbStyle.Render(crumb) + "\n\n"
 	if m.top().id == "run" {
 		return header + m.runView()
+	}
+	if m.top().id == "demo" {
+		return header + m.demoView()
 	}
 	s := m.top()
 	out := header
@@ -491,6 +522,30 @@ func (m *appModel) View() string {
 		footer = warnStyle.Render("  press ctrl+c again to quit")
 	}
 	return out + "\n" + footer + "\n"
+}
+
+type cubeFrameMsg struct{}
+
+func cubeTick() tea.Cmd {
+	return tea.Tick(time.Second/cubeFPS, func(time.Time) tea.Msg { return cubeFrameMsg{} })
+}
+
+// demoView renders the tumbling cube centred between the header and footer.
+func (m *appModel) demoView() string {
+	h := min(m.logAvail(), 25)
+	w := m.width
+	if w == 0 {
+		w = 80
+	}
+	out := ""
+	for _, line := range renderCube(w, h, m.cube.ang, m.cube.wire) {
+		out += line + "\n"
+	}
+	wire := "off"
+	if m.cube.wire {
+		wire = "on"
+	}
+	return out + "\n" + dimStyle.Render("  [w] wireframe: "+wire+" · [esc] go back · [ctrl+c] quit") + "\n"
 }
 
 // logAvail is how many log lines fit between the header and the footer.
@@ -580,7 +635,7 @@ func rootScreen() screen {
 	return screen{id: "root", title: "home", items: []menuItem{
 		{label: "cad", help: "viewers & exports"},
 		{label: "bench", help: "(coming soon)", inert: true},
-		{label: "demo", help: "(coming soon)", inert: true},
+		{label: "demo", help: "a cube, tumbling, for no reason at all"},
 		{label: "credits", help: "(coming soon)", inert: true},
 	}}
 }
