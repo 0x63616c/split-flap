@@ -86,11 +86,6 @@ MODELS = {
         "SIDE QUEST iPad swivel-bar wall mount: wall + bracket + bar + iPad",
         "ipadwall",
     ),
-    "ipad-bracket": Model(
-        "SIDE QUEST two-piece bracket, exploded: channel body + full-face lid",
-        "ipadwall",
-        "two_piece_scene",
-    ),
     "usb-grommet": Model(
         "SIDE QUEST 38mm USB wall-hole grommet, side slit",
         "usbgrommet",

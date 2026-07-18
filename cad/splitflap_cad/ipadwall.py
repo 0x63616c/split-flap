@@ -13,7 +13,7 @@ World frame: wall = YZ plane at x=0, +X out of the wall, +Z up. The
 bar's wall end is DOWN; it runs up at ibar_tilt_deg off the wall
 (currently 0 = parallel), iPad rigid on its top end.
 
-View: `just cad view ipad-wall` (full viz) or `ipad-bracket`
+View: `just cad view ipad-wall` (full viz)
 (exploded parts). Prints: ipad-body, ipad-lid.
 """
 
@@ -150,15 +150,4 @@ def scene() -> Scene:
         .add(bracket_lid(), "lid", color="steelblue", alpha=0.8)
         .add(bar(), "bar", color="gray", loc=pose)
         .add(ipad(), "ipad", color="black", alpha=0.5, loc=ipad_loc)
-    )
-
-
-def two_piece_scene() -> Scene:
-    """The sandwich exploded: body + bar in the open channel, lid
-    floated out front."""
-    return (
-        Scene()
-        .add(bracket_body(), "body", color="orange", alpha=0.9)
-        .add(bar(), "bar", color="gray", loc=_bar_pose())
-        .add(bracket_lid(), "lid", color="steelblue", alpha=0.9, loc=Pos(25, 0, 0))
     )
