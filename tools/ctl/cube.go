@@ -10,12 +10,13 @@ import (
 // tested without a terminal; the model below only owns the animation state.
 
 const (
-	cubeDist  = 5.0           // camera distance from the cube's centre
-	cubeHalf  = 1.0           // half edge length
-	cubeCellW = 2.0           // terminal cells are ~twice as tall as wide
-	cubeRamp  = ".,-~:;=!*$@" // dark → bright
-	cubeWire  = '#'           // edge char, kept out of the ramp
-	cubeLight = 0.9           // light comes from over the viewer's shoulder
+	cubeDist    = 5.0           // camera distance from the cube's centre
+	cubeHalf    = 1.0           // half edge length
+	cubeCellW   = 2.0           // terminal cells are ~twice as tall as wide
+	cubeRamp    = ".,-~:;=!*$@" // dark → bright
+	cubeWire    = '#'           // edge char, kept out of the ramp
+	cubeLight   = 0.9           // light comes from over the viewer's shoulder
+	cubeAmbient = 0.12          // shade floor, so a face is never blank
 )
 
 // faces holds, per cube face, the origin corner and the two in-plane edge
@@ -113,6 +114,16 @@ func (c *cubeCanvas) lines() []string {
 
 // renderCube draws the cube at the given orientation into a w×h char grid.
 func renderCube(w, h int, ang [3]float64, wire bool) []string {
+	c := renderCubeCanvas(w, h, ang, wire)
+	if c == nil {
+		return nil
+	}
+	return c.lines()
+}
+
+// renderCubeCanvas is renderCube's guts, kept separate so tests can inspect
+// the depth buffer and not just the chars.
+func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *cubeCanvas {
 	if w < 1 || h < 1 {
 		return nil
 	}
@@ -123,11 +134,12 @@ func renderCube(w, h int, ang [3]float64, wire bool) []string {
 	steps := 2 * max(w, h)
 	for _, f := range cubeFaces {
 		n := rot(f.n, ang)
-		lum := -(n[0]*light[0] + n[1]*light[1] + n[2]*light[2]) /
-			math.Sqrt(light[0]*light[0]+light[1]*light[1]+light[2]*light[2])
-		if lum <= 0 {
-			continue // facing away — the depth buffer would drop it anyway
+		if n[2] >= 0 {
+			continue // back face: the camera sits at -z looking towards +z
 		}
+		lum := (n[0]*light[0] + n[1]*light[1] + n[2]*light[2]) /
+			math.Sqrt(light[0]*light[0]+light[1]*light[1]+light[2]*light[2])
+		lum = math.Max(lum, cubeAmbient) // a grazing face stays dim, never a hole
 		ch := rune(cubeRamp[min(int(lum*float64(len(cubeRamp))), len(cubeRamp)-1)])
 		for i := 0; i <= steps; i++ {
 			u := float64(i) / float64(steps)
@@ -157,7 +169,7 @@ func renderCube(w, h int, ang [3]float64, wire bool) []string {
 			}
 		}
 	}
-	return c.lines()
+	return c
 }
 
 // cubeModel is the demo screen's animation state: an angle per axis plus a

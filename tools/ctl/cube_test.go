@@ -61,6 +61,23 @@ func TestRenderCubeWireframeOverlays(t *testing.T) {
 	}
 }
 
+// The centre cell must land on the face nearest the camera, never the far
+// one — drawing the far face means we are seeing the inside of the cube.
+func TestRenderCubeShowsNearFace(t *testing.T) {
+	near, far := 1/(cubeDist-cubeHalf), 1/(cubeDist+cubeHalf)
+	for _, ang := range [][3]float64{{}, {0.6, 0.4, 0.2}, {1.1, 0.9, 0.3}, {2.4, 1.7, 0.8}} {
+		c := renderCubeCanvas(60, 25, ang, false)
+		got := c.depth[(c.h/2)*c.w+c.w/2]
+		if got == 0 {
+			t.Fatalf("ang %v: centre cell empty", ang)
+		}
+		if got < (near+far)/2 {
+			t.Fatalf("ang %v: centre depth %v is a far-side surface (near %v, far %v)",
+				ang, got, near, far)
+		}
+	}
+}
+
 func TestRenderCubeDegenerateSize(t *testing.T) {
 	if got := renderCube(0, 10, [3]float64{}, false); got != nil {
 		t.Fatalf("want nil for zero width, got %v", got)
