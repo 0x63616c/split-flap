@@ -21,8 +21,10 @@ func main() {
 	switch args[0] {
 	case "cad":
 		err = runCad(args[1:])
+	case "bench":
+		err = runBenchCLI(args[1:])
 	default:
-		err = fmt.Errorf("unknown namespace %q (have: cad)", args[0])
+		err = fmt.Errorf("unknown namespace %q (have: cad, bench)", args[0])
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ctl:", err)

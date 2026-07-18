@@ -19,6 +19,7 @@ var (
 	okStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 	errStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
 	crumbStyle = lipgloss.NewStyle().Italic(true).Faint(true).Padding(0, 1)
+	boldStyle  = lipgloss.NewStyle().Bold(true)
 )
 
 const footerHelp = "  [↑↓] move · [esc] go back · [enter] select · [h] help · [ctrl+c] quit"
@@ -149,11 +150,12 @@ type appModel struct {
 	root     string
 	width    int
 	height   int
-	run      *runState  // non-nil while a run screen is on the stack
-	quitting bool       // confirmed quit, waiting for the run to stop
-	armed    bool       // first ctrl+c pressed, waiting for confirm
-	gen      int        // invalidates stale disarm ticks
-	cube     *demoModel // non-nil while the demo screen is on the stack
+	run      *runState   // non-nil while a run screen is on the stack
+	quitting bool        // confirmed quit, waiting for the run to stop
+	armed    bool        // first ctrl+c pressed, waiting for confirm
+	gen      int         // invalidates stale disarm ticks
+	cube     *demoModel  // non-nil while the demo screen is on the stack
+	bench    *benchModel // non-nil while the bench screen is on the stack
 }
 
 func (m *appModel) top() *screen { return &m.stack[len(m.stack)-1] }
@@ -192,6 +194,25 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.popRun()
 		}
 		return m, nil
+	case benchLogMsg:
+		if m.bench == nil {
+			return m, nil
+		}
+		m.bench.logf("%s", msg.line)
+		return m, listenBench(m.bench.w.msgs)
+	case benchSnapMsg:
+		if m.bench == nil {
+			return m, nil
+		}
+		m.bench.snap = benchSnapshot(msg)
+		return m, listenBench(m.bench.w.msgs)
+	case benchDoneMsg:
+		if m.bench == nil {
+			return m, nil
+		}
+		m.bench.snap.connected = false
+		m.bench.snap.busy = false
+		return m, nil
 	case cubeFrameMsg:
 		if m.cube == nil || m.top().id != "demo" {
 			return m, nil // left the demo — let the frame loop die
@@ -228,6 +249,9 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	key := msg.String()
 	if key == "ctrl+c" {
 		if m.armed {
+			if m.bench != nil {
+				m.bench.w.stop()
+			}
 			if m.run != nil && !m.run.done {
 				m.run.stop()
 				m.quitting = true
@@ -246,6 +270,9 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	if m.top().id == "demo" {
 		return m.demoKey(msg)
+	}
+	if m.top().id == "bench" {
+		return m.benchKey(msg)
 	}
 	s := m.top()
 	if s.filtering {
@@ -428,6 +455,8 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		switch s.cursor {
 		case 0:
 			m.stack = append(m.stack, cadScreen())
+		case 1:
+			m.stack = append(m.stack, benchScreen())
 		case 2:
 			return m.startDemo("demo", "")
 		}
@@ -444,6 +473,17 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 4:
 			return m.startRun("golden test", startGoldenTest(m.root))
 		}
+	case "bench-menu":
+		switch s.cursor {
+		case 0:
+			return m.startBenchScreen("", true)
+		case 1:
+			return m.startBenchScreen("", false)
+		case 2:
+			m.stack = append(m.stack, benchPortScreen())
+		}
+	case "bench-port":
+		return m.startBenchScreen(s.names[s.cursor], true)
 	case "pick-render":
 		return m.startDemo("render "+s.names[s.cursor], s.names[s.cursor])
 	case "view":
@@ -491,6 +531,9 @@ func (m *appModel) View() string {
 	}
 	if m.top().id == "demo" {
 		return header + m.demoView()
+	}
+	if m.top().id == "bench" {
+		return header + m.benchView()
 	}
 	s := m.top()
 	out := header
@@ -688,7 +731,7 @@ func helpScreen() screen {
 func rootScreen() screen {
 	return screen{id: "root", title: "home", items: []menuItem{
 		{label: "cad", help: "viewers & exports"},
-		{label: "bench", help: "(coming soon)", inert: true},
+		{label: "bench", help: "drive the breadboard module over serial"},
 		{label: "demo", help: "a cube, tumbling, for no reason at all"},
 		{label: "credits", help: "(coming soon)", inert: true},
 	}}
@@ -782,10 +825,15 @@ func listScreen(cat catalog) screen {
 
 // --- entrypoints -------------------------------------------------------
 
-func runRootMenu() error { return runTUI(false) }
-func runCadMenu() error  { return runTUI(true) }
+func runRootMenu() error { return runTUI(nil) }
+func runCadMenu() error {
+	return runTUI(func(m *appModel) tea.Cmd { m.stack = append(m.stack, cadScreen()); return nil })
+}
 
-func runTUI(startAtCad bool) error {
+// runTUI boots the menu. open, if given, pushes a deeper starting screen (and
+// may return a command to kick it off) so `ctl cad` / `ctl bench` land where
+// you asked rather than at the root.
+func runTUI(open func(*appModel) tea.Cmd) error {
 	root, err := repoRoot()
 	if err != nil {
 		return err
@@ -795,9 +843,14 @@ func runTUI(startAtCad bool) error {
 		return err
 	}
 	m := &appModel{cat: cat, root: root, stack: []screen{rootScreen()}}
-	if startAtCad {
-		m.stack = append(m.stack, cadScreen())
+	var cmd tea.Cmd
+	if open != nil {
+		cmd = open(m)
 	}
-	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
+	p := tea.NewProgram(m, tea.WithAltScreen())
+	if cmd != nil {
+		go func() { p.Send(cmd()) }()
+	}
+	_, err = p.Run()
 	return err
 }
