@@ -56,25 +56,39 @@ class Params:
     # --- interconnect fins (5 tabs outboard of the back wall) ---
     # Five disconnected tabs, no frame between them: 4 corner tabs (a flat
     # pair on the z=0 mating face, a ramped pair on z=53) plus one stacking
-    # tab per +-Y edge on the y=+-59 faces. Each carries a magnet pocket.
+    # tab per +-Y edge on the y=+-59 faces. Each carries one M3 joint.
     #
-    # The magnet axes and the mating faces they open onto are the INTERFACE
-    # — they decide whether two modules latch, so they never get rounded.
-    # Everything else is ours to draw. fin_depth doubles as the corner tabs'
-    # Y width, which puts every hole dead-centre in an 8.78 square footprint.
+    # The screw axes and the mating faces they open onto are the INTERFACE
+    # — they decide whether two modules bolt together, so they never get
+    # rounded. Everything else is ours to draw. fin_depth doubles as the
+    # corner tabs' Y width, which puts every hole dead-centre in an 8.78
+    # square footprint.
     #
-    # Every tab is >= fin_flat_t thick because every tab holds a magnet. The
-    # vendor's tabs tapered to 3 at the mating edge, which is fine for a
-    # screw and not for a pocket that needs a floor behind it.
+    # Modules are identical prints, so a site cannot be both halves of a
+    # joint: the pattern is ANTISYMMETRIC. The z=0 face and the y=-59 face
+    # take the screw (clearance + counterbore); the z=53 face and the y=+59
+    # face take the heat-set insert. A unit stacked on another always
+    # presents z=0 to a z=53, and +59 to a -59, so screw always meets
+    # insert whichever way round the pair goes.
     fin_depth: float = 8.78        # how far the tabs stand off the wall face
     fin_top_tab_h: float = 10.0    # top corner tab height at the wall face;
                                    # ramps down to fin_flat_t at the outer edge
     fin_stack_z_top: float = 30.5  # stack tab top face
     fin_stack_h: float = 14.0469   # stack tab height at the wall face; the
                                    # ramp below it is 45 deg (= fin_depth run)
-    fin_magnet_floor: float = 1.5  # material behind the magnet, pierced by a
-                                   # poke hole so it can be pushed back out
-    fin_magnet_clear: float = 0.3  # pocket depth over magnet thickness
+    # M3x6 button head into an M3x3 heat-set insert. Both halves of the
+    # joint have to fit in the SAME tab thickness (the tabs are one
+    # geometry, only the cuts differ), and they balance at 5.0:
+    #   insert side: 4.0 bore + 1.0 floor
+    #   screw side:  2.0 counterbore + 3.0 shank, then 3.0 into the insert
+    fin_insert_d: float = 4.2      # M3 heat-set insert bore (repo idiom)
+    fin_insert_len: float = 3.0    # M3x3 heat-set, flush with the face
+    fin_insert_depth: float = 4.0  # blind bore: the insert + screw-tip room
+    fin_joint_floor: float = 1.0   # solid material behind the insert bore
+    fin_cbore_d: float = 6.0       # button head 5.7 + clearance
+    fin_cbore_depth: float = 2.0   # head 1.65 sunk 0.35 below the mating
+                                   # face, so mated faces still kiss
+    fin_screw_len: float = 6.0     # M3x6 = 3.0 shank + 3.0 insert engagement
 
     # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A
     # bipolar, 1.8deg, 4-lead). Dims from the vendor's product drawing;
@@ -155,15 +169,20 @@ class Params:
     nema_foot_bolt_l: float = 8.0    # M3x8 in the foot joint
 
     @property
-    def fin_pocket_h(self) -> float:
-        """Magnet pocket depth from the mating face. Derived."""
-        return self.drum_magnet_t + self.fin_magnet_clear
+    def fin_flat_t(self) -> float:
+        """Tab thickness — every tab is at least this. One thickness has
+        to serve both halves of the joint, so it's whichever half needs
+        more: insert bore + floor, or counterbore + shank. Derived."""
+        return max(
+            self.fin_insert_depth + self.fin_joint_floor,
+            self.fin_cbore_depth + self.fin_shank_len,
+        )
 
     @property
-    def fin_flat_t(self) -> float:
-        """Tab thickness — every tab is at least this, set by what a
-        magnet needs behind it: pocket plus floor. Derived."""
-        return self.fin_pocket_h + self.fin_magnet_floor
+    def fin_shank_len(self) -> float:
+        """How much screw is left to cross the clearance tab once the
+        insert has its engagement. Derived."""
+        return self.fin_screw_len - self.fin_insert_len
 
     @property
     def fin_wall_face(self) -> float:
@@ -177,19 +196,19 @@ class Params:
 
     @property
     def fin_hole_x(self) -> float:
-        """Magnet axis X, shared by all five tabs — centred across the
+        """Screw axis X, shared by all five tabs — centred across the
         fin depth. INTERFACE: mates against the neighbour. Derived."""
         return self.fin_wall_face - self.fin_depth / 2
 
     @property
     def fin_hole_y(self) -> float:
-        """Corner magnet axis |Y| — centred across the corner tabs' Y
+        """Corner screw axis |Y| — centred across the corner tabs' Y
         width. INTERFACE. Derived."""
         return self.unit_plate_h / 2 - self.fin_depth / 2
 
     @property
     def fin_stack_hole_z(self) -> float:
-        """Stack magnet axis Z — mid back height, so a stacked pair meets
+        """Stack screw axis Z — mid back height, so a stacked pair meets
         symmetrically. INTERFACE. Derived."""
         return self.unit_back_height / 2
 
