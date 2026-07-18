@@ -355,6 +355,16 @@ func (m *appModel) startRun(title string, r *runState) (tea.Model, tea.Cmd) {
 	return m, listenRun(r.ch)
 }
 
+// catalog re-reads the model catalog so a catalog.py edit shows up without a
+// restart. A failed reload keeps the last good copy — a broken catalog.py
+// shouldn't empty the menus.
+func (m *appModel) catalog() catalog {
+	if cat, err := loadCatalog(m.root); err == nil {
+		m.cat = cat
+	}
+	return m.cat
+}
+
 // select_ handles enter on the top screen: push a submenu or start a run.
 func (m *appModel) select_() (tea.Model, tea.Cmd) {
 	s := m.top()
@@ -368,14 +378,16 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 0:
 			m.stack = append(m.stack, viewScreen())
 		case 1:
-			m.stack = append(m.stack, pickScreen("pick-export", m.cat, true))
+			m.stack = append(m.stack, pickScreen("pick-export", m.catalog(), true))
 		case 2:
-			m.stack = append(m.stack, listScreen(m.cat))
+			m.stack = append(m.stack, listScreen(m.catalog()))
+		case 3:
+			return m.startRun("golden test", startGoldenTest(m.root))
 		}
 	case "view":
 		switch s.cursor {
 		case 0:
-			m.stack = append(m.stack, pickScreen("pick-view", m.cat, false))
+			m.stack = append(m.stack, pickScreen("pick-view", m.catalog(), false))
 		case 1:
 			return m.startRun("view (follow)", startView(""))
 		}
@@ -555,10 +567,9 @@ func helpScreen() screen {
 		row("esc", "back · stop a run · clear the filter"),
 		row("/", "fuzzy filter on pick-a-model screens"),
 		row("space", "mark rows on the export picker; enter exports the set"),
-		row("  typo-tolerant", "one wrong character is forgiven (frap → flap)"),
 		row("  opt+delete / ctrl+w", "delete a word from the filter"),
 		row("h", "this help (h or esc closes)"),
-		row("ctrl+c ctrl+c", "quit — a running job is shut down first"),
+		row("ctrl+c", "quit — a running job is shut down first"),
 		{label: "", disabled: true},
 		row("runs", "export/view stream their logs right here;"),
 		row("", "view keeps re-rendering on every .py save"),
@@ -579,6 +590,7 @@ func cadScreen() screen {
 		{label: "view", help: "live viewer in this pane, re-renders on save"},
 		{label: "export", help: "write STLs to cad/export/"},
 		{label: "list models", help: "the model catalog"},
+		{label: "golden test", help: "pytest -m slow — XOR every model against cad/tests/golden/"},
 	}}
 }
 

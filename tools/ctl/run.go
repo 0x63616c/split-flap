@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -36,7 +38,21 @@ func listenRun(ch chan tea.Msg) tea.Cmd {
 // startExport streams `splitflap_cad export [model...]` into the run screen.
 func startExport(root string, models ...string) *runState {
 	args := append([]string{"export"}, models...)
-	cmd := pyCmd(root, args...)
+	return streamCmd(pyCmd(root, args...))
+}
+
+// startGoldenTest streams the slow suite: full catalog build + BREP XOR against
+// cad/tests/golden/. Lives outside splitflap_cad, so it's pytest directly.
+func startGoldenTest(root string) *runState {
+	cmd := exec.Command("uv", "run", "python", "-m", "pytest", "-m", "slow")
+	cmd.Dir = filepath.Join(root, "cad")
+	cmd.Env = append(os.Environ(), "PYTHONUNBUFFERED=1")
+	return streamCmd(cmd)
+}
+
+// streamCmd runs cmd with stdout+stderr merged into a run screen's log; stop()
+// SIGTERMs it.
+func streamCmd(cmd *exec.Cmd) *runState {
 	ch := make(chan tea.Msg, 64)
 	r := &runState{ch: ch, stop: func() {}}
 
