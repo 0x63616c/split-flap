@@ -61,50 +61,60 @@ func rot(p [3]float64, ang [3]float64) [3]float64 {
 	return [3]float64{x, y, z}
 }
 
-// cubeCanvas is a char grid with a 1/z depth buffer, so nearer samples win.
-type cubeCanvas struct {
+// canvas is a char grid with a 1/z depth buffer, so nearer samples win.
+type canvas struct {
 	w, h  int
 	cells []rune
 	depth []float64
 	scale float64
 }
 
-func newCubeCanvas(w, h int) *cubeCanvas {
-	c := &cubeCanvas{w: w, h: h, cells: make([]rune, w*h), depth: make([]float64, w*h)}
+// newCanvas sizes the projection for a model that fits inside radius r about
+// the origin, so nothing can leave the grid at any orientation: a point at
+// radius r has a largest possible projected offset of r/sqrt(dist²-r²) — the
+// tangent point of the line of sight on the sphere it sweeps.
+func newCanvas(w, h int, r float64) *canvas {
+	c := &canvas{w: w, h: h, cells: make([]rune, w*h), depth: make([]float64, w*h)}
 	for i := range c.cells {
 		c.cells[i] = ' '
 	}
-	// Scale so no corner can leave the grid at any orientation. A corner sits
-	// at radius r from the centre, so its largest possible projected offset
-	// over all rotations is r/sqrt(dist²-r²) — the tangent point of the line
-	// of sight on the sphere it sweeps.
-	r := cubeHalf * math.Sqrt(3)
 	ratio := r / math.Sqrt(cubeDist*cubeDist-r*r)
 	c.scale = math.Min(float64(h)/2/ratio, float64(w)/2/ratio/cubeCellW) * 0.95
 	return c
 }
 
+// project maps a rotated model point to a fractional cell position plus its
+// camera-space depth. Callers that need a whole cell round it themselves.
+func (c *canvas) project(p [3]float64) (x, y, z float64) {
+	z = p[2] + cubeDist
+	// Centre on a whole cell (w/2, not w/2.0) — the grid has no half cells,
+	// and rounding from a half-cell origin pushes the model off by one.
+	return float64(c.w/2) + c.scale*cubeCellW*p[0]/z, float64(c.h/2) - c.scale*p[1]/z, z
+}
+
 // plot projects a rotated point and writes ch if it is the nearest sample
 // yet for that cell. bias nudges a sample towards the camera so wireframe
 // edges beat the faces they sit on.
-func (c *cubeCanvas) plot(p [3]float64, ch rune, bias float64) {
-	z := p[2] + cubeDist
+func (c *canvas) plot(p [3]float64, ch rune, bias float64) {
+	fx, fy, z := c.project(p)
 	if z <= 0.1 {
 		return
 	}
-	ooz := 1/z + bias
-	sx := c.w/2 + int(math.Round(c.scale*cubeCellW*p[0]/z))
-	sy := c.h/2 - int(math.Round(c.scale*p[1]/z))
-	if sx < 0 || sx >= c.w || sy < 0 || sy >= c.h {
+	c.set(int(math.Round(fx)), int(math.Round(fy)), 1/z+bias, ch)
+}
+
+// set writes a cell if ooz (1/z) beats what is already there.
+func (c *canvas) set(x, y int, ooz float64, ch rune) {
+	if x < 0 || x >= c.w || y < 0 || y >= c.h {
 		return
 	}
-	i := sy*c.w + sx
+	i := y*c.w + x
 	if ooz > c.depth[i] {
 		c.depth[i], c.cells[i] = ooz, ch
 	}
 }
 
-func (c *cubeCanvas) lines() []string {
+func (c *canvas) lines() []string {
 	out := make([]string, c.h)
 	for y := 0; y < c.h; y++ {
 		out[y] = string(c.cells[y*c.w : (y+1)*c.w])
@@ -123,11 +133,11 @@ func renderCube(w, h int, ang [3]float64, wire bool) []string {
 
 // renderCubeCanvas is renderCube's guts, kept separate so tests can inspect
 // the depth buffer and not just the chars.
-func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *cubeCanvas {
+func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *canvas {
 	if w < 1 || h < 1 {
 		return nil
 	}
-	c := newCubeCanvas(w, h)
+	c := newCanvas(w, h, cubeHalf*math.Sqrt(3))
 	light := [3]float64{0, cubeLight, -1} // towards the viewer, slightly above
 	steps := 2 * max(w, h)
 
