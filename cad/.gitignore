@@ -2,5 +2,5 @@ __pycache__/
 .venv/
 *.egg-info/
 .viewer-state.json
-# vendor reference models (Printables downloads, license unclear — don't commit)
+# scratch reference models (third-party downloads — don't commit)
 reference/

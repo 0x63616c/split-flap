@@ -22,4 +22,4 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   slow` = XOR vs `cad/tests/golden/*.brep` + full catalog build. Intended
   shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
   Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
-- `cad/reference/Unit.stp` = vendor ghost, gitignored. Motor = 28BYJ-48.
+- No vendor geometry: every printable is ours. Motor = 28BYJ-48.

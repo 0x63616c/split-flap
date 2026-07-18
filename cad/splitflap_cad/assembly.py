@@ -1,5 +1,4 @@
-"""The full-unit assembly: our plate + motor + hall PCB + drum, with the
-vendor unit as a semi-transparent ghost overlay for comparison.
+"""The full-unit assembly: the plate + motor + hall PCB + drum.
 
 Composes parts from the other modules; owns the posed_* helpers that place
 bought parts (motor, hall PCB) in unit coordinates. No geometry of its own
@@ -50,23 +49,17 @@ def posed_hall_pcb():
 
 
 def scene():
-    """Everything posed in unit coords. Vendor ghost included when the
-    STEP is on disk, skipped otherwise."""
+    """Everything posed in unit coords."""
     from .drum import posed_drum_parts
-    from .unit import full_unit, unit_plate
-    from .vendor import REF_STEP, reference
+    from .unit import full_unit
     from .viewer import Scene
 
-    have_step = REF_STEP.exists()
     drum_o, drum_i = posed_drum_parts()
-    s = (
+    return (
         Scene()
-        .add(full_unit() if have_step else unit_plate(), "unit_plate", "orange")
+        .add(full_unit(), "unit_plate", "orange")
         .add(posed_motor(), "motor", "steelblue")
         .add(posed_hall_pcb(), "hall_pcb", "green")
         .add(drum_o, "drum_outer", "violet", alpha=0.8)
         .add(drum_i, "drum_inner", "hotpink", alpha=0.8)
     )
-    if have_step:
-        s.add(reference(), "reference", "gray", alpha=0.4)
-    return s

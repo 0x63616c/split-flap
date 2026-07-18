@@ -123,16 +123,3 @@ def scene():
     from .viewer import Scene
 
     return Scene().add(fins(), "fins")
-
-
-def compare_scene():
-    """Ours solid, the vendor crop ghosted over it. TEMPORARY — goes when
-    the fins are signed off, along with vendor.py."""
-    from .vendor import vendor_fins
-    from .viewer import Scene
-
-    return (
-        Scene()
-        .add(fins(), "fins_ours", "orange")
-        .add(vendor_fins(), "fins_vendor", "gray", alpha=0.35)
-    )

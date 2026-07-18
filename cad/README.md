@@ -42,9 +42,8 @@ re-run `just cad dev`.
 | `splitflap_cad/catalog.py` | THE registry: viewable models, printable parts, save→model focus map. **Add a part here** (builder fn + one `MODELS` entry). |
 | `splitflap_cad/<part>.py` | geometry only (`flap`, `drum`, `unit`, `motor`, `stepper28byj`) — no `__main__` blocks |
 | `splitflap_cad/assembly.py` | full-unit compose + posed bought-parts |
-| `splitflap_cad/vendor.py` | verbatim geometry lifted from the vendor STEP |
+| `splitflap_cad/fins.py` | interconnect fins: the five magnet tabs that latch modules together |
 | `splitflap_cad/__main__.py` | the CLI behind `just cad` (`list/show/pin/sync/export`) — `export` with no name writes every printable |
 | `tools/cad/up.sh` (repo root) | orchestrator: viewers + cmux panes + watcher |
-| `reference/Unit.stp` | vendor unit (Printables #805853) — gitignored, download yourself; assembly ghost + measurement source |
 
 Watcher log: `/tmp/splitflap-cad-watch.log`.

@@ -113,19 +113,11 @@ class Params:
     # Everything inside the barrel wall sweep, r 26.5 about the shaft.
     nema_body_clear: float = 0.25    # gap per side around the body
     nema_leg_t: float = 3.0          # wall thickness along X
-    nema_wall_w: float = 18.0        # wall width along Y — kept inside
-                                     # the deck contour (corners r 22.7
-                                     # < 22.9) so the arc clip never
-                                     # tapers the wall ends to knife
-                                     # edges; the deck carries the motor
-                                     # screw seats, not the walls
     nema_flange_t: float = 3.5       # deck thickness: motor taps are
                                      # only 2.5 MIN deep, so M3x6 must
                                      # engage exactly 6 - 3.5 = 2.5.
                                      # Deck top clears the rails
                                      # radially (r 22.9 < sweep 23.15)
-    nema_flange_in: float = 10.0     # flange inner edge |X - shaft|
-                                     # (hole line 13 minus head + slack)
     nema_flange_r: float = 22.9      # flange plan clip radius — tighter
                                      # than the body clip: flange top z26
                                      # grazes the rail-sweep band (r
@@ -137,7 +129,6 @@ class Params:
     nema_foot_len: float = 4.5       # foot run along X past the wall
                                      # face; outer face lands ON the
                                      # clip arc at y0
-    nema_foot_w: float = 12.0        # foot width along Y
     nema_foot_h: float = 5.5         # foot height (screw passes through:
                                      # M3x8 = 5.5 foot + 2.5 into the
                                      # flush insert, tip 0.5 shy of the
@@ -253,7 +244,6 @@ class Params:
     # height is the vendor's (sets shaft/drum position); everything under
     # the motor is derived from it.
     byj_flange_seat: float = 25.0  # ear underside, from plate bottom (vendor)
-    byj_can_clear: float = 0.4     # radial clearance scooped around the can
     byj_pad_hole_r: float = 8.0    # hole through the pad centre
     # wire channel: enclosed tunnel INSIDE the plate, from the pad hole
     # out to the -X edge, so the motor wires leave the module flat.

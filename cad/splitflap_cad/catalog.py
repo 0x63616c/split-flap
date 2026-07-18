@@ -42,14 +42,14 @@ class Printable:
 
 MODELS = {
     "assembly": Model(
-        "full unit: plate + motor + hall PCB + drum, vendor ghost overlaid",
+        "full unit: plate + motor + hall PCB + drum",
         "assembly",
     ),
     "unit": Model(
-        "printable side plate (+ vendor fins/towers when STEP on disk)",
+        "printable side plate with interconnect fins",
         "unit",
     ),
-    "plate": Model("side plate only — no vendor fins/towers", "unit", "plate_scene"),
+    "plate": Model("side plate only — no interconnect fins", "unit", "plate_scene"),
     "unit-nema": Model(
         "NEMA variant: plate + bridge + motor + drum ghosts",
         "unitnema",
@@ -81,13 +81,7 @@ MODELS = {
     ),
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj"),
     "motor-nema": Model("NEMA 14 pancake reference (ordered part)", "motor"),
-    "vendor": Model("vendor unit STEP, aligned to our frame", "vendor"),
     "fins": Model("parametric interconnect fins, alone", "fins"),
-    "fins-compare": Model(
-        "TEMP: our fins (solid) vs the vendor crop (ghost)",
-        "fins",
-        "compare_scene",
-    ),
     "ipad-wall": Model(
         "SIDE QUEST iPad swivel-bar wall mount: wall + bracket + bar + iPad",
         "ipadwall",
