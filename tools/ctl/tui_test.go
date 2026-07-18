@@ -1,6 +1,11 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 func TestFuzzyMatch(t *testing.T) {
 	cases := []struct {
@@ -90,4 +95,102 @@ func TestMultiSelectToggleAndMarked(t *testing.T) {
 	}
 	empty := screen{} // space on non-multi screens is a no-op
 	empty.toggle()
+}
+
+func TestPickRenderListsExports(t *testing.T) {
+	root, err := repoRoot()
+	if err != nil {
+		t.Skip("not in a repo")
+	}
+	s := pickRenderScreen(root)
+	if len(findSTLs(root)) == 0 {
+		if s.id != "render-empty" {
+			t.Fatalf("no exports should give the empty screen, got id %q", s.id)
+		}
+		return
+	}
+	if s.id != "pick-render" {
+		t.Fatalf("id %q, want pick-render", s.id)
+	}
+	if !s.canFilter {
+		t.Fatal("render picker should be fuzzy-filterable like the other pickers")
+	}
+	if len(s.names) != len(s.items) || len(s.names) == 0 {
+		t.Fatalf("%d names vs %d items", len(s.names), len(s.items))
+	}
+	for _, n := range s.names {
+		if strings.HasSuffix(n, ".stl") {
+			t.Fatalf("name %q should be the model name, not a filename", n)
+		}
+	}
+}
+
+// Picking a model from the render list must open the demo on that scene.
+func TestStartDemoOpensChosenScene(t *testing.T) {
+	root, err := repoRoot()
+	if err != nil || len(findSTLs(root)) == 0 {
+		t.Skip("no exports on disk")
+	}
+	m := &appModel{stack: []screen{rootScreen()}, root: root}
+	want := pickRenderScreen(root).names[0]
+	m.startDemo("render "+want, want)
+	if m.top().id != "demo" {
+		t.Fatalf("top screen is %q, want demo", m.top().id)
+	}
+	if got := m.cube.scene().label; got != want {
+		t.Fatalf("opened on %q, want %q", got, want)
+	}
+}
+
+// Keys pressed together arrive as one batched rune message; each must still
+// take effect.
+func TestDemoKeyHandlesBatchedRunes(t *testing.T) {
+	m := &appModel{stack: []screen{rootScreen(), {id: "demo"}}, cube: newDemoModel(1, "")}
+	wireWas := m.cube.scene().wire
+	m.demoKey(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("wp")})
+	if m.cube.scene().wire == wireWas {
+		t.Fatal("w in a batched message did not toggle wireframe")
+	}
+	if !m.cube.paused {
+		t.Fatal("p in a batched message did not pause")
+	}
+}
+
+// The cube reads well as a skeleton; a mesh has thousands of edges and does
+// not, so parts open shaded.
+func TestSceneWireframeDefaults(t *testing.T) {
+	root, err := repoRoot()
+	if err != nil || len(findSTLs(root)) == 0 {
+		t.Skip("no exports on disk")
+	}
+	d := newDemoModel(1, root)
+	if !d.scenes[0].wire {
+		t.Fatal("cube should open as a wireframe")
+	}
+	for _, s := range d.scenes[1:] {
+		if s.wire {
+			t.Fatalf("mesh scene %q should open shaded", s.label)
+		}
+	}
+}
+
+// Wireframe is per scene: toggling one part must not change another.
+func TestWireframeIsPerScene(t *testing.T) {
+	root, err := repoRoot()
+	if err != nil || len(findSTLs(root)) == 0 {
+		t.Skip("no exports on disk")
+	}
+	m := &appModel{stack: []screen{rootScreen(), {id: "demo"}}, cube: newDemoModel(1, root)}
+	m.cube.jumpTo("unit")
+	m.demoRune('w')
+	if !m.cube.scenes[m.cube.idx].wire {
+		t.Fatal("w did not enable wireframe on the current scene")
+	}
+	if m.cube.scenes[0].wire != true {
+		t.Fatal("the cube's own wireframe state changed")
+	}
+	m.cube.next()
+	if m.cube.scene().wire {
+		t.Fatalf("scene %q inherited the neighbour's wireframe", m.cube.scene().label)
+	}
 }

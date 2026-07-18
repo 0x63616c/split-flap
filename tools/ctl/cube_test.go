@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strings"
 	"testing"
 )
@@ -28,19 +29,44 @@ func TestRenderCubeGrid(t *testing.T) {
 	}
 }
 
-func TestRenderCubeFitsInsideGrid(t *testing.T) {
-	// Every border cell should stay blank at any orientation — the scale is
-	// meant to keep even the furthest corner inside.
+// At fill 1.0 the projection guarantees a fit: no point on the bounding
+// sphere can land outside the grid, whatever the orientation.
+func TestCanvasFillOneAlwaysFits(t *testing.T) {
+	r := cubeHalf * math.Sqrt(3)
+	c := newCanvas(60, 25, r, 1.0)
+	for i := 0; i < 40; i++ {
+		ang := [3]float64{float64(i) * 0.5, float64(i) * 0.31, float64(i) * 0.17}
+		for corner := 0; corner < 8; corner++ {
+			x, y, _ := c.project(rot(cubeCorner(corner), ang))
+			if x < 0 || x > float64(c.w-1) || y < 0 || y > float64(c.h-1) {
+				t.Fatalf("ang %v corner %d projected to (%.1f,%.1f), outside %dx%d",
+					ang, corner, x, y, c.w, c.h)
+			}
+		}
+	}
+}
+
+// The demo trades that guarantee for presence: viewFill draws a quarter
+// larger, and the odd clipped corner is the accepted cost.
+func TestViewFillDrawsLarger(t *testing.T) {
+	r := cubeHalf * math.Sqrt(3)
+	fit := newCanvas(60, 25, r, 1.0).scale
+	got := newCanvas(60, 25, r, viewFill).scale / fit
+	if math.Abs(got-1.25) > 1e-9 {
+		t.Fatalf("viewFill scales by %v, want 1.25", got)
+	}
+}
+
+// Oversizing must clip cleanly rather than corrupt the grid: every row stays
+// exactly w wide however far the model overhangs.
+func TestRenderCubeClipsCleanly(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		ang := [3]float64{float64(i) * 0.5, float64(i) * 0.31, float64(i) * 0.17}
-		lines := renderCube(60, 25, ang, true)
-		for y, l := range lines {
-			if (y == 0 || y == len(lines)-1) && strings.TrimSpace(l) != "" {
-				t.Fatalf("ang %v: drew on border row %d", ang, y)
-			}
-			r := []rune(l)
-			if r[0] != ' ' || r[len(r)-1] != ' ' {
-				t.Fatalf("ang %v: drew on border column of row %d", ang, y)
+		for _, wire := range []bool{false, true} {
+			for _, l := range renderCube(60, 25, ang, wire) {
+				if len([]rune(l)) != 60 {
+					t.Fatalf("ang %v wire %v: row is %d cols, want 60", ang, wire, len([]rune(l)))
+				}
 			}
 		}
 	}
@@ -141,7 +167,7 @@ func TestCubeModelDeterministicFromSeed(t *testing.T) {
 }
 
 func TestCubeModelStartsWireframed(t *testing.T) {
-	if !newDemoModel(1, "").wire {
-		t.Fatal("demo should open in wireframe")
+	if !newDemoModel(1, "").scene().wire {
+		t.Fatal("the cube should open in wireframe")
 	}
 }

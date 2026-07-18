@@ -13,7 +13,7 @@ import (
 type demoModel struct {
 	ang, vel, target [3]float64
 	ticks            int
-	wire             bool
+	paused           bool
 	rng              *rand.Rand
 	scenes           []demoScene
 	idx              int
@@ -25,6 +25,7 @@ type demoModel struct {
 type demoScene struct {
 	label  string
 	path   string
+	wire   bool
 	mesh   *mesh
 	err    error
 	loaded bool
@@ -40,8 +41,10 @@ const (
 // newDemoModel builds the scene list: the cube first, then every export,
 // with unit.stl promoted to the front since it is the whole assembly.
 func newDemoModel(seed int64, root string) *demoModel {
-	d := &demoModel{wire: true, rng: rand.New(rand.NewSource(seed))}
-	d.scenes = append(d.scenes, demoScene{label: "cube"})
+	d := &demoModel{rng: rand.New(rand.NewSource(seed))}
+	// Wireframe suits the cube — twelve edges read as a shape. A mesh has
+	// thousands, which reads as noise, so parts open shaded.
+	d.scenes = append(d.scenes, demoScene{label: "cube", wire: true})
 
 	paths := findSTLs(root)
 	sort.Slice(paths, func(i, j int) bool {
@@ -66,8 +69,12 @@ func (d *demoModel) reroll() {
 	}
 }
 
-// step advances one frame.
+// step advances one frame. A paused demo holds its pose but stays live, so
+// wireframe and scene changes still redraw.
 func (d *demoModel) step() {
+	if d.paused {
+		return
+	}
 	d.ticks++
 	if d.ticks%cubeRerollAt == 0 {
 		d.reroll()
@@ -80,13 +87,26 @@ func (d *demoModel) step() {
 
 func (d *demoModel) next() { d.idx = (d.idx + 1) % len(d.scenes) }
 
+func (d *demoModel) prev() { d.idx = (d.idx - 1 + len(d.scenes)) % len(d.scenes) }
+
+// jumpTo selects a scene by label, reporting whether it existed.
+func (d *demoModel) jumpTo(label string) bool {
+	for i, s := range d.scenes {
+		if s.label == label {
+			d.idx = i
+			return true
+		}
+	}
+	return false
+}
+
 func (d *demoModel) scene() *demoScene { return &d.scenes[d.idx] }
 
 // render draws the current scene, loading its mesh if this is its first view.
 func (d *demoModel) render(w, h int) []string {
 	s := d.scene()
 	if s.path == "" {
-		return renderCube(w, h, d.ang, d.wire)
+		return renderCube(w, h, d.ang, s.wire)
 	}
 	if !s.loaded {
 		s.mesh, s.err = loadSTL(s.path)
@@ -95,7 +115,7 @@ func (d *demoModel) render(w, h int) []string {
 	if s.err != nil {
 		return centred(w, h, "cannot read "+filepath.Base(s.path), s.err.Error())
 	}
-	return renderMesh(s.mesh, w, h, d.ang, d.wire)
+	return renderMesh(s.mesh, w, h, d.ang, s.wire)
 }
 
 // centred lays out message lines in the middle of an otherwise blank grid,

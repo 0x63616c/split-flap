@@ -14,6 +14,7 @@ const (
 	cubeWire    = '#'           // edge char, kept out of the ramp
 	cubeLight   = 0.9           // light comes from over the viewer's shoulder
 	cubeAmbient = 0.12          // shade floor, so a face is never blank
+	viewFill    = 1.25          // 25% past a guaranteed fit: presence over the odd clipped corner
 )
 
 // faces holds, per cube face, the origin corner and the two in-plane edge
@@ -67,16 +68,20 @@ type canvas struct {
 }
 
 // newCanvas sizes the projection for a model that fits inside radius r about
-// the origin, so nothing can leave the grid at any orientation: a point at
-// radius r has a largest possible projected offset of r/sqrt(dist²-r²) — the
-// tangent point of the line of sight on the sphere it sweeps.
-func newCanvas(w, h int, r float64) *canvas {
+// the origin. At fill 1.0 nothing can leave the grid at any orientation: a
+// point at radius r has a largest possible projected offset of
+// r/sqrt(dist²-r²) — the tangent point of the line of sight on the sphere it
+// sweeps. Above 1.0 the model is drawn larger than that guarantee, trading
+// the odd clipped corner for presence on screen.
+func newCanvas(w, h int, r, fill float64) *canvas {
 	c := &canvas{w: w, h: h, cells: make([]rune, w*h), depth: make([]float64, w*h)}
 	for i := range c.cells {
 		c.cells[i] = ' '
 	}
+	// Budget from the centre cell (h/2), matching project's integer origin —
+	// half a cell of overhang is the difference between fitting and not.
 	ratio := r / math.Sqrt(cubeDist*cubeDist-r*r)
-	c.scale = math.Min(float64(h)/2/ratio, float64(w)/2/ratio/cubeCellW) * 0.95
+	c.scale = math.Min(float64(h/2)/ratio, float64(w/2)/ratio/cubeCellW) * fill
 	return c
 }
 
@@ -134,7 +139,7 @@ func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *canvas {
 	if w < 1 || h < 1 {
 		return nil
 	}
-	c := newCanvas(w, h, cubeHalf*math.Sqrt(3))
+	c := newCanvas(w, h, cubeHalf*math.Sqrt(3), viewFill)
 	light := [3]float64{0, cubeLight, -1} // towards the viewer, slightly above
 	steps := 2 * max(w, h)
 

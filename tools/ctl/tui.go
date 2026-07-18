@@ -244,7 +244,7 @@ func (m *appModel) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.runKey(key)
 	}
 	if m.top().id == "demo" {
-		return m.demoKey(key)
+		return m.demoKey(msg)
 	}
 	s := m.top()
 	if s.filtering {
@@ -330,19 +330,52 @@ func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// startDemo pushes the spinning-model screen, opening on scene `label`
+// ("" = the cube). Either way the ←→ keys still walk the whole scene list.
+func (m *appModel) startDemo(title, label string) (tea.Model, tea.Cmd) {
+	m.cube = newDemoModel(time.Now().UnixNano(), m.root)
+	if label != "" {
+		m.cube.jumpTo(label)
+	}
+	m.stack = append(m.stack, screen{id: "demo", title: title})
+	return m, cubeTick()
+}
+
 // demoKey handles keys while the demo screen is on top: w toggles the
 // wireframe overlay, esc drops back to the menu and stops the frame loop.
-func (m *appModel) demoKey(key string) (tea.Model, tea.Cmd) {
-	switch key {
-	case "w":
-		m.cube.wire = !m.cube.wire
-	case "tab", "right", "l":
+func (m *appModel) demoKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Runes arrive batched when keys land in the same read, so "wp" is one
+	// message, not two. Apply each in turn rather than matching the whole.
+	if msg.Type == tea.KeyRunes {
+		for _, r := range msg.Runes {
+			m.demoRune(r)
+		}
+		return m, nil
+	}
+	switch msg.String() {
+	case "right":
 		m.cube.next()
+	case "left":
+		m.cube.prev()
 	case "esc":
 		m.stack = m.stack[:len(m.stack)-1]
 		m.cube = nil
 	}
 	return m, nil
+}
+
+func (m *appModel) demoRune(r rune) {
+	switch r {
+	case 'w':
+		s := m.cube.scene()
+		s.wire = !s.wire
+	case 'p':
+		m.cube.paused = !m.cube.paused
+	case 'l':
+		m.cube.next()
+	case 'h':
+		m.cube.prev()
+	}
 }
 
 // runKey handles keys while the run screen is on top.
@@ -399,9 +432,7 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 0:
 			m.stack = append(m.stack, cadScreen())
 		case 2:
-			m.cube = newDemoModel(time.Now().UnixNano(), m.root)
-			m.stack = append(m.stack, screen{id: "demo", title: "demo"})
-			return m, cubeTick()
+			return m.startDemo("demo", "")
 		}
 	case "cad":
 		switch s.cursor {
@@ -410,10 +441,14 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 1:
 			m.stack = append(m.stack, pickScreen("pick-export", m.catalog(), true))
 		case 2:
-			m.stack = append(m.stack, listScreen(m.catalog()))
+			m.stack = append(m.stack, pickRenderScreen(m.root))
 		case 3:
+			m.stack = append(m.stack, listScreen(m.catalog()))
+		case 4:
 			return m.startRun("golden test", startGoldenTest(m.root))
 		}
+	case "pick-render":
+		return m.startDemo("render "+s.names[s.cursor], s.names[s.cursor])
 	case "view":
 		switch s.cursor {
 		case 0:
@@ -544,16 +579,20 @@ func (m *appModel) demoView() string {
 		out += line + "\n"
 	}
 	wire := "off"
-	if m.cube.wire {
+	if m.cube.scene().wire {
 		wire = "on"
+	}
+	spin := "spinning"
+	if m.cube.paused {
+		spin = warnStyle.Render("paused")
 	}
 	s := m.cube.scene()
 	name := okStyle.Render(s.label)
 	if len(m.cube.scenes) > 1 {
 		name += dimStyle.Render(fmt.Sprintf(" (%d/%d)", m.cube.idx+1, len(m.cube.scenes)))
 	}
-	return out + "\n  " + name +
-		dimStyle.Render("  ·  [tab] next · [w] wireframe: "+wire+" · [esc] back") + "\n"
+	return out + "\n  " + name + dimStyle.Render("  ·  [←→] model · [w] wireframe: "+wire+" · [p] ") +
+		spin + dimStyle.Render(" · [esc] back") + "\n"
 }
 
 // logAvail is how many log lines fit between the header and the footer.
@@ -652,6 +691,7 @@ func cadScreen() screen {
 	return screen{id: "cad", title: "cad", items: []menuItem{
 		{label: "view", help: "live viewer in this pane, re-renders on save"},
 		{label: "export", help: "write STLs to cad/export/"},
+		{label: "render", help: "spin an exported part in ASCII, right here"},
 		{label: "list models", help: "the model catalog"},
 		{label: "golden test", help: "pytest -m slow — XOR every model against cad/tests/golden/"},
 	}}
@@ -691,6 +731,29 @@ func pickScreen(id string, cat catalog, printable bool) screen {
 		s.title = "pick a model(s)"
 	}
 	return s
+}
+
+// pickRenderScreen lists what can actually be drawn: the STLs on disk, not
+// the catalog, since a model with no export has no geometry to render.
+func pickRenderScreen(root string) screen {
+	paths := findSTLs(root)
+	if len(paths) == 0 {
+		return screen{id: "render-empty", title: "render", items: []menuItem{
+			{label: "no exports found", disabled: true},
+			{label: "run: just cad export", disabled: true},
+		}}
+	}
+	names := make([]string, len(paths))
+	for i, p := range paths {
+		names[i] = stlName(p)
+	}
+	sort.Strings(names)
+	items := make([]menuItem, len(names))
+	for i, n := range names {
+		items[i] = menuItem{label: n}
+	}
+	return screen{id: "pick-render", title: "render", items: items, names: names,
+		canFilter: true, allItems: items, allNames: names}
 }
 
 func listScreen(cat catalog) screen {

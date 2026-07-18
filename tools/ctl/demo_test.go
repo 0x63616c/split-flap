@@ -58,3 +58,57 @@ func TestDemoRendersLoadFailure(t *testing.T) {
 		t.Fatalf("no error shown: %q", lines)
 	}
 }
+
+func TestDemoPauseHoldsPose(t *testing.T) {
+	d := newDemoModel(3, "")
+	for i := 0; i < 5; i++ {
+		d.step()
+	}
+	d.paused = true
+	held := d.ang
+	for i := 0; i < 50; i++ {
+		d.step()
+	}
+	if d.ang != held {
+		t.Fatalf("paused demo moved: %v -> %v", held, d.ang)
+	}
+	d.paused = false
+	d.step()
+	if d.ang == held {
+		t.Fatal("unpausing did not resume the tumble")
+	}
+}
+
+func TestDemoPrevWrapsBackwards(t *testing.T) {
+	root, _ := repoRoot()
+	d := newDemoModel(1, root)
+	if len(d.scenes) < 2 {
+		t.Skip("no exports on disk")
+	}
+	d.prev()
+	if d.idx != len(d.scenes)-1 {
+		t.Fatalf("prev from 0 gave idx %d, want %d", d.idx, len(d.scenes)-1)
+	}
+	d.next()
+	if d.idx != 0 {
+		t.Fatalf("next did not return to 0, got %d", d.idx)
+	}
+}
+
+func TestDemoJumpTo(t *testing.T) {
+	root, _ := repoRoot()
+	d := newDemoModel(1, root)
+	if len(d.scenes) < 2 {
+		t.Skip("no exports on disk")
+	}
+	want := d.scenes[len(d.scenes)-1].label
+	if !d.jumpTo(want) {
+		t.Fatalf("jumpTo(%q) reported missing", want)
+	}
+	if d.scene().label != want {
+		t.Fatalf("landed on %q, want %q", d.scene().label, want)
+	}
+	if d.jumpTo("no-such-model") {
+		t.Fatal("jumpTo accepted a label that does not exist")
+	}
+}

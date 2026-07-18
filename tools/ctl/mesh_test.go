@@ -194,7 +194,7 @@ func TestRenderRealUnit(t *testing.T) {
 // densities most triangles are sub-cell, and each miss is a pinhole showing
 // the inside of the part.
 func TestTriangleSubCellStillDraws(t *testing.T) {
-	c := newCanvas(40, 20, 1)
+	c := newCanvas(40, 20, 1, viewFill)
 	tiny := 0.001
 	c.triangle([3]float64{0, 0, 0}, [3]float64{tiny, 0, 0}, [3]float64{0, tiny, 0}, '@')
 	if nonBlank(c.lines()) == 0 {

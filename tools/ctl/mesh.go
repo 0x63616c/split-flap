@@ -144,7 +144,7 @@ func renderMeshCanvas(m *mesh, w, h int, ang [3]float64, wire bool) *canvas {
 	if w < 1 || h < 1 || m == nil {
 		return nil
 	}
-	c := newCanvas(w, h, 1)
+	c := newCanvas(w, h, 1, viewFill)
 	light := norm([3]float64{0, cubeLight, -1})
 
 	for _, t := range m.tris {
