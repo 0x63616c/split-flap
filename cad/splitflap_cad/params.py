@@ -53,6 +53,23 @@ class Params:
     unit_wall_thick: float = 3.0   # back wall thickness
     unit_back_height: float = 53.0  # total height from plate bottom (matches vendor ref)
 
+    # --- interconnect fins (5 tabs outboard of the back wall) ---
+    # Five disconnected tabs, no frame between them: 4 corner tabs (a flat
+    # pair on the z=0 mating face, a ramped pair on z=53) plus one stacking
+    # tab per +-Y edge on the y=+-59 faces. Each carries a magnet pocket.
+    #
+    # The magnet axes and the mating faces they open onto are the INTERFACE
+    # — they decide whether two modules latch, so they never get rounded.
+    # Everything else is ours to draw. fin_depth doubles as the corner tabs'
+    # Y width, which puts every hole dead-centre in an 8.78 square footprint.
+    fin_depth: float = 8.78        # how far the tabs stand off the wall face
+    fin_tab_t: float = 3.0         # flat plate thickness (bottom + stack tabs)
+    fin_top_tab_h: float = 10.0    # top corner tab height at the wall face;
+                                   # ramps down to fin_tab_t at the outer edge
+    fin_stack_z_top: float = 30.5  # stack tab top face
+    fin_stack_h: float = 14.0469   # stack tab height at the wall face; the
+                                   # ramp below it is 45 deg (= fin_depth run)
+
     # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A
     # bipolar, 1.8deg, 4-lead). Dims from the vendor's product drawing;
     # body length carries ±0.8 so MEASURE the real unit before printing
@@ -139,6 +156,28 @@ class Params:
     bolt_head_d: float = 5.7
     bolt_head_h: float = 1.65
     nema_foot_bolt_l: float = 8.0    # M3x8 in the foot joint
+
+    @property
+    def fin_wall_face(self) -> float:
+        """Back wall outer face — where the fins root. Derived."""
+        return -self.unit_plate_w / 2
+
+    @property
+    def fin_x_out(self) -> float:
+        """Fin outer face, the module's most -X surface. Derived."""
+        return self.fin_wall_face - self.fin_depth
+
+    @property
+    def fin_hole_x(self) -> float:
+        """Magnet axis X, shared by all five tabs — centred across the
+        fin depth. INTERFACE: mates against the neighbour. Derived."""
+        return self.fin_wall_face - self.fin_depth / 2
+
+    @property
+    def fin_hole_y(self) -> float:
+        """Corner magnet axis |Y| — centred across the corner tabs' Y
+        width. INTERFACE. Derived."""
+        return self.unit_plate_h / 2 - self.fin_depth / 2
 
     @property
     def nema_screw_x_off(self) -> float:

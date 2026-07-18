@@ -82,6 +82,12 @@ MODELS = {
     "motor-byj": Model("28BYJ-48 stepper (the real motor)", "stepper28byj"),
     "motor-nema": Model("NEMA 14 pancake reference (ordered part)", "motor"),
     "vendor": Model("vendor unit STEP, aligned to our frame", "vendor"),
+    "fins": Model("parametric interconnect fins, alone", "fins"),
+    "fins-compare": Model(
+        "TEMP: our fins (solid) vs the vendor crop (ghost)",
+        "fins",
+        "compare_scene",
+    ),
     "ipad-wall": Model(
         "SIDE QUEST iPad swivel-bar wall mount: wall + bracket + bar + iPad",
         "ipadwall",
