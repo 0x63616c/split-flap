@@ -605,6 +605,15 @@ class Params:
     ibkt_lid_t: float = 6.0        # two-piece lid thickness (leaves 2mm
                                    # web under the 4mm head recesses)
 
+    # --- cable grommet (plugs the 1" fished-cable hole in the drywall) ---
+    igrom_barrel_d: float = 25.0   # barrel OD — loose in a 25.4 (1") hole
+    igrom_barrel_l: float = 15.0   # barrel length (1/2" drywall + slack)
+    igrom_flange_d: float = 32.0   # face flange OD
+    igrom_flange_t: float = 2.0
+    igrom_cable_d: float = 5.0     # cable pass-through (USB-C ~3.5-4)
+    igrom_slit_w: float = 4.0      # side slit — molded ends can't thread,
+                                   # the cable snaps in sideways
+
     @property
     def unit_back_rise(self) -> float:
         """Back wall height above the plate top. Derived, not raw."""

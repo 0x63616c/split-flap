@@ -91,6 +91,11 @@ MODELS = {
         "ipadwall",
         "two_piece_scene",
     ),
+    "ipad-grommet": Model(
+        "SIDE QUEST 1-inch wall-hole cable grommet, side slit",
+        "ipadwall",
+        "grommet_scene",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -114,4 +119,5 @@ PRINTABLE = {
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
     "ipad-body": Printable("ipadwall", "bracket_body"),
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
+    "ipad-grommet": Printable("ipadwall", "grommet"),
 }

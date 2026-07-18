@@ -153,6 +153,29 @@ def scene() -> Scene:
     )
 
 
+def grommet():
+    """Cable grommet for the 1" wall hole, local frame: axis Z, flange
+    back face at z=0, barrel running +Z (into the wall). Centre hole
+    passes the cable; the open side slit lets the cable snap in
+    sideways (molded connectors can't be threaded). Print flange down."""
+    g = Pos(0, 0, P.igrom_flange_t / 2) * Cylinder(
+        P.igrom_flange_d / 2, P.igrom_flange_t
+    )
+    g += Pos(0, 0, P.igrom_flange_t + P.igrom_barrel_l / 2) * Cylinder(
+        P.igrom_barrel_d / 2, P.igrom_barrel_l
+    )
+    total = P.igrom_flange_t + P.igrom_barrel_l
+    g -= Pos(0, 0, total / 2) * Cylinder(P.igrom_cable_d / 2, 2 * total)
+    g -= Pos(P.igrom_flange_d / 2, 0, total / 2) * Box(
+        P.igrom_flange_d, P.igrom_slit_w, 2 * total
+    )
+    return g
+
+
+def grommet_scene() -> Scene:
+    return Scene().add(grommet(), "grommet")
+
+
 def two_piece_scene() -> Scene:
     """The sandwich exploded: body + bar in the open channel, lid
     floated out front."""

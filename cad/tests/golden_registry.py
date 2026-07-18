@@ -104,6 +104,12 @@ def _ipad_lid():
     return bracket_lid()
 
 
+def _ipad_grommet():
+    from splitflap_cad.ipadwall import grommet
+
+    return grommet()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -118,6 +124,7 @@ BREP_PARTS = {
     "bridge-nema": _nema_bridge,
     "ipad-body": _ipad_body,
     "ipad-lid": _ipad_lid,
+    "ipad-grommet": _ipad_grommet,
 }
 
 FINGERPRINT_ONLY = {
