@@ -48,7 +48,11 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   nets stamp one build late) → `tools/place_and_render.py` (atopile's python:
   `~/.local/share/uv/tools/atopile/bin/python`) → `preview.svg`. Placement AND
   routing are data tables in that script (address-keyed, survives rebuilds).
-  No KiCad installed; renderer is ours. `ato validate` broken upstream.
+  KiCad 10 IS installed (cask half-failed on a sudo step, but the binary
+  works): `/Applications/KiCad.app/Contents/MacOS/kicad-cli` — use it for
+  real DRC (`pcb drc`), 3D renders (`pcb render --side/--rotate`), and fab
+  output (`pcb export gerbers|drill`). `preview.svg` is still ours, for a
+  fast look without the raytracer. `ato validate` broken upstream.
 - atopile cloud (registry/part-picker/autolayout) was down 2026-07-18 —
   workarounds + gotchas in auto-memory `pcb-workflow`. New parts: easyeda2kicad
   → `kicad.convert()` v5→modern → hand-write the .ato (footprint name must be
