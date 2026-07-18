@@ -1,0 +1,22 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component KH_2_54_1X7_FEMALE_package:
+    """
+    1x7 2.54mm female socket header, 11.5mm — one row of the XIAO socket.
+    Two of these accept a Seeed XIAO ESP32-C6 on pin headers.
+    """
+    trait is_atomic_part<manufacturer="KH", partnumber="KH-2.54PH180-1X7P-L11.5", footprint="HDR-TH_7P-P2.54-V-M.kicad_mod", symbol="KH-2.54PH180-1X7P-L11.5.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2932700", manufacturer="KH", partno="KH-2.54PH180-1X7P-L11.5">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    pin 1
+    pin 2
+    pin 3
+    pin 4
+    pin 5
+    pin 6
+    pin 7

@@ -1,0 +1,33 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component ULN2003ADR_package:
+    """
+    ULN2003A — 7-channel darlington sink driver, SOIC-16.
+    Inputs are 5V/3.3V logic tolerant; each output sinks up to 500mA.
+    COM is the common flyback-diode cathode — tie to the motor supply rail
+    when driving inductive loads (stepper coils, relays).
+    """
+    trait is_atomic_part<manufacturer="Texas Instruments", partnumber="ULN2003ADR", footprint="SOIC-16_L9.9-W3.9-P1.27-LS6.0-BL.kicad_mod", symbol="ULN2003ADR.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C7512", manufacturer="Texas Instruments", partno="ULN2003ADR">
+    trait has_designator_prefix<prefix="U">
+
+    # pins
+    signal IN1 ~ pin 1
+    signal IN2 ~ pin 2
+    signal IN3 ~ pin 3
+    signal IN4 ~ pin 4
+    signal IN5 ~ pin 5
+    signal IN6 ~ pin 6
+    signal IN7 ~ pin 7
+    signal GND ~ pin 8
+    signal COM ~ pin 9
+    signal OUT7 ~ pin 10
+    signal OUT6 ~ pin 11
+    signal OUT5 ~ pin 12
+    signal OUT4 ~ pin 13
+    signal OUT3 ~ pin 14
+    signal OUT2 ~ pin 15
+    signal OUT1 ~ pin 16

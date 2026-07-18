@@ -1,0 +1,80 @@
+from "parts/ULN2003ADR/ULN2003ADR.ato" import ULN2003ADR_package
+from "parts/XH_5AW/XH_5AW.ato" import XH_5AW_package
+from "parts/XY_B3B_XH_A/XY_B3B_XH_A.ato" import XY_B3B_XH_A_package
+from "parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato" import KH_2_54_1X7_FEMALE_package
+from "parts/CC0603_100NF/CC0603_100NF.ato" import CC0603_100NF_package
+
+module SplitFlapDriver:
+    """
+    Split-flap single-module driver board, v1.
+
+    Replaces the breadboard: a socketed Seeed XIAO ESP32-C6 drives a
+    ULN2003A darlington array into the stock 28BYJ-48 stepper connector,
+    with a 3-pin connector for the hall homing sensor. Powered entirely
+    from the XIAO's USB-C (VBUS 5V).
+
+    Pin assignment matches the proven bench wiring:
+      IN1..IN4 = D0..D3 (GPIO0/1/2/21), hall DO = D8 (GPIO19, use
+      internal pull-up — sensor output is open-collector).
+
+    Connectors:
+      J_motor (XH-5): 1..4 = coil outputs OUT1..OUT4, 5 = +5V common.
+        If the motor steps roughly, the plug orientation is mirrored
+        relative to the stock breakout — fix coil order in firmware.
+      J_hall (XH-3): 1 = 5V, 2 = GND, 3 = DO.
+    """
+
+    # --- Major blocks ---
+    xiao_left = new KH_2_54_1X7_FEMALE_package   # D0..D6 side
+    xiao_right = new KH_2_54_1X7_FEMALE_package  # 5V/GND/3V3/D10..D7 side
+    uln = new ULN2003ADR_package
+    j_motor = new XH_5AW_package
+    j_hall = new XY_B3B_XH_A_package
+    c_bulk = new CC0603_100NF_package
+
+    # --- Nets ---
+    signal p5v      # XIAO VBUS (USB 5V) — motor + hall supply
+    signal gnd
+    signal p3v3     # broken out on the socket, unused on-board
+    signal d0
+    signal d1
+    signal d2
+    signal d3
+    signal hall_do
+
+    # --- XIAO socket, left row top-down: D0..D6 ---
+    d0 ~ xiao_left.1
+    d1 ~ xiao_left.2
+    d2 ~ xiao_left.3
+    d3 ~ xiao_left.4
+    # xiao_left.5/6/7 = D4/D5 (I2C) and D6 (UART TX) — reserved, unrouted
+
+    # --- XIAO socket, right row top-down: 5V GND 3V3 D10 D9 D8 D7 ---
+    p5v ~ xiao_right.1
+    gnd ~ xiao_right.2
+    p3v3 ~ xiao_right.3
+    # xiao_right.4/5 = D10/D9 (SPI) — reserved, unrouted
+    hall_do ~ xiao_right.6
+    # xiao_right.7 = D7 (UART RX) — reserved, unrouted
+
+    # --- Stepper drive: XIAO GPIO -> darlington -> motor coils ---
+    d0 ~ uln.IN1
+    d1 ~ uln.IN2
+    d2 ~ uln.IN3
+    d3 ~ uln.IN4
+    uln.OUT1 ~ j_motor.1
+    uln.OUT2 ~ j_motor.2
+    uln.OUT3 ~ j_motor.3
+    uln.OUT4 ~ j_motor.4
+    p5v ~ j_motor.5          # motor common (red wire)
+    uln.COM ~ p5v            # flyback clamp rail for the coils
+    uln.GND ~ gnd
+
+    # --- Hall homing sensor ---
+    p5v ~ j_hall.1
+    gnd ~ j_hall.2
+    hall_do ~ j_hall.3
+
+    # --- Decoupling on the 5V rail near the driver ---
+    p5v ~ c_bulk.1
+    gnd ~ c_bulk.2

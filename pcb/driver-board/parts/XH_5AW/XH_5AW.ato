@@ -1,0 +1,20 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component XH_5AW_package:
+    """
+    XH 2.54mm 5-pin right-angle shrouded header (JST XH compatible).
+    Mates directly with the stock 28BYJ-48 stepper motor plug.
+    """
+    trait is_atomic_part<manufacturer="Boom Precision", partnumber="XH-5AW", footprint="CONN-TH_XH2.54-5AW.kicad_mod", symbol="XH-5AW.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C24023", manufacturer="Boom Precision", partno="XH-5AW">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    pin 1
+    pin 2
+    pin 3
+    pin 4
+    pin 5
