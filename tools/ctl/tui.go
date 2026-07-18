@@ -569,8 +569,7 @@ func cubeTick() tea.Cmd {
 
 // demoView renders the tumbling cube centred between the header and footer.
 func (m *appModel) demoView() string {
-	h := min(m.logAvail(), 25)
-	w := m.width
+	w, h := m.width, m.demoAvail()
 	if w == 0 {
 		w = 80
 	}
@@ -592,7 +591,18 @@ func (m *appModel) demoView() string {
 		name += dimStyle.Render(fmt.Sprintf(" (%d/%d)", m.cube.idx+1, len(m.cube.scenes)))
 	}
 	return out + "\n  " + name + dimStyle.Render("  ·  [←→] model · [w] wireframe: "+wire+" · [p] ") +
-		spin + dimStyle.Render(" · [esc] back") + "\n"
+		spin + dimStyle.Render(" · [esc] back")
+}
+
+// demoAvail is how many rows the model gets: everything between the header
+// and a footer pinned to the last row. header(3) + model + gap(1) + footer(1)
+// fills the terminal exactly, so the model takes all the space going.
+func (m *appModel) demoAvail() int {
+	height := m.height
+	if height == 0 {
+		height = 24
+	}
+	return max(height-5, 1)
 }
 
 // logAvail is how many log lines fit between the header and the footer.

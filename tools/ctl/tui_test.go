@@ -194,3 +194,30 @@ func TestWireframeIsPerScene(t *testing.T) {
 		t.Fatalf("scene %q inherited the neighbour's wireframe", m.cube.scene().label)
 	}
 }
+
+// The demo fills the terminal: header, model, gap, footer on the last row,
+// with nothing spilling past it.
+func TestDemoViewFillsTerminalExactly(t *testing.T) {
+	for _, size := range [][2]int{{100, 40}, {80, 24}, {120, 60}} {
+		m := &appModel{
+			stack: []screen{rootScreen(), {id: "demo", title: "demo"}},
+			cube:  newDemoModel(1, ""), width: size[0], height: size[1],
+		}
+		got := strings.Count(m.View(), "\n") + 1
+		if got != size[1] {
+			t.Fatalf("%dx%d: view is %d rows, want %d", size[0], size[1], got, size[1])
+		}
+	}
+}
+
+// A terminal too short to hold the chrome must still render something rather
+// than ask for a negative number of rows.
+func TestDemoViewSurvivesTinyTerminal(t *testing.T) {
+	m := &appModel{
+		stack: []screen{rootScreen(), {id: "demo", title: "demo"}},
+		cube:  newDemoModel(1, ""), width: 20, height: 3,
+	}
+	if m.View() == "" {
+		t.Fatal("tiny terminal rendered nothing")
+	}
+}
