@@ -618,15 +618,16 @@ class Params:
                                    # the cable snaps in sideways
 
     # --- USB grommet (plugs the 38mm drilled USB-cable hole) ---
-    ugrom_barrel_d: float = 37.0   # barrel OD — loose in the 38mm bore
-    ugrom_barrel_l: float = 12.0   # locates in 1/2" drywall
+    ugrom_barrel_d: float = 37.75  # barrel OD — near-net in the 38mm
+                                   # bore (v1 37.0 test-fit loose)
+    ugrom_barrel_l: float = 15.0   # through 1/2" drywall + a little proud
     ugrom_barrel_wall: float = 2.0  # hollow barrel — a ring, not a slug
     ugrom_flange_d: float = 46.0   # face flange OD — 4mm cover past the hole
     ugrom_flange_t: float = 2.0
     ugrom_slot_w: float = 11.0     # USB-C-shaped stadium slot: the molded
-    ugrom_slot_h: float = 7.0      # plug threads straight through, no slit
-    ugrom_rib_n: int = 3           # barb rings gripping the gypsum
-    ugrom_rib_proud: float = 0.8   # crest past barrel OD — 0.3/side bite
+    ugrom_slot_h: float = 6.5      # plug threads straight through, no slit
+    ugrom_rib_n: int = 4           # rib rings gripping the gypsum
+    ugrom_rib_proud: float = 1.0   # crest past barrel OD — 0.75/side bite
     ugrom_rib_l: float = 2.5       # ramp length; step faces the flange
 
     @property
