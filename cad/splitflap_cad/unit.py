@@ -31,6 +31,7 @@ from .shell import (
     front_lip,
     stop_rod,
     window_profile,
+    wire_tunnel,
     with_fins,
 )
 
@@ -138,35 +139,10 @@ def unit_plate():
     # inner/outer cylinder walls
     pad = chamfer(pad.edges().filter_by(Axis.Z), P.byj_pad_slot_chamfer)
 
-    # Wire channel: enclosed tunnel inside the plate from the pad hole
-    # to the -X edge — skin-thick roof and floor with the cavity
-    # between, and a narrower push-in slit through the floor so the
-    # wires snap in and stay held.
-    chan_len = P.byj_can_x + P.unit_plate_w / 2
-    cavity_h = P.unit_plate_thick - 2 * P.wire_chan_skin
-    chan_pos = (P.byj_can_x - chan_len / 2, P.byj_can_y)
-    plate -= Pos(*chan_pos, P.unit_plate_thick / 2) * Box(
-        chan_len, P.wire_chan_w, cavity_h
-    )
-    # slit hugs the cavity's +Y wall — one wide floor lip instead of two
-    slit_y = P.byj_can_y + (P.wire_chan_w - P.wire_chan_slit_w) / 2
-    plate -= Pos(chan_pos[0], slit_y, 0) * Box(
-        chan_len, P.wire_chan_slit_w, P.wire_chan_skin * 2
-    )
-    # flare the -X mouth 45 deg per side so the wires exit without a
-    # sharp corner; open from the plate bottom up to the cavity roof
-    # (full channel depth — only the roof skin runs to the edge)
-    x_edge = -P.unit_plate_w / 2
-    f = P.wire_chan_flare
-    hw = P.wire_chan_w / 2
-    mouth = Polygon(
-        (x_edge, P.byj_can_y - hw - f),
-        (x_edge, P.byj_can_y + hw + f),
-        (x_edge + f, P.byj_can_y + hw),
-        (x_edge + f, P.byj_can_y - hw),
-        align=None,
-    )
-    plate -= extrude(mouth, amount=P.wire_chan_skin + cavity_h, dir=(0, 0, 1))
+    # Wire channel: buried tunnel from the pad hole out to the -X edge.
+    # The 28BYJ's wires leave the can's underside, so the pad hole IS
+    # the feed-in — no separate entry.
+    plate = wire_tunnel(plate, P.byj_can_y, P.byj_can_x)
 
     # Lightening windows through the plate, house style.
     plate -= plate_windows()

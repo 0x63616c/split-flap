@@ -149,22 +149,75 @@ def base_chamfers():
     )
 
 
-def with_fins(body):
-    """body + interconnect fins, each tab's magnet pocket cut in.
+def wire_tunnel(plate, y, x_in):
+    """Cut the motor-wire tunnel into `plate`: an enclosed cavity buried
+    inside the plate on centreline `y`, running from x_in out to the -X
+    edge, where it flares open.
 
-    Pockets open at the mating faces so two modules meet magnet-to-
-    magnet; a poke hole through the floor lets a magnet be pushed back
-    out. Sites come from fins.magnet_locs(), the same list fins.py builds
-    the tabs around, so a pocket can't land where there's no material.
+    Skin-thick roof and floor with the cavity between, plus a narrower
+    push-in slit through the floor (hugging the cavity's +Y wall, so one
+    wide floor lip rather than two) — the wires snap in and stay held.
+    The -X mouth flares 45 deg per side, open from the plate bottom up
+    to the cavity roof, so only the roof skin runs to the edge and the
+    wires leave without a sharp corner.
+
+    Motor-agnostic: each variant picks its own y and x_in and feeds the
+    wires in however its motor presents them.
     """
-    from .fins import fins, magnet_locs
+    chan_len = x_in + P.unit_plate_w / 2
+    cavity_h = P.unit_plate_thick - 2 * P.wire_chan_skin
+    x_mid = x_in - chan_len / 2
+    plate -= Pos(x_mid, y, P.unit_plate_thick / 2) * Box(
+        chan_len, P.wire_chan_w, cavity_h
+    )
+    slit_y = y + (P.wire_chan_w - P.wire_chan_slit_w) / 2
+    plate -= Pos(x_mid, slit_y, 0) * Box(
+        chan_len, P.wire_chan_slit_w, P.wire_chan_skin * 2
+    )
+    x_edge = -P.unit_plate_w / 2
+    f = P.wire_chan_flare
+    hw = P.wire_chan_w / 2
+    mouth = Polygon(
+        (x_edge, y - hw - f),
+        (x_edge, y + hw + f),
+        (x_edge + f, y + hw),
+        (x_edge + f, y - hw),
+        align=None,
+    )
+    return plate - extrude(mouth, amount=P.wire_chan_skin + cavity_h, dir=(0, 0, 1))
+
+
+def with_fins(body):
+    """body + interconnect fins, each tab's half of its M3 joint cut in.
+
+    A "screw" site gets an M3 clearance hole right through the tab with a
+    counterbore at the mating face, so the button head sinks below it. An
+    "insert" site gets a blind heat-set bore opening at the mating face,
+    fin_joint_floor of solid behind it. Sites and kinds come from
+    fins.joint_locs(), the same list fins.py builds the tabs around, so a
+    bore can't land where there's no material.
+    """
+    from .fins import fins, joint_locs
 
     unit = body + fins()
-    for loc in magnet_locs():
-        unit -= (
-            loc
-            * Pos(0, 0, P.fin_pocket_h / 2)
-            * Cylinder((P.drum_magnet_d + P.drum_magnet_clear) / 2, P.fin_pocket_h)
-        )
-        unit -= loc * Pos(0, 0, P.fin_flat_t) * Cylinder(P.drum_poke_d / 2, 10)
+    for loc, kind in joint_locs():
+        if kind == "insert":
+            unit -= (
+                loc
+                * Pos(0, 0, P.fin_insert_depth / 2)
+                * Cylinder(P.fin_insert_d / 2, P.fin_insert_depth)
+            )
+        else:
+            # through-hole first, run past both faces rather than flush
+            # with them (no coplanar boolean), then the head counterbore
+            # at the mating face. It only ever pokes into air: the screw
+            # tabs are the flat ones, with nothing inboard of them.
+            unit -= loc * Pos(0, 0, P.fin_flat_t / 2) * Cylinder(
+                P.screw_hole_d / 2, 3 * P.fin_flat_t
+            )
+            unit -= (
+                loc
+                * Pos(0, 0, P.fin_cbore_depth / 2)
+                * Cylinder(P.fin_cbore_d / 2, P.fin_cbore_depth)
+            )
     return unit
