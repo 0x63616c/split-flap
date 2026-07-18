@@ -54,9 +54,81 @@ from .shell import (
     flap_guard,
     front_lip,
     stop_rod,
+    window_profile,
     wire_tunnel,
     with_fins,
 )
+
+
+def plate_windows():
+    """Lightening cutouts through the base plate, same chamfered-rect
+    style as the walls. The 28BYJ variant has its own set (unit.py); the
+    obstacles here are different enough that sharing one would mean a
+    shape keyed to neither motor.
+
+    What the plate must keep:
+      - everything under the bridge. Its feet are the only things
+        touching the plate, but they land wherever the mount circle
+        allows, so the whole nema_mount_r disc about the shaft is
+        reserved rather than two foot patches — the feet carry the
+        motor's whole reaction torque into the plate, and a window
+        edge running past them is where that would tear out.
+      - the buried wire channel and its feed trench, which are already
+        cavities: a window crossing one would open the tunnel's side
+        and let the wires fall out.
+
+    Both keepouts are grown by plate_web, and the windows are the bands
+    left over: a wide pair above the bridge, one strip out at -X beside
+    it (split off the channel, which runs under it to the edge), and a
+    pair below. Returns one compound to subtract.
+    """
+    g = P.plate_web
+    m = P.unit_window_margin
+    x_lo = -P.unit_plate_w / 2 + P.unit_wall_thick + g
+    x_hi = P.unit_plate_w / 2 - m
+    y_cap = P.unit_plate_h / 2 - P.unit_top_thick - g
+
+    bridge_r = P.nema_mount_r + g            # keepout disc about the shaft
+    bridge_hi = P.byj_shaft_y + bridge_r     # 23.5
+    bridge_lo = P.byj_shaft_y - bridge_r     # -35.5
+    bridge_x_lo = P.mount_x - bridge_r
+    chan_hi = P.nema_wire_y + P.wire_chan_w / 2 + g   # channel roof edge
+    chan_lo = P.nema_wire_y - P.wire_chan_w / 2 - g
+
+    # +Y band: clear above the bridge, stopping short of the stop rod.
+    # [][] split on the same margin scheme as the walls.
+    lo = bridge_hi
+    hi = min(y_cap, P.rod_y - P.rod_r - g)
+    w = (x_hi - x_lo - m) / 2
+    cuts = [
+        (x_lo + w / 2, (lo + hi) / 2, w, hi - lo),
+        (x_hi - w / 2, (lo + hi) / 2, w, hi - lo),
+    ]
+
+    # -X strip beside the bridge. Its bottom is the wire channel, not the
+    # bridge: the channel runs out to the -X edge right through here.
+    cuts.append(
+        (
+            (x_lo + bridge_x_lo) / 2, (chan_hi + bridge_hi) / 2,
+            bridge_x_lo - x_lo, bridge_hi - chan_hi,
+        )
+    )
+
+    # -Y band: below whichever reaches further down, bridge or channel.
+    lo2 = -y_cap
+    hi2 = min(bridge_lo, chan_lo)
+    cuts += [
+        (x_lo + w / 2, (lo2 + hi2) / 2, w, hi2 - lo2),
+        (x_hi - w / 2, (lo2 + hi2) / 2, w, hi2 - lo2),
+    ]
+
+    windows = None
+    for x_c, y_c, w_, h_ in cuts:
+        cut = Pos(x_c, y_c) * extrude(
+            window_profile(w_, h_), amount=P.unit_plate_thick, both=True
+        )
+        windows = cut if windows is None else windows + cut
+    return windows
 
 
 def nema_plate():
@@ -105,6 +177,9 @@ def nema_plate():
         plate -= Pos(
             x, P.byj_shaft_y, P.unit_plate_thick - P.nema_insert_depth / 2
         ) * Cylinder(P.byj_insert_d / 2, P.nema_insert_depth)
+
+    # Lightening windows through the plate, house style.
+    plate -= plate_windows()
 
     return (
         plate + back_wall() + stop_rod() + flap_guard() + front_lip()
