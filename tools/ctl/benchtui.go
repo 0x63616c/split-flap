@@ -52,7 +52,12 @@ func (m *appModel) startBenchScreen(port string, flash bool) (tea.Model, tea.Cmd
 		port = defaultBenchPort()
 	}
 	w := startBench(m.root, port, flash)
-	m.bench = &benchModel{w: w, snap: benchSnapshot{port: port, rpm: 12, busy: true}}
+	// Seed the first frame from the saved calibration so the screen doesn't
+	// flash a blank home glyph while the board is still handshaking.
+	var d drum
+	loadHomeGlyph(m.root, &d)
+	m.bench = &benchModel{w: w, snap: benchSnapshot{
+		port: port, rpm: 12, busy: true, homeGlyph: d.homeGlyph()}}
 	title := "bench"
 	if port != "" {
 		title = "bench " + trimPort(port)
