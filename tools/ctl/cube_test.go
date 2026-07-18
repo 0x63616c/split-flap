@@ -139,3 +139,9 @@ func TestCubeModelDeterministicFromSeed(t *testing.T) {
 		t.Fatalf("same seed diverged: %v vs %v", a.ang, b.ang)
 	}
 }
+
+func TestCubeModelStartsWireframed(t *testing.T) {
+	if !newCubeModel(1).wire {
+		t.Fatal("demo should open in wireframe")
+	}
+}

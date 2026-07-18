@@ -193,7 +193,7 @@ const (
 )
 
 func newCubeModel(seed int64) *cubeModel {
-	c := &cubeModel{rng: rand.New(rand.NewSource(seed))}
+	c := &cubeModel{wire: true, rng: rand.New(rand.NewSource(seed))}
 	c.reroll()
 	c.vel = c.target
 	return c
