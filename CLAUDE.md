@@ -4,7 +4,7 @@ Auto-commit each coherent step, silently. Good trace > big commits.
 
 ## CAD
 
-- `just ctl` = tooling TUI (namespaces; cad for now). `just cad` = cad menu.
+- `just ctl` = tooling TUI (namespaces: cad, bench). `just cad` = cad menu.
   Direct: `just cad view [model]` (live viewer in CURRENT cmux pane — tab 1
   logs, tab 2 viewer; no model = follow last-saved; Ctrl-C = full teardown),
   `just cad export [part]`, `just cad list`, `just cad test|install`.
@@ -23,6 +23,20 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
   Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
 - No vendor geometry: every printable is ours. Motor = 28BYJ-48.
+
+## Bench
+
+- `just bench` = ctl's bench screen (menu: flash & connect / connect / pick
+  port). Direct: `just bench <port>` or `just bench --no-flash`. It owns the
+  serial port outright — nothing else may hold it.
+- "flash & connect" is the old `just up`: pkill stale mpremote, mpremote-copy
+  `firmware/micropython-spike/bench_board.py` to `:main.py`, reset, connect.
+- Type glyphs to drive (a whole string steps through, 1s dwell); `/help` lists
+  the rest. Calibrate once: `/reset` → `/homecal` → `/nudge ±n` → `/sethome <g>`.
+  Nudge offset persists on the board; home glyph in `.bench/` (gitignored).
+- Slot maths in `tools/ctl/slotplan.go` (absolute-step targeting, forward-only)
+  — the keeper, destined for real firmware. Findings:
+  `docs/research/bench-findings.md`.
 
 ## PCB
 

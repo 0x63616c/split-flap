@@ -1,10 +1,11 @@
 # Self-contained bench command loop — THROWAWAY firmware (wayfinder #11).
 #
 # Upload this to the board as main.py so it boots STANDALONE into a serial
-# command loop. The host (tools/bench/bench_ui.py) is then the SOLE owner of the
-# USB serial port.
+# command loop. The host (ctl's bench screen) is then the SOLE owner of the USB
+# serial port.
 #
-#   just up     # free port -> cp this to :main.py -> reset -> drive it
+#   just bench   # menu -> "flash & connect": free port, cp this to :main.py,
+#                # reset, then drive it
 #
 # Why self-contained (no `import main`): mpremote can only hold the port OR the
 # host can — not both. So the board runs alone; nothing else touches the port.
@@ -45,7 +46,7 @@ HALL = Pin(19, Pin.IN, Pin.PULL_UP)                         # 0 = magnet present
 SEQ = [(1, 0, 0, 0), (1, 1, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0),
        (0, 0, 1, 0), (0, 0, 1, 1), (0, 0, 0, 1), (1, 0, 0, 1)][::-1]
 STEPS_PER_REV = 4096
-N_SLOTS = 45          # Kingsman drum (non-umlaut) — must match slotplan.GLYPHS length
+N_SLOTS = 45          # Kingsman drum (non-umlaut) — must match ctl's benchGlyphs length
 
 # Speed is settable at runtime via `SPEED <rpm>`, integer, 1..MAX_RPM.
 # Bench-measured: clean to ~18-22 RPM, stalls ~29 -> cap at 16 for margin.
@@ -73,7 +74,7 @@ _rpm = DEFAULT_RPM
 # The hall trips at a repeatable edge, but that edge is NOT where the home flap
 # reads cleanly — fixed mechanical gap. HOME_OFFSET = extra half-steps to step
 # forward past the edge onto the home flap. Persisted so it survives reboot and
-# `just up` reflashes. Calibrate live with NUDGE.
+# a reflash. Calibrate live with NUDGE.
 OFFSET_FILE = "home_offset.txt"
 
 
