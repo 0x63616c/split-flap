@@ -46,7 +46,7 @@ func TestRenderCubeFitsInsideGrid(t *testing.T) {
 	}
 }
 
-func TestRenderCubeWireframeOverlays(t *testing.T) {
+func TestRenderCubeWireframeDropsFaces(t *testing.T) {
 	ang := [3]float64{0.6, 0.4, 0.2}
 	plain := strings.Join(renderCube(50, 25, ang, false), "\n")
 	wired := strings.Join(renderCube(50, 25, ang, true), "\n")
@@ -56,8 +56,26 @@ func TestRenderCubeWireframeOverlays(t *testing.T) {
 	if !strings.ContainsRune(wired, cubeWire) {
 		t.Fatal("wireframe drew no edges")
 	}
-	if !strings.ContainsAny(wired, cubeRamp) {
-		t.Fatal("wireframe replaced the shading instead of overlaying it")
+	if strings.ContainsAny(wired, cubeRamp) {
+		t.Fatal("wireframe still shaded faces; it should be edges only")
+	}
+}
+
+// The skeleton is see-through: at rest the far square sits concentrically
+// inside the near one, so the middle row crosses four separate edges. Only
+// two would mean the back edges are being occluded.
+func TestRenderCubeWireframeShowsBackEdges(t *testing.T) {
+	lines := renderCube(60, 25, [3]float64{}, true)
+	mid := lines[len(lines)/2]
+	runs, in := 0, false
+	for _, r := range mid {
+		if r == cubeWire && !in {
+			runs++
+		}
+		in = r == cubeWire
+	}
+	if runs != 4 {
+		t.Fatalf("middle row crosses %d edges, want 4 (near pair + far pair): %q", runs, mid)
 	}
 }
 

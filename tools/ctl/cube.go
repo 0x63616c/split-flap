@@ -129,9 +129,26 @@ func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *cubeCanvas {
 	}
 	c := newCubeCanvas(w, h)
 	light := [3]float64{0, cubeLight, -1} // towards the viewer, slightly above
+	steps := 2 * max(w, h)
+
+	if wire {
+		// See-through skeleton: no faces, so every edge shows including the
+		// ones round the back. Nothing to occlude, hence no depth bias.
+		for _, e := range cubeEdges {
+			p0, p1 := rot(cubeCorner(e[0]), ang), rot(cubeCorner(e[1]), ang)
+			for i := 0; i <= steps; i++ {
+				t := float64(i) / float64(steps)
+				c.plot([3]float64{
+					p0[0] + t*(p1[0]-p0[0]),
+					p0[1] + t*(p1[1]-p0[1]),
+					p0[2] + t*(p1[2]-p0[2]),
+				}, cubeWire, 0)
+			}
+		}
+		return c
+	}
 
 	// Faces: sample densely enough that no cell is missed at this size.
-	steps := 2 * max(w, h)
 	for _, f := range cubeFaces {
 		n := rot(f.n, ang)
 		if n[2] >= 0 {
@@ -155,20 +172,6 @@ func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *cubeCanvas {
 		}
 	}
 
-	if wire {
-		for _, e := range cubeEdges {
-			p0, p1 := rot(cubeCorner(e[0]), ang), rot(cubeCorner(e[1]), ang)
-			for i := 0; i <= steps; i++ {
-				t := float64(i) / float64(steps)
-				p := [3]float64{
-					p0[0] + t*(p1[0]-p0[0]),
-					p0[1] + t*(p1[1]-p0[1]),
-					p0[2] + t*(p1[2]-p0[2]),
-				}
-				c.plot(p, cubeWire, 1e-3)
-			}
-		}
-	}
 	return c
 }
 
