@@ -91,11 +91,6 @@ MODELS = {
         "ipadwall",
         "two_piece_scene",
     ),
-    "ipad-key": Model(
-        "SIDE QUEST L-shaped slotted key — drives the #8s behind the iPad",
-        "ipadwall",
-        "key_scene",
-    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -119,5 +114,4 @@ PRINTABLE = {
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
     "ipad-body": Printable("ipadwall", "bracket_body"),
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
-    "ipad-key": Printable("ipadwall", "screw_key"),
 }

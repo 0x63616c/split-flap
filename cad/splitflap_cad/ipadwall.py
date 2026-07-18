@@ -153,25 +153,6 @@ def scene() -> Scene:
     )
 
 
-def screw_key():
-    """Printed L-shaped slotted driver: long handle + stubby blade at
-    90 deg, used like an allen key for the last turns of the #8 screws
-    behind the mounted iPad. Shaft square = ikey_sq so the whole key
-    rides in the lid-to-iPad gap; blade reaches ikey_blade_l into the
-    head recess. Slot drive is 180-deg symmetric — flip the key to
-    ratchet past the centre mount stack. Print flat."""
-    s = P.ikey_sq
-    arm = Box(s, P.ikey_arm_l, s, align=None)
-    blade = Pos(
-        s + P.ikey_blade_l / 2, P.ikey_arm_l - s / 2, s / 2
-    ) * Box(P.ikey_blade_l, P.ikey_blade_t, P.ikey_blade_w)
-    return arm + blade
-
-
-def key_scene() -> Scene:
-    return Scene().add(screw_key(), "screw-key")
-
-
 def two_piece_scene() -> Scene:
     """The sandwich exploded: body + bar in the open channel, lid
     floated out front."""

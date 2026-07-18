@@ -605,14 +605,6 @@ class Params:
     ibkt_lid_t: float = 6.0        # two-piece lid thickness (leaves 2mm
                                    # web under the 4mm head recesses)
 
-    # --- L screw key (printed 90-deg slotted driver for the #8 heads;
-    # works in the lid-to-iPad gap so the iPad can stay mounted) ---
-    ikey_arm_l: float = 70.0       # handle length (leverage)
-    ikey_sq: float = 6.0           # square shaft side — must fit the gap
-    ikey_blade_t: float = 1.2      # blade thickness (slot width)
-    ikey_blade_w: float = 5.5      # blade width (across the head)
-    ikey_blade_l: float = 4.0      # blade reach (= head recess depth)
-
     @property
     def unit_back_rise(self) -> float:
         """Back wall height above the plate top. Derived, not raw."""
