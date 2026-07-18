@@ -7,7 +7,7 @@
 	(tedit "5DC5F6A4")
 	(uuid "9a0a29e2-72e8-40ac-b315-48a908d5498d")
 	(property "Reference" "REF**"
-		(at 0 -4)
+		(at 0 -4 0)
 		(layer "F.SilkS")
 		(uuid "03aeda42-8d7e-404b-b0e6-669bf04c9147")
 		(effects
@@ -18,7 +18,7 @@
 		)
 	)
 	(property "Value" "C0603"
-		(at 0 4)
+		(at 0 4 0)
 		(layer "F.Fab")
 		(uuid "61530021-15cc-44a9-9d7e-9d38c3e1d81b")
 		(effects
@@ -28,7 +28,9 @@
 			)
 		)
 	)
-	(property "LCSC Part" "C14663")
+	(property "LCSC Part" "C14663"
+		(at 0 0 0)
+	)
 	(attr smd)
 	(fp_circle
 		(center -0.8 0.4)

@@ -7,7 +7,7 @@
 	(tedit "5DC5F6A4")
 	(uuid "20328c0c-9661-463b-ac63-6c0d15a3f3b9")
 	(property "Reference" "REF**"
-		(at 0 -4)
+		(at 0 -4 0)
 		(layer "F.SilkS")
 		(uuid "b63f55f8-5ec3-4aef-a535-11bc7311a028")
 		(effects
@@ -18,7 +18,7 @@
 		)
 	)
 	(property "Value" "CONN-TH_XH2.54-5AW"
-		(at 0 4)
+		(at 0 4 0)
 		(layer "F.Fab")
 		(uuid "3f73e3ea-3c2d-41c1-9d15-309e580f2dea")
 		(effects
@@ -28,7 +28,9 @@
 			)
 		)
 	)
-	(property "LCSC Part" "C24023")
+	(property "LCSC Part" "C24023"
+		(at 0 0 0)
+	)
 	(attr through_hole)
 	(fp_circle
 		(center 5 -0)

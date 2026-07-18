@@ -6,7 +6,7 @@
 	(tedit "5DC5F6A4")
 	(uuid "b0368b89-5823-4901-bbbf-86ee09536e03")
 	(property "Reference" "REF**"
-		(at 0 -6.736)
+		(at 0 -6.736 0)
 		(layer "F.SilkS")
 		(uuid "267a0617-6d66-418c-97bb-1d3a08ef9653")
 		(effects
@@ -17,7 +17,7 @@
 		)
 	)
 	(property "Value" "SOIC-16_L9.9-W3.9-P1.27-LS6.0-BL"
-		(at 0 6.736)
+		(at 0 6.736 0)
 		(layer "F.Fab")
 		(uuid "30972a4b-eacd-4c54-82d8-9600f08507b0")
 		(effects
@@ -27,7 +27,9 @@
 			)
 		)
 	)
-	(property "LCSC Part" "C7512")
+	(property "LCSC Part" "C7512"
+		(at 0 0 0)
+	)
 	(attr smd)
 	(fp_circle
 		(center -4.95 3)

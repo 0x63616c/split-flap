@@ -6,7 +6,7 @@
 	(tedit "5DC5F6A4")
 	(uuid "fcfd6197-6835-42f0-815a-67c65e927d51")
 	(property "Reference" "REF**"
-		(at 0 -4)
+		(at 0 -4 0)
 		(layer "F.SilkS")
 		(uuid "a20ca162-c0ef-4e5f-87fd-f9564335ca99")
 		(effects
@@ -17,7 +17,7 @@
 		)
 	)
 	(property "Value" "HDR-TH_7P-P2.54-V-M"
-		(at 0 4)
+		(at 0 4 0)
 		(layer "F.Fab")
 		(uuid "83937bc1-dafc-4895-b4bc-8e3cd1944fc8")
 		(effects
@@ -27,7 +27,9 @@
 			)
 		)
 	)
-	(property "LCSC Part" "C2932700")
+	(property "LCSC Part" "C2932700"
+		(at 0 0 0)
+	)
 	(attr through_hole)
 	(fp_circle
 		(center -8.88 1.25)
