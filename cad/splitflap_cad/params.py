@@ -616,11 +616,12 @@ class Params:
 
     # --- USB grommet (plugs the 38mm drilled USB-cable hole) ---
     ugrom_barrel_d: float = 37.0   # barrel OD — loose in the 38mm bore
-    ugrom_barrel_l: float = 15.0   # 1/2" drywall + slack
+    ugrom_barrel_l: float = 12.0   # locates in 1/2" drywall
+    ugrom_barrel_wall: float = 2.0  # hollow barrel — a ring, not a slug
     ugrom_flange_d: float = 46.0   # face flange OD — 4mm cover past the hole
     ugrom_flange_t: float = 2.0
-    ugrom_cable_d: float = 5.0     # cable pass-through (USB-C ~3.5-4)
-    ugrom_slit_w: float = 4.0      # side slit, same snap-in scheme as igrom
+    ugrom_slot_w: float = 11.0     # USB-C-shaped stadium slot: the molded
+    ugrom_slot_h: float = 6.0      # plug threads straight through, no slit
 
     @property
     def unit_back_rise(self) -> float:
