@@ -3,6 +3,7 @@ from "parts/XH_5AW/XH_5AW.ato" import XH_5AW_package
 from "parts/XY_B3B_XH_A/XY_B3B_XH_A.ato" import XY_B3B_XH_A_package
 from "parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato" import KH_2_54_1X7_FEMALE_package
 from "parts/CC0603_100NF/CC0603_100NF.ato" import CC0603_100NF_package
+from "parts/CAP_220UF_16V/CAP_220UF_16V.ato" import CAP_220UF_16V_package
 
 module SplitFlapDriver:
     """
@@ -30,7 +31,8 @@ module SplitFlapDriver:
     uln = new ULN2003ADR_package
     j_motor = new XH_5AW_package
     j_hall = new XY_B3B_XH_A_package
-    c_bulk = new CC0603_100NF_package
+    c_hf = new CC0603_100NF_package
+    c_bulk = new CAP_220UF_16V_package
 
     # --- Nets ---
     signal p5v      # XIAO VBUS (USB 5V) — motor + hall supply
@@ -75,6 +77,8 @@ module SplitFlapDriver:
     gnd ~ j_hall.2
     hall_do ~ j_hall.3
 
-    # --- Decoupling on the 5V rail near the driver ---
-    p5v ~ c_bulk.1
-    gnd ~ c_bulk.2
+    # --- Decoupling + bulk storage on the 5V rail ---
+    p5v ~ c_hf.1          # 100nF HF decoupling at the driver
+    gnd ~ c_hf.2
+    p5v ~ c_bulk.POS      # 220uF bulk for motor current spikes
+    gnd ~ c_bulk.NEG

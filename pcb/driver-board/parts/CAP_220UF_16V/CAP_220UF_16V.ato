@@ -1,0 +1,18 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component CAP_220UF_16V_package:
+    """
+    220uF 16V SMD aluminum electrolytic, D6.3xL7.7 — bulk storage for the
+    5V motor rail. POLARIZED: pin 1 = + (POS), pin 2 = - (NEG/GND); the
+    silkscreen hatched half marks the negative side.
+    """
+    trait is_atomic_part<manufacturer="ROQANG", partnumber="RVT220UF16V67RV0015", footprint="CAP-SMD_BD6.3-L6.6-W6.6-FD.kicad_mod", symbol="RVT220UF16V67RV0015.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2887273", manufacturer="ROQANG", partno="RVT220UF16V67RV0015">
+    trait has_designator_prefix<prefix="C">
+
+    # pins
+    signal POS ~ pin 1
+    signal NEG ~ pin 2

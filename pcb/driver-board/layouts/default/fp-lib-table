@@ -42,4 +42,11 @@
 		(options "")
 		(descr "atopile: part lib: easyeda2kicad")
 	)
+	(lib
+		(name "CAP_220UF_16V")
+		(type "KiCad")
+		(uri "${KIPRJMOD}/../../parts/CAP_220UF_16V")
+		(options "")
+		(descr "atopile: part lib: CAP_220UF_16V")
+	)
 )
