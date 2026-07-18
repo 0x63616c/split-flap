@@ -204,21 +204,22 @@ func (m *appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// cursorMove steps the cursor to the previous/next enabled item.
+// cursorMove steps the cursor to the previous/next enabled item, wrapping
+// around the ends of the list.
 func (m *appModel) cursorMove(s *screen, up bool) {
-	if up {
-		for i := s.cursor - 1; i >= 0; i-- {
-			if !s.items[i].disabled {
-				s.cursor = i
-				break
-			}
-		}
+	n := len(s.items)
+	if n == 0 {
 		return
 	}
-	for i := s.cursor + 1; i < len(s.items); i++ {
-		if !s.items[i].disabled {
-			s.cursor = i
-			break
+	step := 1
+	if up {
+		step = -1
+	}
+	for i := 1; i <= n; i++ {
+		j := ((s.cursor+step*i)%n + n) % n
+		if !s.items[j].disabled {
+			s.cursor = j
+			return
 		}
 	}
 }
@@ -319,13 +320,9 @@ func (m *appModel) filterKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m.select_()
 	case "up":
-		if s.cursor > 0 {
-			s.cursor--
-		}
+		m.cursorMove(s, true)
 	case "down":
-		if s.cursor < len(s.items)-1 {
-			s.cursor++
-		}
+		m.cursorMove(s, false)
 	}
 	return m, nil
 }
