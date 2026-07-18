@@ -112,34 +112,82 @@ class Params:
     screw_clearance: float = 0.2  # radial gap around M3 screws
 
     # --- NEMA harness (one printed bridge) ---
-    # The pancake motor sits face-UP flat on the plate (no pocket), body
-    # inside the drum barrel's interior, shaft on the same axis as the
-    # 28BYJ variant (mount_x, byj_shaft_y). Its tapped holes open
-    # upward, so a printed BRIDGE drops over it: ring deck on the face
+    # The pancake motor sits face-UP on the plate, sunk nema_recess into
+    # a pocket that also locates it laterally (the bridge walls used to
+    # do that alone), body inside the drum barrel's interior, shaft on
+    # the same axis as the 28BYJ variant (mount_x, byj_shaft_y). Its
+    # tapped holes open upward, so a printed BRIDGE drops over it: ring deck
     # (pilot bore + 4 M3 — the motor's own screws clamp deck to face),
     # a wall down each ±X body flat ending in a foot on the plate, each
     # held by an M3x8 from above into a flush heat-set insert. Ø7 well
     # channels through deck rim/wall give the bolts + hex key a
     # straight vertical drop onto spot-faced seats. Prints deck-down,
     # no overhangs (feet topped by 45° back wedges). The whole plan is
-    # clipped to a cylinder about the shaft (nema_mount_r) so every
-    # outer edge runs concentric with the drum.
-    # Envelope (plate top z=3): body top/face z 24; flange top z 26 —
-    # under the drum guide rails (sweep r>=23.15 from z~26.3; flange
-    # kept inside r 22.9) and the web fins (bottom z 28.3 at the rim).
-    # Everything inside the barrel wall sweep, r 26.5 about the shaft.
+    # clipped to ONE cylinder about the shaft (nema_mount_r) — deck, legs
+    # and feet all share it, so the plan is a single arc with no ledge
+    # and no lens-tip points where a wider leg overhung a narrower deck.
+    # Envelope (plate top z=3): motor face z 22.8 (recessed); deck top z
+    # 25.43, which is what lets the deck out to r 25.5 — the drum guide
+    # rails only sweep r>=23.15 from z 26.3, so at 25.43 the deck passes
+    # under them with 0.87 to spare, and stays inside the barrel wall
+    # sweep (r 26.5). The four screw bosses do reach 26.3, but they sit
+    # at r 18.4 (hole pitch 26 diagonal /2), nowhere near the rails.
+    # Web fins bottom out at z 28.3 at the rim, magnet boss face at
+    # 28.96 — the hall head lives in that gap, on the deck top.
     nema_body_clear: float = 0.25    # gap per side around the body
+    nema_recess: float = 0.4         # how far the body sinks into the
+                                     # plate. Locates the motor laterally
+                                     # and drops the whole bridge with it
+                                     # (everything keys off nema_face_z)
+    nema_recess_clear: float = 0.3   # pocket oversize per side on the
+                                     # body square — print tolerance, the
+                                     # pocket locates, it does not press
     nema_leg_t: float = 3.0          # wall thickness along X
-    nema_flange_t: float = 3.5       # deck thickness: motor taps are
-                                     # only 2.5 MIN deep, so M3x6 must
-                                     # engage exactly 6 - 3.5 = 2.5.
-                                     # Deck top clears the rails
-                                     # radially (r 22.9 < sweep 23.15)
-    nema_flange_r: float = 22.9      # flange plan clip radius — tighter
-                                     # than the body clip: flange top z26
-                                     # grazes the rail-sweep band (r
-                                     # 23.15 from z 26.3), so it stays
-                                     # inside it with 0.25
+    nema_flange_t: float = 2.625     # deck thickness AWAY from the screws
+                                     # (0.75 x the original 3.5)
+    nema_screw_boss_t: float = 3.5   # thickness AT each screw hole: the
+                                     # motor taps are only 2.5 MIN deep,
+                                     # so an M3x6 must engage exactly
+                                     # 6 - 3.5 = 2.5. Thinning the deck
+                                     # under the head would make the screw
+                                     # bottom out before it clamped, so
+                                     # each hole keeps a local boss at the
+                                     # full old thickness and only the
+                                     # material between them gets thinner.
+    nema_screw_boss_d: float = 8.0   # boss diameter about each screw axis
+    # Wire route. The pancake's leads leave the body edge flush, so the
+    # motor is rotated to present them at -Y — the only free azimuth,
+    # since the bridge legs and feet own +-X out to r 25.35. The buried
+    # channel centreline has to clear the legs' widest Y reach (18.2
+    # about the shaft, at the leg's inner face) plus half the channel
+    # width and a margin.
+    nema_wire_y: float = -29.5       # buried channel centreline
+    nema_wire_entry_bite: float = 1.0  # how far the open feed trench
+                                     # reaches back UNDER the body edge,
+                                     # so the leads turn down instead of
+                                     # being pinched at the corner
+    # --- NEMA homing: bare hall head on the deck top ---
+    # No PCB in this variant — a bare TO-92 head drops into a pocket in
+    # the bridge deck's top face, on the drum's magnet sweep circle. The
+    # deck is a full disc over r <= mount_r, so it is the only solid
+    # thing that reaches the sweep; a post up from the plate cannot,
+    # the deck is in the way. Magnet boss face sits at z 28.96 and the
+    # deck top at 25.43, so the head's 1.5 body leaves a ~2.0 air gap.
+    nema_hall_az: float = -90.0      # azimuth about the shaft, degrees
+                                     # (-90 = -Y, same side as the wires)
+    nema_hall_pocket_w: float = 4.4  # across the head, +0.4 on hall_elem_w
+    nema_hall_pocket_l: float = 3.4  # along the leads, +0.4 on hall_elem_l
+    nema_hall_pocket_d: float = 0.4  # sunk into the deck top — enough to
+                                     # locate the head, not to bury it.
+                                     # THIS is the air-gap tuning knob:
+                                     # deeper pocket = bigger gap = weaker
+                                     # signal. At 0.4 the head top lands
+                                     # 2.43 under the magnet face. Bench-
+                                     # verify with the real magnet before
+                                     # trusting it.
+    nema_hall_wire_w: float = 2.4    # lead groove across the deck top,
+                                     # radially outward to the deck edge
+    nema_hall_wire_d: float = 1.2    # lead groove depth
     nema_mount_r: float = 25.5       # wall/foot plan clip radius about
                                      # the shaft (barrel wall sweeps
                                      # r 26.5 from z 6.3; 1.0 gap)
@@ -222,8 +270,11 @@ class Params:
 
     @property
     def nema_face_z(self) -> float:
-        """Motor mounting face height: body flat on the plate. Derived."""
-        return self.unit_plate_thick + self.motor_body_len
+        """Motor mounting face height: body seated in the plate pocket,
+        so nema_recess lower than a body sat flat on top. Every bridge
+        dimension keys off this, so the recess propagates on its own.
+        Derived."""
+        return self.unit_plate_thick + self.motor_body_len - self.nema_recess
 
     @property
     def pilot_hole_d(self) -> float:

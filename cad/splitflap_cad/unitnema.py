@@ -1,14 +1,22 @@
 """The NEMA unit side plate + bridge — pancake motor variant.
 
-The pancake NEMA 14 sits face-UP flat on the base plate, body inside
-the drum barrel's interior, shaft coaxial with the 28BYJ variant's
-(mount_x, byj_shaft_y). Its tapped mount holes open upward, so a
-printed BRIDGE drops over it: a ring deck on the face (pilot bore +
-4 M3 clearance holes — the motor's own screws clamp deck to face) with
-a solid chord-segment leg down each ±X body flat landing on the plate,
-each held by an M3x8 from above into a flush heat-set insert. Full-height well
+The pancake NEMA 14 sits face-UP on the base plate, sunk nema_recess
+into a shallow pocket that locates it laterally, body inside the drum
+barrel's interior, shaft coaxial with the 28BYJ variant's (mount_x,
+byj_shaft_y). Its tapped mount holes open upward, so a printed BRIDGE
+drops over it: a ring deck on the face (pilot bore + 4 M3 clearance
+holes — the motor's own screws clamp deck to face) with a solid
+chord-segment leg down each ±X body flat landing on the plate, each
+held by an M3x8 from above into a flush heat-set insert. Full-height well
 channels through the deck rim and wall faces give the bolts + hex key
 a straight vertical drop onto spot-faced seats.
+
+Deck, legs and feet share ONE plan radius (nema_mount_r), so the
+outline is a single arc — no ledge and no lens-tip points where a
+wider leg used to overhang a narrower deck. The deck is thin
+(nema_flange_t) except for a local boss at each screw hole holding the
+full nema_screw_boss_t, because the motor's taps are only 2.5 deep and
+an M3x6 through thinner material would bottom out before it clamped.
 
 Printability: print deck-face down. Walls and bolt bosses rise
 vertically; the only ceiling is each bolt seat, a small flat bridge
@@ -16,10 +24,15 @@ over its U-slot. The plan is clipped to a cylinder about the shaft so
 every outer edge runs concentric with the drum, inside the barrel
 wall sweep.
 
-Hall/homing mount: OPEN. The 28BYJ hall post spot is buried under the
-motor body and a horizontal board above the face would cross the shaft;
-candidates are a vertical-board mast or TMC2209 sensorless homing —
-decide when the motor is in hand.
+Homing: a BARE hall head (no PCB) drops into a pocket in the deck's
+top face, on the drum's magnet sweep circle (drum_magnet_r) at the -Y
+azimuth, leads grooved radially out to the deck edge. The deck is a
+full disc over r <= mount_r, so it is the only solid thing that
+reaches the sweep — a post up from the plate cannot, the deck is in
+the way. Magnet boss face 28.96, deck top 25.43: the head sits in that
+gap. Motor wires leave the body edge flush at -Y, drop into an open
+trench in the plate and run out the buried wire_tunnel to the -X edge,
+clear of the ±X legs and feet.
 
 Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 (same convention as motor.py); frames.py poses it at nema_face_z.
@@ -27,7 +40,7 @@ Bridge local frame: shaft axis at the motor MOUNTING FACE plane, +Z up
 View it: `just cad unit-nema` (see cad/splitflap_cad/catalog.py).
 """
 
-from build123d import Box, Circle, Cylinder, Pos, extrude
+from build123d import Align, Box, Circle, Cylinder, Pos, Rot, extrude
 
 from .params import P
 from .shell import (
@@ -38,15 +51,43 @@ from .shell import (
     flap_guard,
     front_lip,
     stop_rod,
+    wire_tunnel,
     with_fins,
 )
 
 
 def nema_plate():
-    """Return the NEMA unit side plate Part: shell + bridge-foot
-    inserts. No motor pocket — the body sits flat, located by the
-    bridge walls."""
+    """Return the NEMA unit side plate Part: shell + motor recess +
+    wire tunnel + bridge-foot inserts."""
     plate = base_plate()
+
+    # Motor recess: square pocket the body sits down into, so the plate
+    # locates the motor laterally instead of leaving that to the bridge
+    # walls alone. Shallow — the bolt feet still land on the plate top.
+    pocket_w = P.motor_body_w + 2 * P.nema_recess_clear
+    plate -= Pos(
+        P.mount_x, P.byj_shaft_y, P.unit_plate_thick - P.nema_recess / 2
+    ) * Box(pocket_w, pocket_w, P.nema_recess)
+
+    # Wire tunnel. The pancake's leads leave the body edge flush at the
+    # rear face, so unlike the 28BYJ there is no centre hole to feed
+    # through — the motor is rotated to present its leads at -Y and an
+    # open trench takes them from the body edge down to the buried
+    # channel. -Y is the only free azimuth: the bridge legs and feet own
+    # ±X out to r 25.35, and the channel has to clear them.
+    plate = wire_tunnel(plate, P.nema_wire_y, P.mount_x)
+    # Feed trench: roof open from just under the body edge to the
+    # channel, so the leads drop straight in. It runs under the barrel
+    # sweep, but the drum's lowest feature clears the plate top by 3.3,
+    # and nothing here rises above it.
+    y_hi = P.byj_shaft_y - P.motor_body_w / 2 + P.nema_wire_entry_bite
+    y_lo = P.nema_wire_y + P.wire_chan_w / 2
+    plate -= Pos(
+        P.mount_x, (y_lo + y_hi) / 2,
+        P.unit_plate_thick - (P.unit_plate_thick - P.wire_chan_skin) / 2
+    ) * Box(
+        P.wire_chan_w, y_hi - y_lo, P.unit_plate_thick - P.wire_chan_skin
+    )
 
     # Bridge foot inserts: M3x3 heat-set straight into the plate from
     # the top, flush — screws come down through the feet, module's
@@ -75,16 +116,25 @@ def nema_bridge():
     wall_in = P.motor_body_w / 2 + P.nema_body_clear
     drop = P.nema_face_z - P.unit_plate_thick  # face plane -> plate top
 
-    # Deck: full ring on the face — clipped tighter than the rest (its
-    # top grazes the guide-rail sweep band), pilot-boss bore, 4 M3.
-    deck = extrude(Circle(P.nema_flange_r), amount=P.nema_flange_t)
-    deck -= Cylinder(P.pilot_hole_d / 2, P.nema_flange_t * 3)
+    # Deck: full ring on the face, clipped to the SAME radius as the legs
+    # so the plan is one arc — no ledge, no lens tips. Thin everywhere
+    # except a local boss at each screw hole, which keeps the full
+    # nema_screw_boss_t so an M3x6 still engages exactly the 2.5 the
+    # motor's tapped hole gives (thinning under the head would only make
+    # the screw bottom out early). Pilot-boss bore + 4 M3 through.
+    deck = extrude(Circle(P.nema_mount_r), amount=P.nema_flange_t)
     half = P.motor_hole_pitch / 2
-    for x in (-half, half):
-        for y in (-half, half):
-            deck -= Pos(x, y, 0) * Cylinder(
-                P.screw_hole_d / 2, P.nema_flange_t * 3
+    screw_xy = [(x, y) for x in (-half, half) for y in (-half, half)]
+    for x, y in screw_xy:
+        deck += Pos(x, y, 0) * Cylinder(
+            P.nema_screw_boss_d / 2, P.nema_screw_boss_t, align=(
+                Align.CENTER, Align.CENTER, Align.MIN
             )
+        )
+    bore_h = P.nema_screw_boss_t * 3
+    deck -= Cylinder(P.pilot_hole_d / 2, bore_h)
+    for x, y in screw_xy:
+        deck -= Pos(x, y, 0) * Cylinder(P.screw_hole_d / 2, bore_h)
 
     body = deck
     z_seat = -drop + P.nema_foot_h
@@ -122,7 +172,24 @@ def nema_bridge():
     # Clip the whole plan to the mount cylinder: outer edges concentric
     # with the drum, inside the barrel wall sweep.
     body &= Pos(0, 0, -drop) * extrude(
-        Circle(P.nema_mount_r), amount=drop + P.nema_flange_t
+        Circle(P.nema_mount_r), amount=drop + P.nema_screw_boss_t
+    )
+
+    # Homing: pocket for a bare hall head in the deck top, centred on
+    # the drum's magnet sweep circle, plus a lead groove running
+    # radially out to the deck edge. Cut after the clip so the groove
+    # opens at the arc.
+    body -= Rot(0, 0, P.nema_hall_az) * (
+        Pos(P.drum_magnet_r, 0, P.nema_flange_t - P.nema_hall_pocket_d / 2)
+        * Box(P.nema_hall_pocket_l, P.nema_hall_pocket_w, P.nema_hall_pocket_d)
+        + Pos(
+            (P.drum_magnet_r + P.nema_mount_r) / 2, 0,
+            P.nema_flange_t - P.nema_hall_wire_d / 2,
+        )
+        * Box(
+            P.nema_mount_r - P.drum_magnet_r, P.nema_hall_wire_w,
+            P.nema_hall_wire_d,
+        )
     )
     return body
 
