@@ -190,12 +190,21 @@ def wire_tunnel(plate, y, x_in):
 def with_fins(body):
     """body + interconnect fins, each tab's half of its M3 joint cut in.
 
-    A "screw" site gets an M3 clearance hole right through the tab with a
-    counterbore at the mating face, so the button head sinks below it. An
-    "insert" site gets a blind heat-set bore opening at the mating face,
-    fin_joint_floor of solid behind it. Sites and kinds come from
-    fins.joint_locs(), the same list fins.py builds the tabs around, so a
-    bore can't land where there's no material.
+    A "screw" site gets an M3 clearance hole right through the tab, with
+    the head counterbore on the FAR face — the one pointing away from the
+    joint. That is the only face a driver can reach: the mating face is
+    pressed flat against the neighbour's tab, so a head sunk there would
+    be sealed inside the joint line, unreachable and clamping nothing.
+    The screw goes in from outside, crosses the tab, and lands in the
+    neighbour's insert.
+
+    An "insert" site gets a blind heat-set bore opening AT the mating
+    face — that one really does face the joint, because it's the thread
+    the screw arrives into — with fin_joint_floor of solid behind it.
+
+    Sites and kinds come from fins.joint_locs(), the same list fins.py
+    builds the tabs around, so a bore can't land where there's no
+    material.
     """
     from .fins import fins, joint_locs
 
@@ -209,15 +218,17 @@ def with_fins(body):
             )
         else:
             # through-hole first, run past both faces rather than flush
-            # with them (no coplanar boolean), then the head counterbore
-            # at the mating face. It only ever pokes into air: the screw
-            # tabs are the flat ones, with nothing inboard of them.
+            # with them (no coplanar boolean). It only ever pokes into
+            # air: the screw tabs are the flat ones, with nothing inboard
+            # of them.
             unit -= loc * Pos(0, 0, P.fin_flat_t / 2) * Cylinder(
                 P.screw_hole_d / 2, 3 * P.fin_flat_t
             )
+            # counterbore on the far face (local +Z is INTO the module,
+            # away from the joint), open outward so a driver can reach it
             unit -= (
                 loc
-                * Pos(0, 0, P.fin_cbore_depth / 2)
+                * Pos(0, 0, P.fin_flat_t - P.fin_cbore_depth / 2)
                 * Cylinder(P.fin_cbore_d / 2, P.fin_cbore_depth)
             )
     return unit

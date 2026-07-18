@@ -86,8 +86,13 @@ class Params:
     fin_insert_depth: float = 4.0  # blind bore: the insert + screw-tip room
     fin_joint_floor: float = 1.0   # solid material behind the insert bore
     fin_cbore_d: float = 6.0       # button head 5.7 + clearance
-    fin_cbore_depth: float = 2.0   # head 1.65 sunk 0.35 below the mating
-                                   # face, so mated faces still kiss
+    fin_cbore_depth: float = 2.0   # head 1.65 sunk 0.35 below the tab's
+                                   # FAR face. Not the mating face: that
+                                   # one is pressed against the
+                                   # neighbour, so a head sunk there
+                                   # would be sealed inside the joint
+                                   # line with no way to turn it. The
+                                   # screw goes in from outside.
     fin_screw_len: float = 6.0     # M3x6 = 3.0 shank + 3.0 insert engagement
 
     # --- NEMA 14 pancake stepper (ordered: YEJMKJ 35x21mm 7Ncm 0.6A

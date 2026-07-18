@@ -39,11 +39,17 @@ def fin_solid():
 
 
 def _bore(loc, kind):
-    """The bore shell.py cuts at this site — the widest one, since it's
-    the wide bore that runs off a tapering tab first."""
-    d = P.fin_insert_d if kind == "insert" else P.fin_cbore_d
-    h = P.fin_insert_depth if kind == "insert" else P.fin_cbore_depth
-    return loc * Pos(0, 0, h / 2) * Cylinder(d / 2, h)
+    """The widest bore shell.py cuts at this site, since it's the wide
+    bore that runs off a tapering tab first. Note the faces they open
+    onto are opposite: the insert bore opens at the mating face (local
+    z=0), the head counterbore at the far one."""
+    if kind == "insert":
+        return loc * Pos(0, 0, P.fin_insert_depth / 2) * Cylinder(
+            P.fin_insert_d / 2, P.fin_insert_depth
+        )
+    return loc * Pos(0, 0, P.fin_flat_t - P.fin_cbore_depth / 2) * Cylinder(
+        P.fin_cbore_d / 2, P.fin_cbore_depth
+    )
 
 
 def _floor(loc):
@@ -100,6 +106,49 @@ def test_insert_has_a_floor(name, i, fin_solid):
     missing = _floor(loc) - fin_solid
     v = 0.0 if missing is None else missing.volume
     assert v < TOL, f"{name}: {v:.4f} mm³ of the insert floor is air"
+
+
+@pytest.fixture(scope="module")
+def jointed():
+    """A unit with the joints actually cut — the bare tabs above carry no
+    holes, so face-side questions can only be asked here."""
+    from golden_registry import ALL_PARTS
+
+    return ALL_PARTS["unit-full"]()
+
+
+@pytest.mark.parametrize("name,i", CASES)
+def test_head_is_reachable(name, i, jointed):
+    """The counterbore must open on the tab's FAR face, never the mating
+    one.
+
+    Sink the head at the mating face and it ends up sealed in the joint
+    line the moment the modules are pushed together: no driver can reach
+    it, so it can only ever be tightened before assembly, when it is
+    clamping nothing. Cut it the wrong way round and every dimension
+    still checks out — this is the only test that notices.
+
+    Probed as a ring: the annulus between the clearance hole and the
+    counterbore has to be SOLID at the mating face (the head isn't there)
+    and AIR at the far face (the head is).
+    """
+    loc, kind = joint_locs()[i]
+    if kind != "screw":
+        pytest.skip("insert site — no head at either face")
+
+    def ring(z):
+        outer = loc * Pos(0, 0, z) * Cylinder(P.fin_cbore_d / 2, 0.4)
+        inner = loc * Pos(0, 0, z) * Cylinder(P.screw_hole_d / 2, 0.6)
+        return outer - inner
+
+    at_joint = ring(0.2) & jointed
+    assert at_joint is not None and at_joint.volume > TOL, (
+        f"{name}: mating face is counterbored — the head would be buried "
+        f"in the joint with nothing able to turn it"
+    )
+    at_far = ring(P.fin_flat_t - 0.2) & jointed
+    v = 0.0 if at_far is None else at_far.volume
+    assert v < TOL, f"{name}: {v:.4f} mm³ of solid where the head has to sit"
 
 
 def test_screw_reaches_its_insert():
