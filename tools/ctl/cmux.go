@@ -24,18 +24,26 @@ func cmuxCallerPane() (string, bool) {
 	return id.Caller.PaneRef, true
 }
 
-var surfaceRe = regexp.MustCompile(`surface:[0-9]+`)
+// The surface UUID, not the surface:N short ref: close-surface treats a ref
+// that no longer resolves as "no surface given" and falls back to the focused
+// surface — which is this terminal once the user has closed the viewer tab.
+// An unknown UUID is a clean not_found instead.
+var surfaceUUIDRe = regexp.MustCompile(`surface:[0-9]+ \(([0-9A-Fa-f-]{36})\)`)
 
 // cmuxOpenViewerTab adds a focused browser tab to pane (tab 1 stays this
-// command's logs, tab 2 becomes the viewer).
+// command's logs, tab 2 becomes the viewer). Returns the surface UUID.
 func cmuxOpenViewerTab(pane, url string) (string, bool) {
 	out, err := exec.Command("cmux", "new-surface", "--type", "browser",
-		"--pane", pane, "--url", url, "--focus", "true").Output()
+		"--pane", pane, "--url", url, "--focus", "true",
+		"--id-format", "both").Output()
 	if err != nil {
 		return "", false
 	}
-	s := surfaceRe.FindString(string(out))
-	return s, s != ""
+	m := surfaceUUIDRe.FindStringSubmatch(string(out))
+	if m == nil {
+		return "", false
+	}
+	return m[1], true
 }
 
 func cmuxCloseSurface(surface string) {
