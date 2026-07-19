@@ -778,6 +778,39 @@ class Params:
     ugrom_rib_proud: float = 1.0   # crest past barrel OD — 0.75/side bite
     ugrom_rib_l: float = 2.5       # ramp length; step faces the flange
 
+    # --- P2S poop bucket (side quest — Bambu P2S waste-chute catcher) ---
+    # Remodel of a downloaded vase-mode bucket, enlarged. Solid body;
+    # the slicer's spiral-vase mode hollows it (outer contour only), so
+    # internal geometry is irrelevant — every surface slope stays
+    # <= 45 deg so the single wall always lands on the layer below.
+    # Local frame: X left-right (facing the logo: +X = viewer's right,
+    # the cramped side), Y=0 at the printer-side face (bucket extends
+    # -Y, spout +Y over the chute), Z=0 at the bed. Chute-fit geometry
+    # (spout, notch, body width at the top) is measured off the
+    # original mesh — don't tweak without a test fit.
+    pb_h: float = 187.0            # overall height (unchanged)
+    pb_body_w: float = 80.0        # original body width — the top must
+                                   # keep this to fit around the chute
+    pb_body_d: float = 50.0        # original body depth (measured)
+    pb_d: float = 75.0             # new depth: 1.5x toward the wall
+    pb_ext_l: float = 80.0         # left wing reach past the body (roomy side)
+    pb_ext_r: float = 25.4         # right wing reach — old edge + 1in cap
+    pb_wing_top_l: float = 163.5   # left wing chamfer meets the body here
+    pb_notch_z: float = 140.0      # notch ramp base = right wing top (45 deg
+                                   # up-inward from here, measured)
+    pb_notch_x: float = 20.0       # wall position left of the chute door
+    pb_corner_r: float = 3.0       # vertical corner rounds (measured)
+    pb_spout_x0: float = -33.75    # spout tube left face (measured)
+    pb_spout_x1: float = 13.75     # spout tube right face (measured)
+    pb_spout_reach: float = 28.0   # spout past the printer-side face at
+                                   # the top rim
+    pb_spout_z0: float = 160.0     # spout crosses the printer-side face
+                                   # here — slant is 28 over 27 (46 deg,
+                                   # measured; still vase-printable)
+    pb_text_h: float = 15.0        # engraved P2S logo cap height
+    pb_text_depth: float = 0.4     # engrave depth (measured)
+    pb_text_z: float = 94.5        # logo centreline height
+
     @property
     def unit_back_rise(self) -> float:
         """Back wall height above the plate top. Derived, not raw."""

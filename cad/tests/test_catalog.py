@@ -39,4 +39,5 @@ def test_printable_builders_exist():
         "ipad-lid",
         "grommet-usb",
         "grommet-bathroom",
+        "poop-bucket",
     }

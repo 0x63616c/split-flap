@@ -95,6 +95,10 @@ MODELS = {
         "grommet",
         "bathroom_scene",
     ),
+    "poop-bucket": Model(
+        "SIDE QUEST Bambu P2S waste-chute bucket XL, vase mode",
+        "poopbucket",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -120,4 +124,5 @@ PRINTABLE = {
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
     "grommet-usb": Printable("grommet", "grommet_usb"),
     "grommet-bathroom": Printable("grommet", "grommet_bathroom"),
+    "poop-bucket": Printable("poopbucket", "poop_bucket"),
 }

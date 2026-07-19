@@ -116,6 +116,12 @@ def _grommet_bathroom():
     return grommet_bathroom()
 
 
+def _poop_bucket():
+    from splitflap_cad.poopbucket import poop_bucket
+
+    return poop_bucket()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -132,6 +138,7 @@ BREP_PARTS = {
     "ipad-lid": _ipad_lid,
     "grommet-usb": _grommet_usb,
     "grommet-bathroom": _grommet_bathroom,
+    "poop-bucket": _poop_bucket,
     "unit-full": _full_unit,
     "unit-nema-full": _full_unit_nema,
 }
