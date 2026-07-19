@@ -135,6 +135,76 @@
 		(locked no)
 		(uuid "c11393e9-9936-4e69-8c1f-83a80d466b57")
 	)
+	(fp_line
+		(start -7.15 -5.48)
+		(end 7.15 -5.48)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000022")
+	)
+	(fp_line
+		(start 7.15 -5.48)
+		(end 7.15 5.48)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000023")
+	)
+	(fp_line
+		(start 7.15 5.48)
+		(end -7.15 5.48)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000024")
+	)
+	(fp_line
+		(start -7.15 5.48)
+		(end -7.15 -5.48)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000025")
+	)
+	(fp_line
+		(start -6.8999999999999995 -2.8)
+		(end -5.7 -2.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000001")
+	)
+	(fp_line
+		(start -6.3 -3.4)
+		(end -6.3 -2.1999999999999997)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000002")
+	)
+	(fp_line
+		(start 5.7 -2.8)
+		(end 6.8999999999999995 -2.8)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "5f1a5f1a-0000-4000-8000-000000000003")
+	)
 	(fp_text user "%R"
 		(at 0 0)
 		(layer "F.Fab")
