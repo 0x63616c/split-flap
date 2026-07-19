@@ -794,7 +794,8 @@ class Params:
     pb_body_d: float = 50.0        # original body depth (measured)
     pb_d: float = 75.0             # new depth: 1.5x toward the wall
     pb_ext_l: float = 80.0         # left wing reach past the body (roomy side)
-    pb_ext_r: float = 25.4         # right wing reach — old edge + 1in cap
+    pb_ext_r: float = 19.05        # right wing reach — old edge + 1in,
+                                   # then trimmed 25% (space check)
     pb_wing_top_l: float = 163.5   # left wing chamfer meets the body here
     pb_notch_z: float = 140.0      # notch ramp base = right wing top (45 deg
                                    # up-inward from here, measured)
@@ -810,6 +811,7 @@ class Params:
     pb_text_h: float = 15.0        # engraved P2S logo cap height
     pb_text_depth: float = 0.4     # engrave depth (measured)
     pb_text_z: float = 94.5        # logo centreline height
+    pb_tag_h: float = 8.0          # maker-tag cap height (printer-side face)
 
     @property
     def unit_back_rise(self) -> float:

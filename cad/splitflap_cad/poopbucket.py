@@ -20,13 +20,16 @@ View: `just cad view poop-bucket` (ghost = original-size bucket).
 """
 
 from build123d import (
+    Axis,
     FontStyle,
     Plane,
     Polyline,
     Pos,
+    Rectangle,
     RectangleRounded,
     Text,
     extrude,
+    fillet,
     make_face,
 )
 
@@ -82,21 +85,55 @@ def poop_bucket(ext_l: float | None = None, ext_r: float | None = None,
         d + big,
     )
 
+    # the wedge cuts leave sharp corners where their faces meet the
+    # front/back walls — round them like the rest of the body so the
+    # spiral-vase contour never has to turn a hard corner: the vertical
+    # column edges above the wings/notch plus the sloped cut-face edges
+    def _cut_corner(e):
+        v = e @ 1 - e @ 0  # chord: fine for lines, arcs won't match
+        length = abs(v)
+        if length < 1e-6:
+            return False
+        dz = abs(v.Z) / length
+        vertical = dz > 0.999
+        sloped = abs(dz - 2**-0.5) < 0.01 and abs(v.Y) / length < 0.01
+        if not (vertical or sloped):
+            return False
+        x0, x1 = (e @ 0).X, (e @ 1).X
+        near = lambda x, t: abs(x - t) < 0.01
+        if vertical:
+            return (near(x0, -hw) and ext_l) or (near(x0, hw) and ext_r) or near(
+                x0, P.pb_notch_x
+            )
+        lo, hi = min(x0, x1), max(x0, x1)
+        return (ext_l and lo < -hw - 0.1) or (ext_r and hi > hw + 0.1) or (
+            P.pb_notch_x + 0.1 < hi <= hw + 0.1
+        )
+
+    corner_edges = [e for e in slab.edges() if _cut_corner(e)]
+    if corner_edges:
+        slab = fillet(corner_edges, r)
+
     # spout: rounded-rect tube swept down-back at 45 deg from the top
     # rim; only the part past y=0 shows — the tail buries in the body
     sw = P.pb_spout_x1 - P.pb_spout_x0
     scx = (P.pb_spout_x0 + P.pb_spout_x1) / 2
     reach = P.pb_spout_reach
-    prof = Plane.XY.offset(h) * Pos(scx, reach / 2, 0) * RectangleRounded(
-        sw, reach, r
+    # corner rounds only on the far (+Y) edge: mirrored rounded rect
+    # trimmed to a 5mm square stub on the buried side, so the tube
+    # meets the body wall square — no sliver cusps at the joint
+    top = Plane.XY.offset(h)
+    prof = (top * Pos(scx, 0, 0) * RectangleRounded(sw, 2 * reach, r)) & (
+        top * Pos(scx, (reach - 5) / 2, 0) * Rectangle(sw, reach + 5)
     )
-    # 50mm of drop buries the tail inside the body without ever
-    # poking the back wall (y stays > -75); slant = reach over
-    # (h - z0), the measured 46 deg
+    # 30mm of Y travel buries the whole profile behind the printer-side
+    # face without the stub reaching the back wall (works for the
+    # original 50mm depth too); slant = reach over (h - z0), the
+    # measured 46 deg
     drop = h - P.pb_spout_z0
     dvec = (0, -reach, -drop)
     dlen = (reach**2 + drop**2) ** 0.5
-    spout = extrude(prof, amount=50 * dlen / drop, dir=dvec)
+    spout = extrude(prof, amount=30 * dlen / reach, dir=dvec)
     slab += spout
 
     # engraved logo on the wall-side face, aligned with the body centre
@@ -104,6 +141,13 @@ def poop_bucket(ext_l: float | None = None, ext_r: float | None = None,
         origin=(0, -d, P.pb_text_z), x_dir=(1, 0, 0), z_dir=(0, -1, 0)
     ) * Text("P2S", font_size=P.pb_text_h, font_style=FontStyle.BOLD)
     slab -= extrude(txt, amount=-P.pb_text_depth)
+
+    # maker tag on the printer-side face (hidden when mounted),
+    # readable when looking at that face
+    tag = Plane(
+        origin=(cx, 0, P.pb_text_z), x_dir=(-1, 0, 0), z_dir=(0, 1, 0)
+    ) * Text("0x63616c", font_size=P.pb_tag_h, font_style=FontStyle.BOLD)
+    slab -= extrude(tag, amount=-P.pb_text_depth)
 
     return slab
 
