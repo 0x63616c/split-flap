@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "build_id": "d288872debe013f2",
+  "build_id": "cab594180bbe4478",
   "components": [
     {
       "id": "c784585",
@@ -11,7 +11,7 @@
       "value": "",
       "package": "CAP0805_22UF_25V:C0805",
       "description": null,
-      "quantity": 4,
+      "quantity": 5,
       "unitCost": null,
       "stock": null,
       "isBasic": null,
@@ -33,40 +33,12 @@
           "designator": "C4"
         },
         {
+          "address": "main.ato::SplitFlapDriverNema.c_bout3|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
+          "designator": "C8"
+        },
+        {
           "address": "main.ato::SplitFlapDriverNema.c_vm|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
           "designator": "C7"
-        }
-      ]
-    },
-    {
-      "id": "c23206",
-      "lcsc": "C23206",
-      "manufacturer": "UNI-ROYAL(Uniroyal Elec)",
-      "mpn": "0603WAF5602T5E",
-      "type": "resistor",
-      "value": "",
-      "package": "R0603_56K:R0603",
-      "description": null,
-      "quantity": 3,
-      "unitCost": null,
-      "stock": null,
-      "isBasic": null,
-      "isPreferred": null,
-      "source": "manual",
-      "datasheet": null,
-      "parameters": [],
-      "usages": [
-        {
-          "address": "main.ato::SplitFlapDriverNema.r_en_lo|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
-          "designator": "R2"
-        },
-        {
-          "address": "main.ato::SplitFlapDriverNema.r_fb_hi|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
-          "designator": "R3"
-        },
-        {
-          "address": "main.ato::SplitFlapDriverNema.r_gate_lo|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
-          "designator": "R6"
         }
       ]
     },
@@ -79,7 +51,7 @@
       "value": "",
       "package": "CC0603_100NF:C0603",
       "description": null,
-      "quantity": 2,
+      "quantity": 3,
       "unitCost": null,
       "stock": null,
       "isBasic": null,
@@ -95,6 +67,10 @@
         {
           "address": "main.ato::SplitFlapDriverNema.c_bst|parts/CC0603_100NF/CC0603_100NF.ato::CC0603_100NF_package",
           "designator": "C5"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_vm_hf|parts/CC0603_100NF/CC0603_100NF.ato::CC0603_100NF_package",
+          "designator": "C10"
         }
       ]
     },
@@ -107,7 +83,7 @@
       "value": "",
       "package": "R0603_1K:R0603",
       "description": null,
-      "quantity": 2,
+      "quantity": 3,
       "unitCost": null,
       "stock": null,
       "isBasic": null,
@@ -116,6 +92,10 @@
       "datasheet": null,
       "parameters": [],
       "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_hall|parts/R0603_1K/R0603_1K.ato::R0603_1K_package",
+          "designator": "R9"
+        },
         {
           "address": "main.ato::SplitFlapDriverNema.r_led|parts/R0603_1K/R0603_1K.ato::R0603_1K_package",
           "designator": "R7"
@@ -283,13 +263,13 @@
       ]
     },
     {
-      "id": "c16214",
-      "lcsc": "C16214",
-      "manufacturer": "BOOMELE(Boom Precision Elec)",
-      "mpn": "DC-005 2.0",
-      "type": "connector",
+      "id": "c183115",
+      "lcsc": "C183115",
+      "manufacturer": "TDK",
+      "mpn": "C1608C0G1H101JT000N",
+      "type": "capacitor",
       "value": "",
-      "package": "DC_005:DC-IN-TH_DC-005-5.5-2.0",
+      "package": "CC0603_100PF:C0603",
       "description": null,
       "quantity": 1,
       "unitCost": null,
@@ -301,8 +281,8 @@
       "parameters": [],
       "usages": [
         {
-          "address": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005/DC_005.ato::DC_005_package",
-          "designator": "J3"
+          "address": "main.ato::SplitFlapDriverNema.c_ff|parts/CC0603_100PF/CC0603_100PF.ato::CC0603_100PF_package",
+          "designator": "C9"
         }
       ]
     },
@@ -327,6 +307,54 @@
         {
           "address": "main.ato::SplitFlapDriverNema.j_motor|parts/XH_4AW/XH_4AW.ato::XH_4AW_package",
           "designator": "J2"
+        }
+      ]
+    },
+    {
+      "id": "c23077",
+      "lcsc": "C23077",
+      "manufacturer": "UNI-ROYAL(Uniroyal Elec)",
+      "mpn": "0603WAF5492T5E",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_54K9:R0603",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_fb_hi|parts/R0603_54K9/R0603_54K9.ato::R0603_54K9_package",
+          "designator": "R3"
+        }
+      ]
+    },
+    {
+      "id": "c23206",
+      "lcsc": "C23206",
+      "manufacturer": "UNI-ROYAL(Uniroyal Elec)",
+      "mpn": "0603WAF5602T5E",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_56K:R0603",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_gate_lo|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
+          "designator": "R6"
         }
       ]
     },
@@ -399,6 +427,54 @@
         {
           "address": "main.ato::SplitFlapDriverNema.j_hall|parts/XY_B3B_XH_A/XY_B3B_XH_A.ato::XY_B3B_XH_A_package",
           "designator": "J1"
+        }
+      ]
+    },
+    {
+      "id": "c84007",
+      "lcsc": "C84007",
+      "manufacturer": "Korean Hroparts Elec",
+      "mpn": "DC-005C-20A",
+      "type": "connector",
+      "value": "",
+      "package": "DC_005C:DC-IN-TH_DC-005C-20A",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005C/DC_005C.ato::DC_005C_package",
+          "designator": "J3"
+        }
+      ]
+    },
+    {
+      "id": "c8598",
+      "lcsc": "C8598",
+      "manufacturer": "Changjiang Electronics Tech (CJ)",
+      "mpn": "B5819W SL",
+      "type": "diode",
+      "value": "",
+      "package": "D_B5819W:SOD-123_L2.7-W1.6-LS3.7-RD-1",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.d_usb|parts/D_B5819W/D_B5819W.ato::D_B5819W_package",
+          "designator": "D2"
         }
       ]
     },

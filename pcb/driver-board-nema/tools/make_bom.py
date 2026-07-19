@@ -17,22 +17,25 @@ OUT = ROOT / "bom.csv"
 
 # MPN -> (value, what it does)
 INFO = {
-    "CC0603KRX7R9BB104": ("100nF 50V X7R 0603", "HF decoupling (buck bootstrap, 5V rail)"),
+    "CC0603KRX7R9BB104": ("100nF 50V X7R 0603", "HF decoupling (buck bootstrap, 5V rail, StepStick VM pin)"),
+    "C1608C0G1H101JT000N": ("100pF 50V C0G 0603", "Cff across the buck feedback high side (TI SLVAF45)"),
     "CC0805MKX5R8BB226": ("22uF 25V X5R 0805", "buck input/output + VM ceramic"),
+    "B5819W SL": ("40V 1A Schottky, SOD-123", "blocks the buck back-feeding USB VBUS via the XIAO 5V pad"),
     "BXJ25V470M10*10 10.0TP": ("470uF 25V, 80mOhm ESR", "VM bulk reservoir for the motor"),
     "TPS563201DDCR": ("12V->5V 3A buck", "makes the 5V rail for the XIAO"),
     "AO3401A": ("-30V -4A P-MOSFET", "reverse-polarity gate on the 12V input"),
     "CKCS5040-4.7uH/M": ("4.7uH 3A shielded", "buck output inductor"),
     "KT-0603G": ("green LED 0603", "5V power-good indicator"),
-    "RC0603FR-071KL": ("1k 1% 0603", "PDN_UART series + LED ballast"),
+    "RC0603FR-071KL": ("1k 1% 0603", "PDN_UART series + hall DO series + LED ballast"),
     "RC0603FR-0710KL": ("10k 1% 0603", "buck feedback divider, low side"),
-    "0603WAF5602T5E": ("56k 1% 0603", "feedback / enable / gate dividers"),
-    "0603WAF1003T5E": ("100k 1% 0603", "enable + gate dividers, high side"),
+    "0603WAF5492T5E": ("54.9k 1% 0603", "buck feedback divider, high side (TI SLVAF45 value)"),
+    "0603WAF5602T5E": ("56k 1% 0603", "P-FET gate divider, low side"),
+    "0603WAF1003T5E": ("100k 1% 0603", "P-FET gate divider high side + buck EN pull-up"),
     "KH-2.54FH-1X7P-H8.5": ("1x7 2.54mm FEMALE socket", "XIAO ESP32-C6 socket row (receptacle)"),
     "KH-2.54FH-1X8P-H8.5": ("1x8 2.54mm FEMALE socket", "TMC2209 StepStick socket row (receptacle)"),
-    "XH-4AW": ("JST-XH 4P right-angle", "stepper motor; pads run B2 B1 A2 A1 left to right"),
+    "XH-4AW": ("JST-XH 4P right-angle", "stepper motor; silk reads A2 A1 B2 B1 left to right (driver coil naming)"),
     "XY-B3B-XH-A": ("JST-XH 3P vertical", "hall sensor: 5V GND DO"),
-    "DC-005 2.0": ("5.5x2.1mm barrel jack", "12V input, centre positive"),
+    "DC-005C-20A": ("5.5x2.1mm barrel jack, 24V 3A", "12V input, centre positive — METER TIP/SLEEVE BEFORE POWER-UP"),
 }
 
 # Not fitted to the board, but you cannot build a module without them.

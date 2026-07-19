@@ -3,11 +3,21 @@
   "atoAddress": "j_pwr",
   "designator": "J3",
   "descriptor": "J3 \u2014 j_pwr",
-  "typeName": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005/DC_005.ato::DC_005_package",
-  "footprintUuid": "8a6ba58b-0a39-4c75-965c-dfa34642524b",
+  "typeName": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005C/DC_005C.ato::DC_005C_package",
+  "footprintUuid": "9a75f06b-3cfa-420e-9c27-ecec4642524b",
   "leads": [
     {
-      "leadDesignator": "SLEEVE",
+      "leadDesignator": "TIP",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "v12_raw",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "SWITCH",
       "padNumbers": [
         "2"
       ],
@@ -17,21 +27,11 @@
       "isConnected": true
     },
     {
-      "leadDesignator": "SLEEVE",
+      "leadDesignator": "SWITCH",
       "padNumbers": [
         "3"
       ],
       "netName": "2",
-      "signalType": "signal",
-      "interfaces": [],
-      "isConnected": true
-    },
-    {
-      "leadDesignator": "TIP",
-      "padNumbers": [
-        "4"
-      ],
-      "netName": "v12_raw",
       "signalType": "signal",
       "interfaces": [],
       "isConnected": true

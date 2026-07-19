@@ -11,6 +11,7 @@ happy to let two component *bodies* occupy the same space.
 """
 
 import math
+import re
 from pathlib import Path
 
 from faebryk.libs.kicad.fileformats import kicad
@@ -29,41 +30,68 @@ BOARD_W, BOARD_H = 62.0, 76.0
 #   centre-bottom TMC2209 StepStick socket (signal row up, motor row down)
 #   bottom        motor + hall connectors, cables exiting the bottom edge
 #   right-bottom  VM bulk, hard up against the StepStick's VM pin
+#
+# Socket row spacing is load-bearing and is asserted in check_socket_pitch():
+#   XIAO       15.24mm  (0.6in) -- the module's pin rows ARE 0.6in apart
+#   StepStick  12.70mm  (0.5in) -- NOT 0.6in. The 0.6x0.8in figure quoted for a
+#              StepStick is its BOARD OUTLINE; the pin rows are inset 1.27mm
+#              from each long edge, so centre-to-centre is 15.24 - 2*1.27.
+#              (Pololu A4988 dimension drawing; Watterott
+#              SilentStepStick-TMC2209_v20 has its rows at x=1.27 and x=13.97.)
 PLACEMENT = {
     # XIAO socket: rows 15.24mm apart, pin 1 at the top (rot 270).
     "xiao_left": (12.0, 16.0, 270),    # D0..D6
     "xiao_right": (27.24, 16.0, 270),  # 5V/GND/3V3/D10..D7
+    # 5V -> XIAO blocking Schottky, on the 5V run just before the socket
+    "d_usb": (30.5, 6.4, 0),
     # 12V input + reverse-polarity gate
     "j_pwr": (56.0, 13.0, 0),          # barrel faces the right edge
-    "q_rev": (42.0, 10.5, 0),
+    "q_rev": (42.0, 10.5, 0),          # pin3=D (west, jack side), pin2=S (east, rail)
     "r_gate_hi": (37.5, 8.0, 0),
     "r_gate_lo": (37.5, 12.6, 0),
     # 12V -> 5V buck
-    "r_en_hi": (39.5, 20.0, 0),
-    "r_en_lo": (39.5, 23.0, 0),
+    "r_en_hi": (38.8, 20.0, 0),
     "u_buck": (46.0, 24.0, 0),
-    "c_bin": (50.5, 24.0, 270),
+    "c_bin": (51.2, 24.0, 270),
     "c_bst": (46.0, 27.2, 0),
     "l_buck": (53.5, 29.5, 0),
     "c_bout1": (48.5, 34.5, 0),
     "c_bout2": (53.5, 34.5, 0),
-    "r_fb_hi": (43.0, 32.0, 0),
-    "r_fb_lo": (43.0, 34.5, 0),
+    "c_bout3": (44.0, 34.5, 0),
+    # Feedback divider, parked hard against the VFB pin at (44.65, 23.05).
+    # VFB is the one high-impedance node on the buck; the old placement had it
+    # ~10mm and ~20mm of trace away, running alongside the switch node.
+    # It sits NORTH of the buck rather than west: west is where VBST and its
+    # bootstrap cap live, and crowding those two nets together is how you get
+    # a switcher that oscillates.
+    "r_fb_hi": (44.65, 20.6, 270),  # pin1 = 5V (north), pin2 = VFB (south)
+    "c_ff": (42.3, 20.6, 270),      # feedforward cap, parallel with r_fb_hi
+    "r_fb_lo": (47.2, 21.35, 0),    # pin1 = VFB (west), pin2 = GND (east)
     "c_5v": (58.0, 34.5, 0),
     "r_led": (55.0, 18.0, 0),
     "d_pwr": (55.0, 21.0, 0),
     # signal conditioning
     "r_uart": (19.0, 30.0, 0),
-    # TMC2209 StepStick socket
-    "ss_right": (31.0, 42.0, 0),   # pins 9..16  DIR STEP PDN UART SPRD MS2 MS1 EN
+    "r_hall": (16.5, 63.0, 0),     # pin1 = connector (west), pin2 = D8 (east)
+    # TMC2209 StepStick socket -- rows 12.70mm apart, NOT 15.24mm
+    "ss_right": (31.0, 44.54, 0),  # pins 9..16  DIR STEP PDN UART SPRD MS2 MS1 EN
     "ss_left": (31.0, 57.24, 0),   # pins 1..8   GND VIO M1B M1A M2A M2B GND VM
     # VM bulk, right beside ss_left.8 (VM)
     "c_bulk": (50.0, 57.24, 0),
     "c_vm": (40.5, 62.0, 0),
+    "c_vm_hf": (39.89, 54.0, 90),  # pin1 (v12) faces south, onto ss_left.8
     # connectors, cables off the bottom edge
     "j_motor": (30.0, 68.0, 180),
     "j_hall": (11.0, 66.5, 0),
 }
+
+# Socket row pitches that must hold exactly, in mm. Asserted numerically at
+# place time -- these are the dimensions that decide whether the two modules
+# physically drop into the board at all.
+SOCKET_PITCH = [
+    ("XIAO", "xiao_left", "xiao_right", 15.24),
+    ("StepStick", "ss_right", "ss_left", 12.70),
+]
 
 # M3 clearance holes, one per corner.
 MOUNT_HOLES = [(3.5, 3.5), (58.5, 3.5), (3.5, 72.5), (58.5, 72.5)]
@@ -82,15 +110,29 @@ SILK = [
     ("12V IN", 50.5, 4.4, 1.0, 0),
     ("+ CENTRE", 50.5, 2.6, 0.8, 0),
     ("5V", 58.0, 24.0, 0.8, 0),
-    ("TMC2209 StepStick", 31.0, 39.0, 1.0, 0),
-    ("PIN 1 / PIN 9 THIS END >", 31.0, 49.8, 0.8, 0),
-    ("MS1 MS2 SPRD = GND", 31.0, 51.6, 0.8, 0),
-    ("VM BULK 470u", 50.0, 49.4, 0.8, 0),
+    ("TMC2209 StepStick", 31.0, 41.6, 1.0, 0),
+    # Pin 1 and pin 9 are at the -x end (x=22.11), so the arrow points -x. It
+    # used to read "THIS END >" while pointing at pin 8/16 -- and since both
+    # rows are identical 1x8 headers, this marking is the only thing standing
+    # between the builder and a 180-degree insertion. Belt and braces: each row
+    # is also labelled with what it carries.
+    ("< PIN 1 / PIN 9 THIS END", 31.0, 47.9, 0.8, 0),
+    ("J5 LOGIC (9-16)", 31.0, 49.7, 0.8, 0),
+    ("MS1 MS2 SPRD = GND", 31.0, 51.5, 0.8, 0),
+    ("J4 VM + COILS (1-8)", 31.0, 53.3, 0.8, 0),
+    ("VM BULK 470u  + = WEST END", 50.0, 49.4, 0.8, 0),
+    # C6 is polarised and its footprint chamfer marks the POSITIVE end, which
+    # is the opposite of what a builder reading the can's stripe expects. Say
+    # it in words, beside pad 1.
+    ("+", 41.8, 57.6, 1.4, 0),
     ("MOTOR", 30.0, 64.0, 1.0, 0),
-    ("B2", 26.25, 65.9, 0.8, 0),
-    ("B1", 28.75, 65.9, 0.8, 0),
-    ("A2", 31.25, 65.9, 0.8, 0),
-    ("A1", 33.75, 65.9, 0.8, 0),
+    # Coil labels follow the DRIVER's internal naming, not the connector's:
+    # on a SilentStepStick M1 is coil B and M2 is coil A (Watterott). The
+    # wiring was already right; only these four labels were back to front.
+    ("A2", 26.25, 65.9, 0.8, 0),
+    ("A1", 28.75, 65.9, 0.8, 0),
+    ("B2", 31.25, 65.9, 0.8, 0),
+    ("B1", 33.75, 65.9, 0.8, 0),
     ("HALL", 11.0, 61.5, 1.0, 0),
     ("5V GND DO", 11.0, 63.3, 0.8, 0),
     ("Designed by 0x63616c", 14.0, 74.6, 0.9, 0),
@@ -122,7 +164,21 @@ REFDES_LOCAL = {
     "c_bin": (2.4, 0.0),
     "c_bout2": (0.0, 3.4),
     "r_uart": (-2.6, 0.0),
+    # feedback block -- four parts inside ~4mm, so every refdes is placed by
+    # hand. r_fb_hi and c_ff are rotated 270, hence the swapped axes.
+    "r_fb_hi": (-2.6, 0.0),    # board: 2.6mm above the part
+    "c_ff": (2.9, 2.0),        # board: below and west, clear of U1's refdes
+    "r_fb_lo": (0.0, -2.2),
+    "c_bout3": (-3.4, -3.2),
 }
+
+# PCBWay's stated minimum silkscreen line width is 0.15mm; anything thinner is
+# "may not be legible" territory and they reserve the right to drop it. The
+# vendored footprints are full of 0.06mm pin-1 dots and 0.10mm outlines, and
+# the refdes text used to be stamped at 0.12mm, so widths are normalised here
+# rather than trusted from the libraries.
+MIN_SILK_W = 0.15
+REFDES_H = 1.0
 
 SIG, PWR, MOT = 0.4, 0.8, 1.0
 VIA_SIZE, VIA_DRILL = 0.6, 0.3
@@ -136,61 +192,99 @@ LAYERS = {"F": "F.Cu", "B": "B.Cu"}
 # width; only true logic signals run at SIG.
 ROUTES = [
     # ---- 12V input, before protection (v12_raw) -----------------------------
-    ("j_pwr.4", MOT, [("F", 59.15, 10.70), ("F", 59.15, 6.20), ("F", 45.50, 6.20),
-                      ("F", 45.50, 9.55), ("F", 43.15, 9.55)]),
-    ("r_gate_hi.2", SIG, [("F", 38.25, 8.00), ("F", 44.20, 8.00), ("F", 44.20, 6.20), ("F", 45.50, 6.20)]),
+    # The jack sits east and the FET's DRAIN is its west pad, so v12_raw has to
+    # get past the FET. It ducks onto B.Cu to do it, which also keeps the whole
+    # unprotected net off the top layer where the gate divider lives.
+    # y=7.00, not 6.20: at 6.20 this run passed 0.60mm from the M3 hole at
+    # (58.5, 3.5), which is not enough margin for a routed-tolerance hole with
+    # a metal screw head sitting in it and 12V on the trace. 7.00 gives 1.40mm.
+    ("j_pwr.1", MOT, [("F", 59.33, 10.65), ("F", 59.33, 7.00), ("F", 46.50, 7.00), ("via",),
+                      ("B", 46.50, 7.00), ("B", 39.50, 7.00), ("B", 39.50, 10.50), ("via",),
+                      ("F", 39.50, 10.50), ("F", 40.85, 10.50)]),
 
     # ---- P-FET gate divider -------------------------------------------------
+    # r_gate_hi now hangs off the SOURCE (v12), not the jack -- the gate is
+    # referenced to the source, so the divider's top follows the source pin.
+    ("r_gate_hi.2", SIG, [("F", 38.25, 8.00), ("F", 43.15, 8.00), ("F", 43.15, 9.55)]),
     # Hops to B.Cu to duck under the drain escape, then back up into the gate.
     ("r_gate_hi.1", SIG, [("F", 36.75, 8.00), ("F", 35.40, 8.00), ("via",),
-                          ("B", 35.40, 13.60), ("B", 44.60, 13.60), ("via",),
-                          ("F", 44.60, 11.45), ("F", 43.15, 11.45)]),
+                          ("B", 35.40, 13.60), ("B", 43.80, 13.60), ("via",),
+                          ("F", 43.80, 11.45), ("F", 43.15, 11.45)]),
     ("r_gate_lo.1", SIG, [("F", 36.75, 12.60), ("F", 34.40, 12.60), ("F", 34.40, 8.00), ("F", 35.40, 8.00)]),
 
     # ---- protected 12V rail (v12): one B.Cu spine down x=45.5 ---------------
-    ("q_rev.3", MOT, [("F", 40.85, 10.50), ("F", 41.60, 10.50), ("F", 41.60, 16.60), ("via",),
-                      ("B", 41.60, 16.60), ("B", 45.50, 17.50), ("B", 45.50, 57.24), ("B", 39.89, 57.24)]),
-    ("r_en_hi.1", SIG, [("F", 38.75, 20.00), ("F", 37.00, 20.00), ("F", 37.00, 18.60), ("via",),
+    # Starts at the FET's SOURCE (pin 2, east pad) now that D and S are the
+    # right way round.
+    ("q_rev.2", MOT, [("F", 43.15, 9.55), ("F", 45.00, 9.55), ("F", 45.00, 16.60), ("via",),
+                      ("B", 45.00, 16.60), ("B", 45.50, 17.50), ("B", 45.50, 57.24), ("B", 39.89, 57.24)]),
+    ("r_en_hi.1", SIG, [("F", 38.05, 20.00), ("F", 37.00, 20.00), ("F", 37.00, 18.60), ("via",),
                         ("B", 37.00, 18.60), ("B", 45.50, 18.60)]),
-    ("c_bin.1", PWR, [("F", 50.50, 23.00), ("F", 50.50, 21.00), ("via",),
-                      ("B", 50.50, 21.00), ("B", 45.50, 21.00)]),
-    ("u_buck.3", 0.6, [("F", 47.35, 23.05), ("F", 47.35, 22.20), ("F", 50.50, 22.20), ("F", 50.50, 23.00)]),
+    ("c_bin.1", PWR, [("F", 51.20, 23.00), ("F", 51.20, 21.00), ("via",),
+                      ("B", 51.20, 21.00), ("B", 45.50, 21.00)]),
+    ("u_buck.3", 0.6, [("F", 47.35, 23.05), ("F", 47.35, 22.60), ("F", 51.20, 22.60), ("F", 51.20, 23.00)]),
     # bulk + VM ceramic hang off the same spine, as close to ss_left.8 as the
     # 10mm can body allows
     ("c_bulk.1", MOT, [("F", 45.50, 57.24), ("F", 45.50, 54.00), ("via",), ("B", 45.50, 54.00)]),
-    ("c_vm.1", PWR, [("F", 39.50, 62.00), ("F", 39.50, 59.90), ("F", 44.60, 59.90), ("via",),
-                     ("B", 44.60, 59.90), ("B", 45.50, 59.00), ("B", 45.50, 57.24)]),
+    # c_vm used to reach VM the long way round -- ~11mm and a via for a 4.8mm
+    # straight-line gap, which threw away most of the point of a ceramic.
+    ("c_vm.1", PWR, [("F", 39.50, 62.00), ("F", 39.50, 58.50), ("F", 39.89, 58.10),
+                     ("F", 39.89, 57.24)]),
+    # 100nF straight onto the VM pad
+    ("c_vm_hf.1", SIG, [("F", 39.89, 54.70), ("F", 39.89, 57.24)]),
+
+    # ---- buck GND escape ----------------------------------------------------
+    # U1's own pad ring fences off a pocket of F.Cu GND that has no path to the
+    # B.Cu pour, and the v12 spine running underneath at x=45.5 leaves nowhere
+    # legal to drop a stitching via inside it. So the return is routed out of
+    # the pad instead -- which is what a switcher wants anyway: a via on the
+    # GND pin, not somewhere across the pour.
+    ("u_buck.1", 0.6, [("F", 47.35, 24.95), ("F", 48.50, 24.95), ("via",)]),
 
     # ---- buck switching node ------------------------------------------------
-    ("u_buck.2", 0.6, [("F", 47.35, 24.00), ("F", 48.60, 24.00), ("F", 48.60, 29.50), ("F", 51.50, 29.50)]),
-    ("c_bst.2", SIG, [("F", 46.70, 27.20), ("F", 48.60, 27.20)]),
+    ("u_buck.2", 0.6, [("F", 47.35, 24.00), ("F", 49.40, 24.00), ("F", 49.40, 29.50), ("F", 51.50, 29.50)]),
+    ("c_bst.2", SIG, [("F", 46.70, 27.20), ("F", 49.40, 27.20)]),
     ("u_buck.6", SIG, [("F", 44.65, 24.95), ("F", 43.60, 24.95), ("F", 43.60, 27.20), ("F", 45.30, 27.20)]),
 
-    # ---- buck enable divider (EN abs max 6V, hence the divider) -------------
-    ("u_buck.5", SIG, [("F", 44.65, 24.00), ("F", 42.20, 24.00), ("F", 42.20, 20.00), ("F", 40.25, 20.00)]),  # r_en_hi.2
-    ("r_en_lo.1", SIG, [("F", 38.75, 23.00), ("F", 38.75, 21.60), ("F", 42.20, 21.60)]),
+    # ---- buck enable: plain 100k pull-up to v12 ------------------------------
+    # Ducks under the feedback block on B.Cu -- EN is a static DC node, so a
+    # couple of vias cost nothing, and it keeps the VFB area clear.
+    ("u_buck.5", SIG, [("F", 44.65, 24.00), ("F", 44.20, 24.00), ("via",),
+                       ("B", 44.20, 24.00), ("B", 44.20, 21.50), ("B", 39.55, 21.50), ("via",),
+                       ("F", 39.55, 21.50), ("F", 39.55, 20.00)]),
 
-    # ---- buck feedback: 0.768V ref, 56k/10k -> 5.07V ------------------------
-    ("u_buck.4", SIG, [("F", 44.65, 23.05), ("F", 43.00, 23.05), ("via",),
-                       ("B", 43.00, 23.05), ("B", 43.00, 30.00), ("via",),
-                       ("F", 43.00, 30.00), ("F", 43.75, 30.00), ("F", 43.75, 32.00)]),
-    ("r_fb_lo.1", SIG, [("F", 42.25, 34.50), ("F", 42.25, 36.00), ("F", 44.60, 36.00),
-                        ("F", 44.60, 32.60), ("F", 43.75, 32.60), ("F", 43.75, 32.00)]),
+    # ---- buck feedback: 0.768V ref, 54.9k/10k -> 4.99V, with Cff ------------
+    # The whole divider now sits within ~2mm of the VFB pin. VFB is the only
+    # high-Z node on the buck and it used to run ~10mm alongside the switch
+    # node before reaching its resistors.
+    ("u_buck.4", SIG, [("F", 44.65, 23.05), ("F", 44.65, 21.35)]),   # VFB -> r_fb_hi.2
+    ("r_fb_lo.1", SIG, [("F", 46.45, 21.35), ("F", 44.65, 21.35)]),  # VFB -> r_fb_lo
+    ("c_ff.2", SIG, [("F", 42.30, 21.30), ("F", 43.90, 21.35), ("F", 44.65, 21.35)]),  # Cff -> VFB
+    ("c_ff.1", SIG, [("F", 42.30, 19.90), ("F", 43.90, 19.85), ("F", 44.65, 19.85)]),  # Cff -> 5V
 
     # ---- 5V rail ------------------------------------------------------------
     ("l_buck.1", PWR, [("F", 55.50, 29.50), ("F", 57.60, 29.50), ("F", 57.60, 33.00),
                        ("F", 57.30, 33.00), ("F", 57.30, 34.50)]),
     ("c_bout2.1", PWR, [("F", 52.50, 34.50), ("F", 52.50, 33.00), ("F", 57.30, 33.00)]),
     ("c_bout1.1", PWR, [("F", 47.50, 34.50), ("F", 47.50, 33.00), ("F", 52.50, 33.00)]),
-    ("r_fb_hi.1", SIG, [("F", 42.25, 32.00), ("F", 42.25, 29.00), ("F", 46.00, 29.00),
-                        ("F", 46.00, 33.00), ("F", 47.50, 33.00)]),
+    # third output cap, extending the bank westward
+    ("c_bout3.1", PWR, [("F", 43.00, 34.50), ("F", 43.00, 33.00), ("F", 47.50, 33.00)]),
+    # 5V up to the feedback divider and the Cff, which now live by the VFB pin.
+    # Sense point is the output cap bank, not the inductor -- that is the node
+    # the load actually sees.
+    ("c_ff.1", PWR, [("F", 42.30, 19.90), ("F", 41.00, 19.90), ("F", 41.00, 32.00),
+                     ("F", 43.00, 33.00)]),
     ("r_led.1", SIG, [("F", 54.25, 18.00), ("F", 54.25, 17.00), ("F", 57.60, 17.00), ("F", 57.60, 29.50)]),
-    # 5V leaves the buck westward on F, hops to B.Cu and runs up the top edge to
-    # the XIAO, then all the way down the left edge to the hall connector.
-    ("r_fb_hi.1", PWR, [("F", 42.25, 32.00), ("F", 40.00, 32.00), ("F", 40.00, 31.00), ("via",),
-                        ("B", 40.00, 31.00), ("B", 40.00, 29.00), ("B", 34.00, 29.00),
-                        ("B", 34.00, 6.40), ("B", 27.24, 6.40), ("B", 27.24, 8.38)]),
+
+    # ---- 5V up to the XIAO, through the blocking Schottky --------------------
+    # The B.Cu corridor at x=34 carries the *undropped* buck rail: the hall
+    # connector taps it, and only the very last hop goes through d_usb into the
+    # XIAO's 5V pad. Everything upstream of d_usb is still a full 5V.
+    ("c_bout3.1", PWR, [("F", 43.00, 34.50), ("F", 41.00, 34.50), ("F", 41.00, 31.00), ("via",),
+                        ("B", 41.00, 31.00), ("B", 41.00, 29.00), ("B", 34.00, 29.00),
+                        ("B", 34.00, 6.40), ("via",), ("F", 34.00, 6.40), ("F", 32.20, 6.40)]),
     ("j_hall.1", PWR, [("B", 8.50, 66.50), ("B", 4.50, 66.50), ("B", 4.50, 6.40), ("B", 34.00, 6.40)]),
+    # cathode side -> the XIAO socket's 5V pin, and nothing else on the board
+    ("d_usb.1", PWR, [("F", 28.80, 6.40), ("F", 27.24, 6.40), ("F", 27.24, 8.38)]),
 
     # ---- 5V power LED -------------------------------------------------------
     ("r_led.2", SIG, [("F", 55.75, 18.00), ("F", 55.75, 21.00)]),
@@ -205,25 +299,33 @@ ROUTES = [
     # from its own lane, which keeps them mutually clear.
     ("xiao_left.1", SIG, [("F", 12.00, 8.38), ("F", 9.40, 8.38), ("via",),
                           ("B", 9.40, 8.38), ("B", 9.40, 36.00), ("B", 24.65, 36.00), ("via",),
-                          ("F", 24.65, 36.00), ("F", 24.65, 42.00)]),
+                          ("F", 24.65, 36.00), ("F", 24.65, 44.54)]),
     ("xiao_left.2", SIG, [("F", 12.00, 10.92), ("F", 8.00, 10.92), ("via",),
                           ("B", 8.00, 10.92), ("B", 8.00, 37.40), ("B", 22.11, 37.40), ("via",),
-                          ("F", 22.11, 37.40), ("F", 22.11, 42.00)]),
+                          ("F", 22.11, 37.40), ("F", 22.11, 44.54)]),
     ("xiao_left.3", SIG, [("F", 12.00, 13.46), ("F", 6.60, 13.46), ("via",),
                           ("B", 6.60, 13.46), ("B", 6.60, 39.00), ("B", 39.89, 39.00),
-                          ("B", 39.89, 42.00)]),
+                          ("B", 39.89, 44.54)]),
     # PDN: D6 -> 1k -> StepStick pin 11
     ("xiao_left.7", SIG, [("B", 12.00, 23.62), ("B", 12.00, 27.60), ("B", 18.25, 27.60), ("via",),
                           ("F", 18.25, 27.60), ("F", 18.25, 30.00)]),
-    ("r_uart.2", SIG, [("F", 19.75, 30.00), ("F", 27.19, 30.00), ("F", 27.19, 42.00)]),
+    ("r_uart.2", SIG, [("F", 19.75, 30.00), ("F", 27.19, 30.00), ("F", 27.19, 44.54)]),
+    # D7 = GPIO17 = U0RXD onto the same PDN net, so the UART can be read back.
+    # Drops onto B.Cu to clear the hall run, which crosses on F at y=25.
+    ("xiao_right.7", SIG, [("F", 27.24, 23.62), ("F", 29.00, 23.62), ("via",),
+                           ("B", 29.00, 23.62), ("B", 29.00, 31.50), ("via",),
+                           ("F", 29.00, 31.50), ("F", 27.19, 31.50)]),
     # VIO: the XIAO's own 3V3 regulator sets the StepStick's logic level
     ("xiao_right.3", SIG, [("F", 27.24, 13.46), ("F", 31.60, 13.46), ("F", 31.60, 26.00),
                            ("F", 16.00, 26.00), ("F", 16.00, 53.00), ("F", 24.65, 53.00),
                            ("F", 24.65, 57.24)]),
-    # hall DO -> D8
+    # hall DO -> 1k -> D8. r_hall bounds the fault current if the user's hall
+    # module turns out to have a pull-up to its own 5V rather than being the
+    # open-collector part we assume.
     ("xiao_right.6", SIG, [("F", 27.24, 21.08), ("F", 30.60, 21.08), ("F", 30.60, 25.00),
-                           ("F", 10.60, 25.00), ("F", 10.60, 63.00), ("F", 13.50, 63.00),
-                           ("F", 13.50, 66.50)]),
+                           ("F", 10.60, 25.00), ("F", 10.60, 59.00), ("F", 19.00, 59.00),
+                           ("F", 19.00, 63.00), ("F", 17.25, 63.00)]),
+    ("r_hall.1", SIG, [("F", 15.75, 63.00), ("F", 13.50, 63.00), ("F", 13.50, 66.50)]),
 
     # ---- motor coils --------------------------------------------------------
     # The StepStick coil order (M1B M1A M2A M2B) is the reverse of the
@@ -241,7 +343,17 @@ ROUTES = [
 # return path.
 GND_REF_PAD = ("ss_left", "1")  # StepStick pin 1 is GND — used to resolve the net
 GND_STITCH = [(17.5, 20.0), (7.0, 50.0), (36.0, 20.0), (36.0, 50.0),
-              (52.0, 45.0), (52.0, 20.0), (20.0, 72.0), (44.0, 72.0)]
+              (52.0, 45.0), (52.0, 20.0), (20.0, 72.0), (44.0, 72.0),
+              # Inside the buck's own pad ring. The VIN/VFB/EN/VBST escapes
+              # fence off a ~17mm^2 pocket of F.Cu GND around U1 that has no
+              # other path to the B.Cu pour -- it showed up as a zone-to-zone
+              # unconnected item. It is also exactly where the buck's return
+              # current wants a via, so this one is doing real work.
+              # The 1.0mm v12 spine runs ~40mm down B.Cu at x=45.5, straight
+              # between the StepStick's GND pins and C6's negative terminal,
+              # so the VM return current cannot cross it on B.Cu. These pairs
+              # let it hop to the F.Cu pour and back around the slit.
+              (42.5, 50.0), (48.5, 52.5), (42.5, 60.0)]
 
 
 def fp_extent(fp, board_rot):
@@ -295,6 +407,58 @@ def fp_boxes(k):
     return out
 
 
+def thicken_silk(k):
+    """Raise every footprint silk stroke and text to at least MIN_SILK_W.
+
+    The vendored EasyEDA footprints draw their pin-1 dots as 0.06mm circles and
+    most of their outlines at 0.10mm, both under PCBWay's 0.15mm minimum. A
+    0.06mm dot is the marking that says which way round a polarised part goes,
+    so losing it in production is not cosmetic.
+    """
+    bumped = 0
+    for fp in k.footprints:
+        graphics = (list(fp.fp_lines) + list(fp.fp_rects)
+                    + list(fp.fp_circles) + list(fp.fp_arcs) + list(fp.fp_poly))
+        for g in graphics:
+            if "SilkS" not in str(getattr(g, "layer", "")):
+                continue
+            if g.stroke and g.stroke.width < MIN_SILK_W:
+                g.stroke.width = MIN_SILK_W
+                bumped += 1
+        for t in list(fp.fp_texts) + list(fp.propertys):
+            if "SilkS" not in str(getattr(t, "layer", "")):
+                continue
+            if t.effects and t.effects.font and (t.effects.font.thickness or 0) < MIN_SILK_W:
+                t.effects.font.thickness = MIN_SILK_W
+                bumped += 1
+    print(f"silk: raised {bumped} strokes/texts to >= {MIN_SILK_W}mm")
+
+
+def check_socket_pitch():
+    """Assert the two module sockets are exactly the right distance apart.
+
+    This is the failure that does not show up in DRC, in the renders, or in any
+    electrical check -- the board builds and passes everything, and then the
+    module physically will not seat. v2 shipped a first spin with the StepStick
+    rows at 15.24mm because the 0.6x0.8in figure on a StepStick is its board
+    outline, not its pin pitch.
+    """
+    errs = []
+    for name, a, b, want in SOCKET_PITCH:
+        (ax, ay, _), (bx, by, _) = PLACEMENT[a], PLACEMENT[b]
+        got = math.dist((ax, ay), (bx, by))
+        if abs(got - want) > 1e-9:
+            errs.append(f"{name} socket rows ({a}/{b}): {got:.4f}mm, want {want}mm")
+        # rows must also be parallel -- same rotation, and offset on one axis only
+        if abs(ax - bx) > 1e-9 and abs(ay - by) > 1e-9:
+            errs.append(f"{name} socket rows ({a}/{b}) are diagonal, not parallel")
+        if PLACEMENT[a][2] != PLACEMENT[b][2]:
+            errs.append(f"{name} socket rows ({a}/{b}) have different rotations")
+    if errs:
+        raise SystemExit("SOCKET PITCH CHECK FAILED:\n  " + "\n  ".join(errs))
+    print("socket pitch ok: " + ", ".join(f"{n} {w}mm" for n, _, _, w in SOCKET_PITCH))
+
+
 def check(k):
     """Body overlap / off-board / pad clearance, numerically. Raises on failure."""
     boxes = fp_boxes(k)
@@ -327,7 +491,8 @@ def check(k):
 
 
 def main():
-    pcb = kicad.loads(kicad.pcb.PcbFile, PCB.read_text())
+    check_socket_pitch()
+    pcb = kicad.loads(kicad.pcb.PcbFile, strip_mount_holes(PCB.read_text()))
     k = pcb.kicad_pcb
 
     for fp in k.footprints:
@@ -367,8 +532,8 @@ def main():
             off = (dx * (half[0] + 1.3), dy * (half[1] + 1.3))
             ref.at.x, ref.at.y = rot(off[0], off[1], -r)
         if ref.effects and ref.effects.font:
-            ref.effects.font.size = kicad.pcb.Wh(w=0.8, h=0.8)
-            ref.effects.font.thickness = 0.12
+            ref.effects.font.size = kicad.pcb.Wh(w=REFDES_H, h=REFDES_H)
+            ref.effects.font.thickness = MIN_SILK_W
         # these fields ship right-justified; with the footprint rotated that
         # throws KiCad's text-extent calc off, so centre them
         if ref.effects:
@@ -383,6 +548,7 @@ def main():
                 p.layer = "F.Fab"
                 p.at.x, p.at.y = 0.0, 0.0
 
+    thicken_silk(k)
     check(k)
 
     # drop the previous run's GND pour; add_gnd_zones() re-appends it
@@ -405,18 +571,14 @@ def main():
             layer="Edge.Cuts",
         ))
 
-    # M3 mounting holes as Edge.Cuts circles (routed, not drilled — fab treats
-    # an inner edge cut as a hole, and there is no NPTH footprint library here)
+    # M3 mounting holes. These used to be Edge.Cuts circles, i.e. routed inner
+    # contours. That "works" -- a fab will cut them -- but it leaves the NPTH
+    # drill file completely empty, so nothing in the fab package actually says
+    # "these are four 3.2mm holes". They are emitted as real NPTH pads below
+    # (see add_mount_holes), which puts them in the drill file where a hole
+    # belongs and gets them drilled to tolerance rather than routed to one.
     while len(k.gr_circles):
         k.gr_circles.pop(len(k.gr_circles) - 1)
-    for hx, hy in MOUNT_HOLES:
-        k.gr_circles.append(kicad.pcb.Circle(
-            center=kicad.pcb.Xy(x=hx, y=hy),
-            end=kicad.pcb.Xy(x=hx + MOUNT_DIA / 2, y=hy),
-            stroke=kicad.pcb.Stroke(width=0.1, type="default"),
-            fill="none",
-            layer="Edge.Cuts",
-        ))
 
     # board-level silkscreen
     while len(k.gr_texts):
@@ -428,14 +590,96 @@ def main():
             layer=kicad.pcb.TextLayer(layer="F.SilkS"),
             effects=kicad.pcb.Effects(
                 font=kicad.pcb.Font(size=kicad.pcb.Wh(w=size, h=size),
-                                    thickness=round(size * 0.15, 3)),
+                                    thickness=max(MIN_SILK_W, round(size * 0.15, 3))),
             ),
         ))
 
     route(k)
     kicad.dumps(pcb, PCB)
+    add_mount_holes()
+    set_mask_expansion()
     add_gnd_zones(k)
     render(pcb)
+
+
+MOUNT_FP_LIB = "SPLITFLAP_MOUNT"
+
+MOUNT_FP = """
+	(footprint "{lib}:M3_NPTH"
+		(layer "F.Cu")
+		(uuid "{uuid}")
+		(at {x} {y})
+		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size {d} {d})
+			(drill {d})
+			(layers "F&B.Cu" "F.Mask" "B.Mask")
+			(uuid "{puid}")
+		)
+	)
+"""
+
+
+def strip_mount_holes(text):
+    """Remove mount-hole footprints from a previous run, by paren matching.
+
+    They are spliced in as raw s-expressions after the dump, so they carry no
+    atopile_address and would otherwise trip fp_boxes() on the next run.
+    """
+    while True:
+        i = text.find(f'"{MOUNT_FP_LIB}:')
+        if i == -1:
+            return text
+        start = text.rindex("(footprint", 0, i)
+        depth, j = 0, start
+        while j < len(text):
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    j += 1
+                    break
+            j += 1
+        ls = text.rindex("\n", 0, start)
+        text = text[:ls] + text[j:]
+
+
+def add_mount_holes():
+    """Emit the four M3 holes as real NPTH pads.
+
+    As Edge.Cuts circles they were routed inner contours: the fab cuts them,
+    but `kicad-cli export drill` produced an EMPTY non-plated drill file, so
+    the fab package never actually declared them as holes. A routed 3.2mm
+    contour also carries router tolerance rather than drill tolerance, which
+    matters when an M3 screw head lands next to a 12V trace.
+    """
+    text = PCB.read_text().rstrip()
+    assert text.endswith(")")
+    block = "".join(
+        MOUNT_FP.format(lib=MOUNT_FP_LIB, uuid=kicad.gen_uuid(), puid=kicad.gen_uuid(),
+                        x=hx, y=hy, d=MOUNT_DIA)
+        for hx, hy in MOUNT_HOLES
+    )
+    PCB.write_text(text[:-1] + block + ")\n")
+    print(f"added {len(MOUNT_HOLES)} M3 NPTH pads ({MOUNT_DIA}mm)")
+
+
+def set_mask_expansion():
+    """Solder mask expansion, globally.
+
+    pad_to_mask_clearance 0 makes every mask aperture exactly equal to its
+    copper, so any registration error at all leaves mask creeping onto the
+    pad. 0.05mm is the usual house value and is what the fabs assume.
+    """
+    want = 0.05
+    text = PCB.read_text()
+    new, n = re.subn(r"\(pad_to_mask_clearance [\d.]+\)",
+                     f"(pad_to_mask_clearance {want})", text, count=1)
+    assert n == 1, "pad_to_mask_clearance not found in the board setup block"
+    PCB.write_text(new)
+    print(f"set pad_to_mask_clearance to {want}mm")
 
 
 ZONE = """

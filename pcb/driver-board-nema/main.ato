@@ -2,16 +2,19 @@ from "parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato" import KH_2_54_1X7_FEMALE
 from "parts/KH_2_54_1X8_FEMALE/KH_2_54_1X8_FEMALE.ato" import KH_2_54_1X8_FEMALE_package
 from "parts/XH_4AW/XH_4AW.ato" import XH_4AW_package
 from "parts/XY_B3B_XH_A/XY_B3B_XH_A.ato" import XY_B3B_XH_A_package
-from "parts/DC_005/DC_005.ato" import DC_005_package
+from "parts/DC_005C/DC_005C.ato" import DC_005C_package
 from "parts/AO3401A/AO3401A.ato" import AO3401A_package
 from "parts/TPS563201/TPS563201.ato" import TPS563201_package
 from "parts/IND_4U7_3A/IND_4U7_3A.ato" import IND_4U7_3A_package
 from "parts/CAP_470UF_25V/CAP_470UF_25V.ato" import CAP_470UF_25V_package
 from "parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato" import CAP0805_22UF_25V_package
 from "parts/CC0603_100NF/CC0603_100NF.ato" import CC0603_100NF_package
+from "parts/CC0603_100PF/CC0603_100PF.ato" import CC0603_100PF_package
+from "parts/D_B5819W/D_B5819W.ato" import D_B5819W_package
 from "parts/LED_0603_GREEN/LED_0603_GREEN.ato" import LED_0603_GREEN_package
 from "parts/R0603_1K/R0603_1K.ato" import R0603_1K_package
 from "parts/R0603_10K/R0603_10K.ato" import R0603_10K_package
+from "parts/R0603_54K9/R0603_54K9.ato" import R0603_54K9_package
 from "parts/R0603_56K/R0603_56K.ato" import R0603_56K_package
 from "parts/R0603_100K/R0603_100K.ato" import R0603_100K_package
 
@@ -28,12 +31,18 @@ module SplitFlapDriverNema:
     Power chain:
         12V jack -> Q_rev (P-FET reverse-polarity gate) -> +12V rail
         +12V -> StepStick VM (470uF low-ESR bulk + 22uF ceramic right at the pins)
-        +12V -> U_buck (TPS563201) -> +5V -> XIAO 5V pin + hall sensor
+        +12V -> U_buck (TPS563201) -> +5V -> hall sensor
+                                          -> D_usb (Schottky) -> XIAO 5V pad
         XIAO 3V3 out -> StepStick VIO (3.3V logic levels for STEP/DIR/EN/PDN)
+
+    The Schottky is not optional: the XIAO's 5V pad is its USB VBUS net, so
+    without it 12V-plus-USB back-drives the host. The hall sensor deliberately
+    taps upstream of the diode, where the rail is still a full 5V.
 
     Pin assignment matches firmware/micropython-spike/tmc_spin.py:
         STEP = D0, DIR = D1, EN = D2 (active low), PDN_UART = D6 via 1k,
-        hall DO = D8 (open collector, XIAO internal pull-up) — bench-proven.
+        hall DO = D8 via 1k (open collector, XIAO internal pull-up) —
+        bench-proven. D7 (U0RXD) also lands on PDN so UART can be read back.
 
     StepStick socket pin numbering is the Trinamic SilentStepStick 2x8 standard
     (TMC2209 SilentStepStick HW v2.0, doc rev 1.20), which is NOT the naive
@@ -45,7 +54,7 @@ module SplitFlapDriverNema:
     """
 
     # --- Connectors and sockets ---
-    j_pwr = new DC_005_package                   # 12V in, 5.5x2.1 barrel
+    j_pwr = new DC_005C_package                  # 12V in, 5.5x2.1 barrel, 3A
     j_motor = new XH_4AW_package                 # bipolar stepper, A1/A2/B1/B2
     j_hall = new XY_B3B_XH_A_package             # hall homing sensor
     xiao_left = new KH_2_54_1X7_FEMALE_package   # D0..D6
@@ -59,6 +68,7 @@ module SplitFlapDriverNema:
     r_gate_lo = new R0603_56K_package    # gate -> GND
     c_bulk = new CAP_470UF_25V_package   # VM reservoir, sits at the VM pin
     c_vm = new CAP0805_22UF_25V_package  # VM ceramic, HF partner to c_bulk
+    c_vm_hf = new CC0603_100NF_package   # 100nF right AT the StepStick VM pin
 
     # --- 12V -> 5V buck ---
     u_buck = new TPS563201_package
@@ -67,22 +77,26 @@ module SplitFlapDriverNema:
     l_buck = new IND_4U7_3A_package
     c_bout1 = new CAP0805_22UF_25V_package
     c_bout2 = new CAP0805_22UF_25V_package
-    r_fb_hi = new R0603_56K_package      # VOUT -> VFB
+    c_bout3 = new CAP0805_22UF_25V_package  # third output cap — see note below
+    r_fb_hi = new R0603_54K9_package     # VOUT -> VFB
     r_fb_lo = new R0603_10K_package      # VFB -> GND
-    r_en_hi = new R0603_100K_package     # +12V -> EN
-    r_en_lo = new R0603_56K_package      # EN -> GND
+    c_ff = new CC0603_100PF_package      # feedforward cap across r_fb_hi
+    r_en_hi = new R0603_100K_package     # +12V -> EN pull-up
     c_5v = new CC0603_100NF_package
     d_pwr = new LED_0603_GREEN_package
     r_led = new R0603_1K_package
+    d_usb = new D_B5819W_package         # buck 5V -> XIAO 5V pad, blocks back-feed
 
     # --- Signal conditioning ---
     r_uart = new R0603_1K_package        # D6 -> PDN, single-wire UART
+    r_hall = new R0603_1K_package        # hall DO -> D8, fault-current limit
 
     # --- Nets ---
     signal gnd
     signal v12_raw       # jack tip, before reverse-polarity protection
     signal v12           # protected 12V rail
-    signal p5v           # buck output
+    signal p5v           # buck output — hall sensor taps here, before d_usb
+    signal p5v_xiao      # after d_usb — the XIAO's 5V pad, i.e. its VBUS net
     signal p3v3          # from the XIAO's regulator, powers StepStick VIO
     signal sw_node       # buck switch node
     signal vbst
@@ -92,7 +106,8 @@ module SplitFlapDriverNema:
     signal dir
     signal en_n
     signal pdn
-    signal hall_do
+    signal hall_do       # at the XIAO, after r_hall
+    signal hall_raw      # at the connector, before r_hall
     signal m1a
     signal m1b
     signal m2a
@@ -103,17 +118,36 @@ module SplitFlapDriverNema:
     # and burn ~0.4W at the ~1A this board pulls, and would eat into the buck's
     # headroom. The FET is ~50mOhm, so ~50mV.
     #
+    # ORIENTATION. The body diode of a P-FET conducts drain->source (its anode
+    # is the drain). For reverse-polarity protection the diode has to point the
+    # way the load current wants to go, so that it blocks when the input is
+    # reversed:
+    #
+    #     DRAIN  -> jack tip (v12_raw)      SOURCE -> protected rail (v12)
+    #
+    # Getting this backwards is not a no-op, it silently defeats the whole
+    # circuit: with the source on the jack side the body diode's anode faces
+    # the load, so under reverse input it is forward-biased and conducts
+    # anyway. The 470uF electrolytic on VM then sees roughly -11.3V across it,
+    # which is how that part fails loudly.
+    #
+    # Start-up: on power-up v12 sits at 0V, the body diode conducts and pulls
+    # the rail to Vin - 0.7, the divider then sees a live source and enhances
+    # the FET, and the diode drop collapses to I*Rds_on (~50mV at 1A).
+    #
     # The gate is NOT tied straight to GND. AO3401A is only rated Vgs +/-12V, and
     # a 12V brick sits right at (or over) that limit. The 100k/56k divider parks
-    # the gate at Vin*56/156, i.e. Vgs = -0.64*Vin: -7.7V at 12V in, -9.6V even
-    # at a 15V brick. Comfortably enhanced, comfortably inside the rating.
+    # the gate at Vsource*56/156, i.e. Vgs = -0.64*Vsource: -7.7V at 12V in,
+    # -9.6V even at a 15V brick. Comfortably enhanced, comfortably inside the
+    # rating. Note the divider hangs off the SOURCE (v12), not the jack -- that
+    # is what "gate referenced to source" means, and it follows the source pin.
     v12_raw ~ j_pwr.TIP
     gnd ~ j_pwr.SLEEVE
     gnd ~ j_pwr.SWITCH   # NC-to-sleeve contact; GND only, as a third solder anchor
-    v12_raw ~ q_rev.S
-    v12 ~ q_rev.D
+    v12_raw ~ q_rev.D
+    v12 ~ q_rev.S
     q_rev.G ~ r_gate_hi.1
-    v12_raw ~ r_gate_hi.2
+    v12 ~ r_gate_hi.2
     q_rev.G ~ r_gate_lo.1
     gnd ~ r_gate_lo.2
 
@@ -125,10 +159,26 @@ module SplitFlapDriverNema:
     gnd ~ c_bulk.NEG
     v12 ~ c_vm.1
     gnd ~ c_vm.2
+    # 100nF sitting directly on the VM pin (ss_left.8). The 470uF and the 22uF
+    # are both several mm away -- fine for bulk and mid-band, but neither is a
+    # short at the tens-of-MHz edges the TMC2209's gate drive puts on VM. This
+    # one is 2.5mm from the pad with a via straight into the pour.
+    v12 ~ c_vm_hf.1
+    gnd ~ c_vm_hf.2
 
     # --- 12V -> 5V buck (TPS563201, D-CAP2) ----------------------------------
-    # Vout = 0.768 * (1 + 56k/10k) = 5.07V. EN is abs-max 6V so it gets its own
-    # divider off the 12V rail (12 * 56/156 = 4.3V, and 5.4V at a 15V brick).
+    # Vout = 0.768 * (1 + 54.9k/10k) = 4.99V.
+    #
+    # EN is a plain 100k pull-up to the 12V rail, not a divider.
+    #
+    # This board used to fit a 100k/56k divider here, justified in a comment as
+    # a level-shift for a 6V abs-max on EN. That was simply wrong: SLVSD90B
+    # rates EN at abs-max 19V, so a 12V (or even 15V) rail is inside the
+    # rating. Nor was the divider a useful UVLO -- 100k/56k reaches the ~1.2V
+    # EN threshold at Vin ~= 3.3V, far below the part's own 4.5V minimum Vin,
+    # so the internal VIN UVLO always tripped first. It was two resistors doing
+    # nothing, and the low side sat exactly where the feedback divider needs to
+    # be, so it is gone.
     v12 ~ u_buck.VIN
     gnd ~ u_buck.GND
     v12 ~ c_bin.1
@@ -139,20 +189,40 @@ module SplitFlapDriverNema:
     vbst ~ u_buck.VBST
     vbst ~ c_bst.1
     sw_node ~ c_bst.2
+    # Output capacitance. TI's stable window for this D-CAP2 part is 20-68uF of
+    # EFFECTIVE capacitance. 22uF 25V X5R 0805 parts lose roughly half their
+    # value to DC bias at 5V, so the original two gave ~20-24uF -- sitting on
+    # the very bottom of the window, with tolerance and temperature able to push
+    # it under. A third identical cap takes the derated total to ~30-36uF,
+    # comfortably mid-window, and costs one 0805 site.
     p5v ~ c_bout1.1
     gnd ~ c_bout1.2
     p5v ~ c_bout2.1
     gnd ~ c_bout2.2
+    p5v ~ c_bout3.1
+    gnd ~ c_bout3.2
+
+    # Feedback divider, with a feedforward cap across the high side.
+    # 54.9k/10k -> 0.768 * (1 + 5.49) = 4.99V.
+    #
+    # Cff. A high-Vout D-CAP2 converter running all-ceramic output has very
+    # little phase margin at crossover; TI SLVAF45 ("Why We Need Cff in High
+    # Output Voltage D-CAP2/3 Converter for Stability") works exactly this
+    # 12V->5V case and measures phase margin going from 17.2deg to 75.4deg once
+    # Cff is fitted. 100pF C0G across the 54.9k puts the zero at
+    # 1/(2*pi*54.9k*100pF) ~= 29kHz, below the crossover, which is what buys
+    # the phase back. Values are TI's from that note, hence 54.9k rather than
+    # the 56k this board used to carry.
     vfb ~ u_buck.VFB
     p5v ~ r_fb_hi.1
     vfb ~ r_fb_hi.2
+    p5v ~ c_ff.1
+    vfb ~ c_ff.2
     vfb ~ r_fb_lo.1
     gnd ~ r_fb_lo.2
     ven ~ u_buck.EN
     v12 ~ r_en_hi.1
     ven ~ r_en_hi.2
-    ven ~ r_en_lo.1
-    gnd ~ r_en_lo.2
     p5v ~ c_5v.1
     gnd ~ c_5v.2
 
@@ -169,13 +239,31 @@ module SplitFlapDriverNema:
     xiao_left.7 ~ r_uart.1  # D6 (UART TX) -> 1k -> PDN
     pdn ~ r_uart.2
 
+    # --- 5V rail -> XIAO, through a blocking Schottky -------------------------
+    # The XIAO ESP32-C6's "5V" pad is the SAME NET as its USB VBUS, with no
+    # series diode anywhere on the module (Seeed schematic v1.0). Wired
+    # straight through, plugging in USB while 12V is applied would have the
+    # buck driving the host PC's VBUS rail backwards through the cable.
+    #
+    # d_usb makes the path one-way. It sits between the buck and the socket
+    # only, so everything else on the board still taps the undropped rail --
+    # which matters for the hall module, whose A3144 wants >=4.5V and would be
+    # marginal at 4.99 - 0.3 = 4.69V if it sat downstream. The XIAO's own
+    # regulator is happy at 4.69V.
+    p5v ~ d_usb.A
+    p5v_xiao ~ d_usb.K
+
     # --- XIAO socket, right row top-down: 5V GND 3V3 D10 D9 D8 D7 ------------
-    p5v ~ xiao_right.1     # fed BY the buck, not by USB
+    p5v_xiao ~ xiao_right.1  # fed BY the buck through d_usb, not by USB
     gnd ~ xiao_right.2
     p3v3 ~ xiao_right.3    # XIAO's own LDO — sourced here, used by VIO
     # xiao_right.4/5 = D10/D9 — reserved, unrouted
     hall_do ~ xiao_right.6  # D8
-    # xiao_right.7 = D7 — reserved, unrouted
+    # D7 = GPIO17 = U0RXD. Tied to the same PDN net that D6 drives, so the
+    # single-wire UART can be READ as well as written: the TMC2209 replies on
+    # PDN, and without a receiver the link is write-only -- no way to read
+    # DRV_STATUS, check stallguard, or even confirm the chip answered.
+    pdn ~ xiao_right.7
 
     # --- TMC2209 StepStick socket, left row: pins 1..8 -----------------------
     gnd ~ ss_left.1        # GND
@@ -208,7 +296,22 @@ module SplitFlapDriverNema:
     # --- Hall homing sensor --------------------------------------------------
     # HW-477 module: 5V supply, open-collector DO. Safe into a 3.3V GPIO because
     # the output only ever pulls down — the high level comes from the XIAO's own
-    # internal pull-up to 3.3V. Carried over unchanged from the v1 bench wiring.
+    # internal pull-up to 3.3V. Carried over from the v1 bench wiring, with one
+    # addition.
+    #
+    # r_hall is a 1k series resistor, same idiom as r_uart on PDN. The board
+    # cannot see what module the user actually plugs in, and plenty of "hall
+    # sensor" breakouts labelled open-collector in fact fit a pull-up to their
+    # own VCC -- which here is 5V. That would sit 5V on a 3.3V GPIO through the
+    # ESP32-C6's clamp diode. 1k bounds that to ~1.7mA, well inside what the
+    # clamp handles, and is invisible to a genuine open-collector part driving
+    # a ~50k internal pull-up.
+    #
+    # NOTE: with no magnet present the line FLOATS -- an open-collector output
+    # is high-Z when off. Firmware MUST enable the XIAO's internal pull-up or
+    # it reads noise.
     p5v ~ j_hall.1
     gnd ~ j_hall.2
-    hall_do ~ j_hall.3
+    hall_raw ~ j_hall.3
+    hall_raw ~ r_hall.1
+    hall_do ~ r_hall.2

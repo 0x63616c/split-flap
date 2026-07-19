@@ -1,0 +1,25 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component D_B5819W_package:
+    """
+    B5819W 40V 1A Schottky, SOD-123. ~0.3V Vf at the XIAO's 0.5A peak.
+
+    Series diode between the on-board 5V rail and the XIAO's 5V pad. On the
+    XIAO ESP32-C6 that pad is the same net as USB VBUS with no series diode of
+    its own (Seeed schematic v1.0), so without this the buck would drive the
+    host PC's VBUS whenever 12V and USB are applied together. Cathode faces
+    the XIAO.
+
+    Pin 1 is the cathode -- the silk band is on the pin-1 side of the
+    footprint, and the symbol names pin 1 "-".
+    """
+    trait is_atomic_part<manufacturer="Changjiang Electronics Tech (CJ)", partnumber="B5819W SL", footprint="SOD-123_L2.7-W1.6-LS3.7-RD-1.kicad_mod", symbol="B5819W_C8598.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C8598", manufacturer="Changjiang Electronics Tech (CJ)", partno="B5819W SL">
+    trait has_designator_prefix<prefix="D">
+
+    # pins
+    signal K ~ pin 1  # cathode -- faces the XIAO
+    signal A ~ pin 2  # anode   -- faces the buck

@@ -1,0 +1,21 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component CC0603_100PF_package:
+    """
+    100pF 50V C0G 0603 ceramic capacitor.
+
+    Feedforward cap (Cff) across the buck's high-side feedback resistor. C0G
+    rather than X7R because this one sits in the control loop -- an X7R part
+    would lose a chunk of its capacitance to DC bias and temperature and move
+    the zero it places.
+    """
+    trait is_atomic_part<manufacturer="TDK", partnumber="C1608C0G1H101JT000N", footprint="C0603.kicad_mod", symbol="C1608C0G1H101JT000N.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C183115", manufacturer="TDK", partno="C1608C0G1H101JT000N">
+    trait has_designator_prefix<prefix="C">
+
+    # pins
+    pin 1
+    pin 2

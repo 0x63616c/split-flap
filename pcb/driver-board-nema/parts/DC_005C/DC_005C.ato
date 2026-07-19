@@ -1,0 +1,44 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component DC_005C_package:
+    """
+    5.5x2.1mm barrel jack (2.0mm centre post), THT right-angle, switched.
+    24V 3A rated.
+
+    Replaces the DC-005 2.0 (C16214), which is only rated 1A against a board
+    budget of 1.0-1.3A -- i.e. running at or over its limit continuously.
+
+    PIN FUNCTIONS ARE POSITIONAL, AND MUST BE METERED BEFORE FIRST POWER-UP.
+    DC-005 pad numbering is not standardised between vendors, and the EasyEDA
+    symbol for this part labels its pins "1"/"2"/"3" with no function names, so
+    there is nothing authoritative to read them off. The mapping below is
+    derived structurally, by correspondence with the C16214 footprint whose
+    functions were documented:
+
+      * Both footprints put a PAIR of pads on the y<0 row and a SINGLETON on
+        the y>0 row. On the C16214 the singleton is the NC switch contact, so
+        it is the singleton here too -> pin 3.
+      * Both bodies extend to -x with the barrel opening at +x (silk/fab bbox
+        x -10.65..3.55 vs -10.22..3.98), so the two parts have the same
+        handedness. On the C16214 the -x pad of the pair is the sleeve and the
+        +x pad is the tip, so the same holds here: pin 2 = sleeve, pin 1 = tip.
+
+    That reasoning is sound but it is still an inference, not a datasheet. Meter
+    tip-to-sleeve continuity against a plug before applying 12V -- see the
+    assembly notes in README.md.
+
+    SWITCH is the normally-closed contact, which shorts to the SLEEVE when no
+    plug is inserted. It must therefore never touch +12V; it is tied to GND
+    here, purely as a third mechanical anchor for the jack.
+    """
+    trait is_atomic_part<manufacturer="Korean Hroparts Elec", partnumber="DC-005C-20A", footprint="DC-IN-TH_DC-005C-20A.kicad_mod", symbol="DC-005C-20A.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C84007", manufacturer="Korean Hroparts Elec", partno="DC-005C-20A">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    signal TIP ~ pin 1     # +12V, centre post  (+x of the pair)
+    signal SLEEVE ~ pin 2  # GND                (-x of the pair)
+    signal SWITCH ~ pin 3  # NC to sleeve when unplugged (singleton row)

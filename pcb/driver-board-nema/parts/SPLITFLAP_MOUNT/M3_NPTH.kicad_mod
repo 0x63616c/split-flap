@@ -1,0 +1,16 @@
+(footprint "SPLITFLAP_MOUNT:M3_NPTH"
+	(version 20241229)
+	(generator "splitflap")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "M3 clearance hole, 3.2mm non-plated. Ours, not vendored.")
+	(tags "mounting hole npth m3")
+	(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
+	(pad "" np_thru_hole circle
+		(at 0 0)
+		(size 3.2 3.2)
+		(drill 3.2)
+		(layers "F&B.Cu" "F.Mask" "B.Mask")
+		(uuid "b1f0a2c4-0000-4000-8000-000000000001")
+	)
+)

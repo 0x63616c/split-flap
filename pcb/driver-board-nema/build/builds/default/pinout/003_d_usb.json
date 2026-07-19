@@ -1,0 +1,31 @@
+{
+  "name": "d_usb",
+  "atoAddress": "d_usb",
+  "designator": "D2",
+  "descriptor": "D2 \u2014 d_usb",
+  "typeName": "main.ato::SplitFlapDriverNema.d_usb|parts/D_B5819W/D_B5819W.ato::D_B5819W_package",
+  "footprintUuid": "c68c819d-bdda-493f-812b-1ad04642524b",
+  "leads": [
+    {
+      "leadDesignator": "K",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "p5v_xiao",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "A",
+      "padNumbers": [
+        "2"
+      ],
+      "netName": "1",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    }
+  ],
+  "warnings": []
+}

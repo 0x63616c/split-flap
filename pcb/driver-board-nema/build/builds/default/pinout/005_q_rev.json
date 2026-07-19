@@ -21,7 +21,7 @@
       "padNumbers": [
         "2"
       ],
-      "netName": "v12_raw",
+      "netName": "1-1",
       "signalType": "signal",
       "interfaces": [],
       "isConnected": true
@@ -31,7 +31,7 @@
       "padNumbers": [
         "3"
       ],
-      "netName": "1-1",
+      "netName": "v12_raw",
       "signalType": "signal",
       "interfaces": [],
       "isConnected": true

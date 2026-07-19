@@ -1,0 +1,21 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component R0603_54K9_package:
+    """
+    54.9k 1% 0603 thick-film resistor.
+
+    High side of the buck's feedback divider. 54.9k (an E96 value) rather than
+    56k because that is what TI's own worked example uses for a 12V->5V
+    TPS563201 in SLVAF45, and the Cff sizing in that note is derived from the
+    54.9k/10k pair. Vout = 0.768 * (1 + 54.9/10) = 4.99V.
+    """
+    trait is_atomic_part<manufacturer="UNI-ROYAL(Uniroyal Elec)", partnumber="0603WAF5492T5E", footprint="R0603.kicad_mod", symbol="0603WAF5492T5E.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C23077", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0603WAF5492T5E">
+    trait has_designator_prefix<prefix="R">
+
+    # pins
+    pin 1
+    pin 2

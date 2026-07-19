@@ -1,19 +1,22 @@
 Designator,Footprint,Quantity,Value,Manufacturer,Partnumber,LCSC Part #,Function
-"C1, C5",CC0603_100NF:C0603,2,100nF 50V X7R 0603,YAGEO,CC0603KRX7R9BB104,C14663,"HF decoupling (buck bootstrap, 5V rail)"
-"C2, C3, C4, C7",CAP0805_22UF_25V:C0805,4,22uF 25V X5R 0805,YAGEO,CC0805MKX5R8BB226,C784585,buck input/output + VM ceramic
+"C1, C5, C10",CC0603_100NF:C0603,3,100nF 50V X7R 0603,YAGEO,CC0603KRX7R9BB104,C14663,"HF decoupling (buck bootstrap, 5V rail, StepStick VM pin)"
+"C2, C3, C4, C7, C8",CAP0805_22UF_25V:C0805,5,22uF 25V X5R 0805,YAGEO,CC0805MKX5R8BB226,C784585,buck input/output + VM ceramic
 C6,CAP_470UF_25V:CAP-SMD_BD10.0-L10.3-W10.3-LS11.0-FD,1,"470uF 25V, 80mOhm ESR",SamYoung Electronics,BXJ25V470M10*10 10.0TP,C3002464,VM bulk reservoir for the motor
+C9,CC0603_100PF:C0603,1,100pF 50V C0G 0603,TDK,C1608C0G1H101JT000N,C183115,Cff across the buck feedback high side (TI SLVAF45)
 D1,LED_0603_GREEN:LED0603-RD,1,green LED 0603,Hubei KENTO Elec,KT-0603G,C12624,5V power-good indicator
+D2,D_B5819W:SOD-123_L2.7-W1.6-LS3.7-RD-1,1,"40V 1A Schottky, SOD-123",Changjiang Electronics Tech (CJ),B5819W SL,C8598,blocks the buck back-feeding USB VBUS via the XIAO 5V pad
 J1,XY_B3B_XH_A:CONN-TH_3P-P2.50_A2501WV2-3P,1,JST-XH 3P vertical,XINGYE,XY-B3B-XH-A,C51940188,hall sensor: 5V GND DO
-J2,XH_4AW:CONN-TH_XH2.54-4AW,1,JST-XH 4P right-angle,BOOMELE(Boom Precision Elec),XH-4AW,C21273,stepper motor; pads run B2 B1 A2 A1 left to right
-J3,DC_005:DC-IN-TH_DC-005-5.5-2.0,1,5.5x2.1mm barrel jack,BOOMELE(Boom Precision Elec),DC-005 2.0,C16214,"12V input, centre positive"
+J2,XH_4AW:CONN-TH_XH2.54-4AW,1,JST-XH 4P right-angle,BOOMELE(Boom Precision Elec),XH-4AW,C21273,stepper motor; silk reads A2 A1 B2 B1 left to right (driver coil naming)
+J3,DC_005C:DC-IN-TH_DC-005C-20A,1,"5.5x2.1mm barrel jack, 24V 3A",Korean Hroparts Elec,DC-005C-20A,C84007,"12V input, centre positive — METER TIP/SLEEVE BEFORE POWER-UP"
 "J4, J5",KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-F,2,1x8 2.54mm FEMALE socket,Shenzhen Kinghelm Elec,KH-2.54FH-1X8P-H8.5,C2905417,TMC2209 StepStick socket row (receptacle)
 "J6, J7",KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-F,2,1x7 2.54mm FEMALE socket,Shenzhen Kinghelm Elec,KH-2.54FH-1X7P-H8.5,C2932672,XIAO ESP32-C6 socket row (receptacle)
 L1,IND_4U7_3A:IND-SMD_L5.0-W5.0,1,4.7uH 3A shielded,CENKER,CKCS5040-4.7uH/M,C354606,buck output inductor
 Q1,AO3401A:SOT-23_L2.9-W1.3-P1.90-LS2.4-BR,1,-30V -4A P-MOSFET,Alpha & Omega Semiconductor,AO3401A,C15127,reverse-polarity gate on the 12V input
-"R1, R5",R0603_100K:R0603,2,100k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF1003T5E,C25803,"enable + gate dividers, high side"
-"R2, R3, R6",R0603_56K:R0603,3,56k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF5602T5E,C23206,feedback / enable / gate dividers
+"R1, R5",R0603_100K:R0603,2,100k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF1003T5E,C25803,P-FET gate divider high side + buck EN pull-up
+R3,R0603_54K9:R0603,1,54.9k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF5492T5E,C23077,"buck feedback divider, high side (TI SLVAF45 value)"
 R4,R0603_10K:R0603,1,10k 1% 0603,YAGEO,RC0603FR-0710KL,C98220,"buck feedback divider, low side"
-"R7, R8",R0603_1K:R0603,2,1k 1% 0603,YAGEO,RC0603FR-071KL,C22548,PDN_UART series + LED ballast
+R6,R0603_56K:R0603,1,56k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF5602T5E,C23206,"P-FET gate divider, low side"
+"R7, R8, R9",R0603_1K:R0603,3,1k 1% 0603,YAGEO,RC0603FR-071KL,C22548,PDN_UART series + hall DO series + LED ballast
 U1,TPS563201:SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR,1,12V->5V 3A buck,Texas Instruments,TPS563201DDCR,C116592,makes the 5V rail for the XIAO
 
 # not fitted — order separately

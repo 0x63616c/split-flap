@@ -18,5 +18,5 @@ component TPS563201_package:
     signal SW ~ pin 2
     signal VIN ~ pin 3
     signal VFB ~ pin 4  # 0.768V reference
-    signal EN ~ pin 5  # abs max 6V — never tie to 12V
+    signal EN ~ pin 5  # abs max 19V (SLVSD90B) — a 12V rail is fine here
     signal VBST ~ pin 6  # bootstrap, 100nF to SW

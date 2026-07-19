@@ -1,8 +1,8 @@
 (kicad_symbol_lib
 	(version 20211014)
 	(generator "https://github.com/uPesy/easyeda2kicad.py")
-	(symbol "DC-0055.5-2.0MM"
-		(property "Reference" "DC"
+	(symbol "DC-005C-20A"
+		(property "Reference" "J"
 			(id 0)
 			(at 0 7.62 0)
 			(effects
@@ -11,7 +11,7 @@
 				)
 			)
 		)
-		(property "Value" "DC-005 5.5-2.0MM"
+		(property "Value" "DC-005C-20A"
 			(id 1)
 			(at 0 -7.62 0)
 			(effects
@@ -20,7 +20,7 @@
 				)
 			)
 		)
-		(property "Footprint" "C16214:DC-IN-TH_DC-005-5.5-2.0"
+		(property "Footprint" "C84007:DC-IN-TH_DC-005C-20A"
 			(id 2)
 			(at 0 -10.16 0)
 			(effects
@@ -30,7 +30,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://lcsc.com/product-detail/DC-Connectors_DC-005-5-5-2-0MM_C16214.html"
+		(property "Datasheet" "https://lcsc.com/product-detail/DC-Connectors_high-quality-DC-005-Inner-core2-0mm_C84007.html"
 			(id 3)
 			(at 0 -12.7 0)
 			(effects
@@ -40,7 +40,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part" "C16214"
+		(property "LCSC Part" "C84007"
 			(id 5)
 			(at 0 -15.24 0)
 			(effects
@@ -52,7 +52,7 @@
 		)
 		(in_bom yes)
 		(on_board yes)
-		(symbol "DC-0055.5-2.0MM_0_1"
+		(symbol "DC-005C-20A_0_1"
 			(polyline
 				(stroke
 					(width 0)
@@ -147,7 +147,7 @@
 			(pin unspecified line
 				(at 5.08 -2.54 180)
 				(length 2.54)
-				(name "3"
+				(name "2"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -163,9 +163,9 @@
 				)
 			)
 			(pin unspecified line
-				(at 5.08 2.54 180)
+				(at 5.08 -0 180)
 				(length 2.54)
-				(name "4"
+				(name "3"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -181,9 +181,9 @@
 				)
 			)
 			(pin unspecified line
-				(at 5.08 -0 180)
+				(at 5.08 2.54 180)
 				(length 2.54)
-				(name "2"
+				(name "1"
 					(effects
 						(font
 							(size 1.27 1.27)
