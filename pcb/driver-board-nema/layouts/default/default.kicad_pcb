@@ -8043,7 +8043,7 @@
 
 	(footprint "SPLITFLAP_MOUNT:M3_NPTH"
 		(layer "F.Cu")
-		(uuid "5a404442-1f89-4eb8-87ba-8732541c82c9")
+		(uuid "17a7b998-7d39-4548-9d0b-803029161df7")
 		(at 3.5 3.5)
 		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(pad "" np_thru_hole circle
@@ -8051,13 +8051,13 @@
 			(size 3.2 3.2)
 			(drill 3.2)
 			(layers "F&B.Cu" "F.Mask" "B.Mask")
-			(uuid "209430f5-8794-41eb-8693-26942758e672")
+			(uuid "075daf4c-6c09-4907-ab3a-5639c94ef206")
 		)
 	)
 
 	(footprint "SPLITFLAP_MOUNT:M3_NPTH"
 		(layer "F.Cu")
-		(uuid "059b04af-14f4-4c4c-85f9-ce0079e01476")
+		(uuid "e41c72da-a0c6-4675-81f4-077b87275b62")
 		(at 58.5 3.5)
 		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(pad "" np_thru_hole circle
@@ -8065,13 +8065,13 @@
 			(size 3.2 3.2)
 			(drill 3.2)
 			(layers "F&B.Cu" "F.Mask" "B.Mask")
-			(uuid "8c455c8d-c6a3-46c1-8f2f-3cf549a64373")
+			(uuid "b957e445-ac3d-4e51-8550-544b38900e21")
 		)
 	)
 
 	(footprint "SPLITFLAP_MOUNT:M3_NPTH"
 		(layer "F.Cu")
-		(uuid "3a6ec3af-12c4-4201-a157-fe24eb3fb8f5")
+		(uuid "24f67192-ad05-49c5-828b-9c5db5884d28")
 		(at 3.5 72.5)
 		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(pad "" np_thru_hole circle
@@ -8079,13 +8079,13 @@
 			(size 3.2 3.2)
 			(drill 3.2)
 			(layers "F&B.Cu" "F.Mask" "B.Mask")
-			(uuid "d6ac2848-f0b7-44a7-ae0d-40fd39eaa917")
+			(uuid "aa0d2862-3084-4b75-a2f6-bcd737e07e72")
 		)
 	)
 
 	(footprint "SPLITFLAP_MOUNT:M3_NPTH"
 		(layer "F.Cu")
-		(uuid "c74b7a18-9111-44ee-bc0b-934a5498bc37")
+		(uuid "505943b7-9fcc-41d7-9c9c-ecd1496f0914")
 		(at 58.5 72.5)
 		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
 		(pad "" np_thru_hole circle
@@ -8093,7 +8093,7 @@
 			(size 3.2 3.2)
 			(drill 3.2)
 			(layers "F&B.Cu" "F.Mask" "B.Mask")
-			(uuid "93760793-9b31-4e02-a8bb-9cd515d41029")
+			(uuid "d241b1f6-442a-4d3b-8c2a-fd5a72ffb343")
 		)
 	)
 
@@ -8101,7 +8101,7 @@
 		(net 1)
 		(net_name "2")
 		(layers "F.Cu" "B.Cu")
-		(uuid "2a6a6d88-50bf-4dc2-b5ab-248bcd542afa")
+		(uuid "7595318e-3be9-4cd8-a621-2c303ebf6391")
 		(name "GND")
 		(hatch edge 0.5)
 		(priority 0)
