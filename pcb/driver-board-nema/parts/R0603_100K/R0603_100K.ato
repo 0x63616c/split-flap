@@ -1,0 +1,16 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component R0603_100K_package:
+    """
+    100k 1% 0603 thick-film resistor.
+    """
+    trait is_atomic_part<manufacturer="UNI-ROYAL(Uniroyal Elec)", partnumber="0603WAF1003T5E", footprint="R0603.kicad_mod", symbol="0603WAF1003T5E.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C25803", manufacturer="UNI-ROYAL(Uniroyal Elec)", partno="0603WAF1003T5E">
+    trait has_designator_prefix<prefix="R">
+
+    # pins
+    pin 1
+    pin 2

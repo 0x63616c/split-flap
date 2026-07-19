@@ -1,0 +1,71 @@
+{
+  "name": "u_buck",
+  "atoAddress": "u_buck",
+  "designator": "U1",
+  "descriptor": "U1 \u2014 u_buck",
+  "typeName": "main.ato::SplitFlapDriverNema.u_buck|parts/TPS563201/TPS563201.ato::TPS563201_package",
+  "footprintUuid": "a0ef2505-c7b9-447a-bb61-90b44642524b",
+  "leads": [
+    {
+      "leadDesignator": "GND",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "2",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "SW",
+      "padNumbers": [
+        "2"
+      ],
+      "netName": "sw_node",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "VIN",
+      "padNumbers": [
+        "3"
+      ],
+      "netName": "1-1",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "VFB",
+      "padNumbers": [
+        "4"
+      ],
+      "netName": "vfb",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "EN",
+      "padNumbers": [
+        "5"
+      ],
+      "netName": "ven",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "VBST",
+      "padNumbers": [
+        "6"
+      ],
+      "netName": "vbst",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    }
+  ],
+  "warnings": []
+}

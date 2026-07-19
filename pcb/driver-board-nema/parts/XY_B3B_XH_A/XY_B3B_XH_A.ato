@@ -1,0 +1,18 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component XY_B3B_XH_A_package:
+    """
+    XH 2.5mm 3-pin vertical header (JST XH compatible).
+    Hall-sensor module connector — board defines pin 1 = 5V, 2 = GND, 3 = DO.
+    """
+    trait is_atomic_part<manufacturer="XINGYE", partnumber="XY-B3B-XH-A", footprint="CONN-TH_3P-P2.50_A2501WV2-3P.kicad_mod", symbol="XY-B3B-XH-A.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C51940188", manufacturer="XINGYE", partno="XY-B3B-XH-A">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    pin 1
+    pin 2
+    pin 3

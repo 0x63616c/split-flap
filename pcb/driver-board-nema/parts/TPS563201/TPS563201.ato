@@ -1,0 +1,22 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component TPS563201_package:
+    """
+    4.5-17V 3A synchronous buck, SOT-23-6. Makes the 5V rail for the XIAO
+    from the 12V motor supply. D-CAP2 control: stable on all-ceramic output,
+    no external compensation and no catch diode (both FETs are internal).
+    """
+    trait is_atomic_part<manufacturer="Texas Instruments", partnumber="TPS563201DDCR", footprint="SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR.kicad_mod", symbol="TPS563201DDCR.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C116592", manufacturer="Texas Instruments", partno="TPS563201DDCR">
+    trait has_designator_prefix<prefix="U">
+
+    # pins
+    signal GND ~ pin 1
+    signal SW ~ pin 2
+    signal VIN ~ pin 3
+    signal VFB ~ pin 4  # 0.768V reference
+    signal EN ~ pin 5  # abs max 6V — never tie to 12V
+    signal VBST ~ pin 6  # bootstrap, 100nF to SW

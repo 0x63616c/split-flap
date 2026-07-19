@@ -1,0 +1,147 @@
+(footprint "TPS563201:SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR"
+	(version 20241229)
+	(generator "faebryk_convert")
+	(generator_version "v5")
+	(layer "F.Cu")
+	(tedit "5DC5F6A4")
+	(uuid "acbd8455-087a-4de3-a3ce-542ed546d1e6")
+	(property "Reference" "REF**"
+		(at 0 -4.95 0)
+		(layer "F.SilkS")
+		(uuid "cf596fcf-44ff-4bfc-b8ac-b4c238dc2df5")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR"
+		(at 0 4.95 0)
+		(layer "F.Fab")
+		(uuid "946e6436-d61d-4965-833a-50bb13ddd645")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_circle
+		(center 1.4 1.45)
+		(end 1.43 1.45)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(locked no)
+		(uuid "abafd40c-8e6d-47c8-913c-cf3be25c603f")
+	)
+	(fp_circle
+		(center 1.4 0.95)
+		(end 1.5 0.95)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "Cmts.User")
+		(locked no)
+		(uuid "59e0248e-a10f-4fc9-9604-0171c2e7efcf")
+	)
+	(fp_circle
+		(center 1.4 1.65)
+		(end 1.53 1.65)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(locked no)
+		(uuid "c9ca76ab-4059-4664-abbb-3658ca8aa91b")
+	)
+	(fp_line
+		(start -0.9 -1.55)
+		(end 0.9 -1.55)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "27e418db-a61a-488e-943f-c00300207c01")
+	)
+	(fp_line
+		(start -0.9 1.55)
+		(end 0.9 1.55)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "cb622415-7f9f-4547-93bb-1b47cee63e56")
+	)
+	(fp_text user "%R"
+		(at 0 0)
+		(layer "F.Fab")
+		(uuid "de666d02-5f46-4df2-a8cb-b9ea21453e1a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "3" smd rect
+		(at 1.35 -0.95 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "1a96e954-1390-437a-bb66-d316f5a2aaab")
+	)
+	(pad "2" smd rect
+		(at 1.35 0 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "17eb64c5-465d-4b57-b388-bdf69ca1118b")
+	)
+	(pad "1" smd rect
+		(at 1.35 0.95 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "8e3daebe-3034-42e8-aef3-378d17da3d09")
+	)
+	(pad "6" smd rect
+		(at -1.35 0.95 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "e80f67ed-1be9-454b-a7a0-8811a3ebe8a5")
+	)
+	(pad "5" smd rect
+		(at -1.35 0 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "90e0556c-4745-4fcd-9b50-9e850150cc4c")
+	)
+	(pad "4" smd rect
+		(at -1.35 -0.95 0)
+		(size 1.1 0.6)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "ed38e6f5-dcd5-4a6c-adce-371e5b9b8e7d")
+	)
+	(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C116592/C116592.3dshapes/SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95.wrl"
+		(offset
+			(xyz 0 -0 -0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 180)
+		)
+	)
+	(embedded_fonts no)
+)

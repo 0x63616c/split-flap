@@ -1,0 +1,16 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component LED_0603_GREEN_package:
+    """
+    0603 green LED, ~3.1Vf. Power-good indicator on the 5V rail.
+    """
+    trait is_atomic_part<manufacturer="Hubei KENTO Elec", partnumber="KT-0603G", footprint="LED0603-RD.kicad_mod", symbol="0603Green509-620mcd.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C12624", manufacturer="Hubei KENTO Elec", partno="KT-0603G">
+    trait has_designator_prefix<prefix="D">
+
+    # pins
+    signal K ~ pin 1  # cathode
+    signal A ~ pin 2  # anode

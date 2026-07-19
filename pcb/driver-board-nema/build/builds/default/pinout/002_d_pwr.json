@@ -1,0 +1,31 @@
+{
+  "name": "d_pwr",
+  "atoAddress": "d_pwr",
+  "designator": "D1",
+  "descriptor": "D1 \u2014 d_pwr",
+  "typeName": "main.ato::SplitFlapDriverNema.d_pwr|parts/LED_0603_GREEN/LED_0603_GREEN.ato::LED_0603_GREEN_package",
+  "footprintUuid": "37938bd8-ae69-406f-aa57-00394642524b",
+  "leads": [
+    {
+      "leadDesignator": "K",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "2",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "A",
+      "padNumbers": [
+        "2"
+      ],
+      "netName": "2-1",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    }
+  ],
+  "warnings": []
+}

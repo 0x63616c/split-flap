@@ -1,0 +1,182 @@
+(footprint "DC_005:DC-IN-TH_DC-005-5.5-2.0"
+	(version 20241229)
+	(generator "faebryk_convert")
+	(generator_version "v5")
+	(layer "F.Cu")
+	(tedit "5DC5F6A4")
+	(uuid "3b953b6a-7a7c-4daf-a1a7-c01c3d358e16")
+	(property "Reference" "REF**"
+		(at 0 -6.3 0)
+		(layer "F.SilkS")
+		(uuid "40e75377-24d7-460b-8f19-5ed979c7b93f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "DC-IN-TH_DC-005-5.5-2.0"
+		(at 0 6.3 0)
+		(layer "F.Fab")
+		(uuid "9f80b6b9-235f-4897-831e-932f0abb4b14")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_circle
+		(center 3.55 2.5)
+		(end 3.58 2.5)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(locked no)
+		(uuid "c213c4c2-0ab3-463a-b178-d650e3338633")
+	)
+	(fp_line
+		(start -10.65 2.24)
+		(end -2.48 2.24)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "dca67f90-da7b-4ce5-b7b8-e58644635d7a")
+	)
+	(fp_line
+		(start -10.65 -6.76)
+		(end 3.55 -6.76)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "fe8121ca-e9e4-41e7-b5d5-6e4d5279c210")
+	)
+	(fp_line
+		(start 3.55 -6.76)
+		(end 3.55 -4.29)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "bbf6f7b0-daa5-43e2-9399-d61652541376")
+	)
+	(fp_line
+		(start -10.65 -6.75)
+		(end -10.65 2.24)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "d73504fb-8f02-4df8-882e-9af86b75cdc8")
+	)
+	(fp_line
+		(start 3.55 -0.31)
+		(end 3.55 2.24)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "b8b8ae5c-c5c4-4710-9406-77c53fb95d4e")
+	)
+	(fp_line
+		(start 3.55 2.24)
+		(end 2.55 2.24)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "28f28012-5a23-4b8c-be80-12f34dc7ec32")
+	)
+	(fp_line
+		(start -1.85 2.24)
+		(end -2.48 2.24)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "5f2cbee3-4ae1-4629-8e60-978598d320fa")
+	)
+	(fp_line
+		(start -7.89 -6.75)
+		(end -7.89 2.25)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(layers "F.SilkS")
+		(locked no)
+		(uuid "4fed643b-ff45-4b28-9502-79e1743092bf")
+	)
+	(fp_text user "%R"
+		(at 0 0)
+		(layer "F.Fab")
+		(uuid "b3103401-45e9-4610-a88c-7391a5d5e9d8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "2" thru_hole oval
+		(at 0.15 2.3 0)
+		(size 3.5 1.3)
+		(drill oval 2.999994 0.7999984)
+		(layers "*.Cu" "*.Mask")
+		(uuid "d89eebbd-83ba-41f1-99ab-0726922f4502")
+	)
+	(pad "3" thru_hole oval
+		(at -3.15 -2.3 -90)
+		(size 3.5 1.5)
+		(drill oval 2.999994 0.999998)
+		(layers "*.Cu" "*.Mask")
+		(uuid "8e60c99c-26f5-4c67-a14d-8e7e5f39e831")
+	)
+	(pad "4" thru_hole oval
+		(at 3.15 -2.3 90)
+		(size 3.5 1.5)
+		(drill oval 2.999994 0.999998)
+		(layers "*.Cu" "*.Mask")
+		(uuid "9f6c55f2-dd35-4687-bd7a-a3a6cd348a6a")
+	)
+	(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C16214/C16214.3dshapes/DC-IN-TH_DC-5520-1.wrl"
+		(offset
+			(xyz -3.65 2.05 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 90)
+		)
+	)
+	(embedded_fonts no)
+)

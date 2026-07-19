@@ -1,0 +1,214 @@
+from "parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato" import KH_2_54_1X7_FEMALE_package
+from "parts/KH_2_54_1X8_FEMALE/KH_2_54_1X8_FEMALE.ato" import KH_2_54_1X8_FEMALE_package
+from "parts/XH_4AW/XH_4AW.ato" import XH_4AW_package
+from "parts/XY_B3B_XH_A/XY_B3B_XH_A.ato" import XY_B3B_XH_A_package
+from "parts/DC_005/DC_005.ato" import DC_005_package
+from "parts/AO3401A/AO3401A.ato" import AO3401A_package
+from "parts/TPS563201/TPS563201.ato" import TPS563201_package
+from "parts/IND_4U7_3A/IND_4U7_3A.ato" import IND_4U7_3A_package
+from "parts/CAP_470UF_25V/CAP_470UF_25V.ato" import CAP_470UF_25V_package
+from "parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato" import CAP0805_22UF_25V_package
+from "parts/CC0603_100NF/CC0603_100NF.ato" import CC0603_100NF_package
+from "parts/LED_0603_GREEN/LED_0603_GREEN.ato" import LED_0603_GREEN_package
+from "parts/R0603_1K/R0603_1K.ato" import R0603_1K_package
+from "parts/R0603_10K/R0603_10K.ato" import R0603_10K_package
+from "parts/R0603_56K/R0603_56K.ato" import R0603_56K_package
+from "parts/R0603_100K/R0603_100K.ato" import R0603_100K_package
+
+
+module SplitFlapDriverNema:
+    """
+    Split-flap single-module driver board, v2 — NEMA 14 / TMC2209.
+
+    v1 drove a 28BYJ-48 through a ULN2003 off USB 5V. This one drives a 4-lead
+    bipolar NEMA 14 (0.6A/phase, 1.8deg) through a SOCKETED TMC2209
+    SilentStepStick, and runs the whole module — motor, logic and hall sensor —
+    from a single 12V barrel jack.
+
+    Power chain:
+        12V jack -> Q_rev (P-FET reverse-polarity gate) -> +12V rail
+        +12V -> StepStick VM (470uF low-ESR bulk + 22uF ceramic right at the pins)
+        +12V -> U_buck (TPS563201) -> +5V -> XIAO 5V pin + hall sensor
+        XIAO 3V3 out -> StepStick VIO (3.3V logic levels for STEP/DIR/EN/PDN)
+
+    Pin assignment matches firmware/micropython-spike/tmc_spin.py:
+        STEP = D0, DIR = D1, EN = D2 (active low), PDN_UART = D6 via 1k,
+        hall DO = D8 (open collector, XIAO internal pull-up) — bench-proven.
+
+    StepStick socket pin numbering is the Trinamic SilentStepStick 2x8 standard
+    (TMC2209 SilentStepStick HW v2.0, doc rev 1.20), which is NOT the naive
+    A4988 column order:
+        left  1..8  = GND, VIO, M1B, M1A, M2A, M2B, GND, VM
+        right 9..16 = DIR, STEP, PDN, UART, SPREAD, MS2, MS1, EN
+    DIAG and INDEX are module pads 17/18 and are deliberately not on the 2x8
+    header, so they are not broken out here.
+    """
+
+    # --- Connectors and sockets ---
+    j_pwr = new DC_005_package                   # 12V in, 5.5x2.1 barrel
+    j_motor = new XH_4AW_package                 # bipolar stepper, A1/A2/B1/B2
+    j_hall = new XY_B3B_XH_A_package             # hall homing sensor
+    xiao_left = new KH_2_54_1X7_FEMALE_package   # D0..D6
+    xiao_right = new KH_2_54_1X7_FEMALE_package  # 5V/GND/3V3/D10..D7
+    ss_left = new KH_2_54_1X8_FEMALE_package     # StepStick pins 1..8
+    ss_right = new KH_2_54_1X8_FEMALE_package    # StepStick pins 9..16
+
+    # --- Power path ---
+    q_rev = new AO3401A_package
+    r_gate_hi = new R0603_100K_package   # source -> gate
+    r_gate_lo = new R0603_56K_package    # gate -> GND
+    c_bulk = new CAP_470UF_25V_package   # VM reservoir, sits at the VM pin
+    c_vm = new CAP0805_22UF_25V_package  # VM ceramic, HF partner to c_bulk
+
+    # --- 12V -> 5V buck ---
+    u_buck = new TPS563201_package
+    c_bin = new CAP0805_22UF_25V_package
+    c_bst = new CC0603_100NF_package
+    l_buck = new IND_4U7_3A_package
+    c_bout1 = new CAP0805_22UF_25V_package
+    c_bout2 = new CAP0805_22UF_25V_package
+    r_fb_hi = new R0603_56K_package      # VOUT -> VFB
+    r_fb_lo = new R0603_10K_package      # VFB -> GND
+    r_en_hi = new R0603_100K_package     # +12V -> EN
+    r_en_lo = new R0603_56K_package      # EN -> GND
+    c_5v = new CC0603_100NF_package
+    d_pwr = new LED_0603_GREEN_package
+    r_led = new R0603_1K_package
+
+    # --- Signal conditioning ---
+    r_uart = new R0603_1K_package        # D6 -> PDN, single-wire UART
+
+    # --- Nets ---
+    signal gnd
+    signal v12_raw       # jack tip, before reverse-polarity protection
+    signal v12           # protected 12V rail
+    signal p5v           # buck output
+    signal p3v3          # from the XIAO's regulator, powers StepStick VIO
+    signal sw_node       # buck switch node
+    signal vbst
+    signal vfb
+    signal ven
+    signal step
+    signal dir
+    signal en_n
+    signal pdn
+    signal hall_do
+    signal m1a
+    signal m1b
+    signal m2a
+    signal m2b
+
+    # --- 12V input + reverse-polarity protection -----------------------------
+    # High-side P-FET rather than a series Schottky: a Schottky would drop ~0.4V
+    # and burn ~0.4W at the ~1A this board pulls, and would eat into the buck's
+    # headroom. The FET is ~50mOhm, so ~50mV.
+    #
+    # The gate is NOT tied straight to GND. AO3401A is only rated Vgs +/-12V, and
+    # a 12V brick sits right at (or over) that limit. The 100k/56k divider parks
+    # the gate at Vin*56/156, i.e. Vgs = -0.64*Vin: -7.7V at 12V in, -9.6V even
+    # at a 15V brick. Comfortably enhanced, comfortably inside the rating.
+    v12_raw ~ j_pwr.TIP
+    gnd ~ j_pwr.SLEEVE
+    gnd ~ j_pwr.SWITCH   # NC-to-sleeve contact; GND only, as a third solder anchor
+    v12_raw ~ q_rev.S
+    v12 ~ q_rev.D
+    q_rev.G ~ r_gate_hi.1
+    v12_raw ~ r_gate_hi.2
+    q_rev.G ~ r_gate_lo.1
+    gnd ~ r_gate_lo.2
+
+    # --- VM bulk -------------------------------------------------------------
+    # TMC2209 chops the full coil current out of VM; the datasheet wants real
+    # low-ESR bulk right at the pin or the driver dies of ringing. 470uF/80mOhm
+    # electrolytic for the reservoir, 22uF ceramic beside it for the HF edge.
+    v12 ~ c_bulk.POS
+    gnd ~ c_bulk.NEG
+    v12 ~ c_vm.1
+    gnd ~ c_vm.2
+
+    # --- 12V -> 5V buck (TPS563201, D-CAP2) ----------------------------------
+    # Vout = 0.768 * (1 + 56k/10k) = 5.07V. EN is abs-max 6V so it gets its own
+    # divider off the 12V rail (12 * 56/156 = 4.3V, and 5.4V at a 15V brick).
+    v12 ~ u_buck.VIN
+    gnd ~ u_buck.GND
+    v12 ~ c_bin.1
+    gnd ~ c_bin.2
+    sw_node ~ u_buck.SW
+    sw_node ~ l_buck.1
+    p5v ~ l_buck.2
+    vbst ~ u_buck.VBST
+    vbst ~ c_bst.1
+    sw_node ~ c_bst.2
+    p5v ~ c_bout1.1
+    gnd ~ c_bout1.2
+    p5v ~ c_bout2.1
+    gnd ~ c_bout2.2
+    vfb ~ u_buck.VFB
+    p5v ~ r_fb_hi.1
+    vfb ~ r_fb_hi.2
+    vfb ~ r_fb_lo.1
+    gnd ~ r_fb_lo.2
+    ven ~ u_buck.EN
+    v12 ~ r_en_hi.1
+    ven ~ r_en_hi.2
+    ven ~ r_en_lo.1
+    gnd ~ r_en_lo.2
+    p5v ~ c_5v.1
+    gnd ~ c_5v.2
+
+    # 5V power-good indicator, ~1.9mA
+    p5v ~ r_led.1
+    r_led.2 ~ d_pwr.A
+    gnd ~ d_pwr.K
+
+    # --- XIAO socket, left row top-down: D0..D6 ------------------------------
+    step ~ xiao_left.1     # D0
+    dir ~ xiao_left.2      # D1
+    en_n ~ xiao_left.3     # D2
+    # xiao_left.4/5/6 = D3/D4/D5 — reserved, unrouted
+    xiao_left.7 ~ r_uart.1  # D6 (UART TX) -> 1k -> PDN
+    pdn ~ r_uart.2
+
+    # --- XIAO socket, right row top-down: 5V GND 3V3 D10 D9 D8 D7 ------------
+    p5v ~ xiao_right.1     # fed BY the buck, not by USB
+    gnd ~ xiao_right.2
+    p3v3 ~ xiao_right.3    # XIAO's own LDO — sourced here, used by VIO
+    # xiao_right.4/5 = D10/D9 — reserved, unrouted
+    hall_do ~ xiao_right.6  # D8
+    # xiao_right.7 = D7 — reserved, unrouted
+
+    # --- TMC2209 StepStick socket, left row: pins 1..8 -----------------------
+    gnd ~ ss_left.1        # GND
+    p3v3 ~ ss_left.2       # VIO — 3.3V logic, matches the XIAO
+    m1b ~ ss_left.3        # M1B
+    m1a ~ ss_left.4        # M1A
+    m2a ~ ss_left.5        # M2A
+    m2b ~ ss_left.6        # M2B
+    gnd ~ ss_left.7        # GND
+    v12 ~ ss_left.8        # VM
+
+    # --- TMC2209 StepStick socket, right row: pins 9..16 ---------------------
+    dir ~ ss_right.1       # DIR   (pin 9)
+    step ~ ss_right.2      # STEP  (pin 10)
+    pdn ~ ss_right.3       # PDN   (pin 11) — driven from D6 through r_uart
+    # ss_right.4 = UART (pin 12): the module's own series-resistor tap. Left
+    # unconnected — we supply our own 1k on PDN, and doubling them up would put
+    # 2k in the single-wire UART path.
+    gnd ~ ss_right.5       # SPREAD (pin 13) low = StealthChop, quiet
+    gnd ~ ss_right.6       # MS2    (pin 14) low
+    gnd ~ ss_right.7       # MS1    (pin 15) low -> UART address 0
+    en_n ~ ss_right.8      # EN     (pin 16) active low, module pulls it up
+
+    # --- Motor ---------------------------------------------------------------
+    m1a ~ j_motor.1        # A1
+    m1b ~ j_motor.2        # A2
+    m2a ~ j_motor.3        # B1
+    m2b ~ j_motor.4        # B2
+
+    # --- Hall homing sensor --------------------------------------------------
+    # HW-477 module: 5V supply, open-collector DO. Safe into a 3.3V GPIO because
+    # the output only ever pulls down — the high level comes from the XIAO's own
+    # internal pull-up to 3.3V. Carried over unchanged from the v1 bench wiring.
+    p5v ~ j_hall.1
+    gnd ~ j_hall.2
+    hall_do ~ j_hall.3

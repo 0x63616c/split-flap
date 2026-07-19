@@ -1,0 +1,19 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component AO3401A_package:
+    """
+    -30V -4A P-channel MOSFET, SOT-23. High-side reverse-polarity gate for
+    the 12V input. Vgs is rated +/-12V only, so the gate is driven from a
+    divider rather than tied to GND — see the divider in main.ato.
+    """
+    trait is_atomic_part<manufacturer="Alpha & Omega Semiconductor", partnumber="AO3401A", footprint="SOT-23_L2.9-W1.3-P1.90-LS2.4-BR.kicad_mod", symbol="AO3401A.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C15127", manufacturer="Alpha & Omega Semiconductor", partno="AO3401A">
+    trait has_designator_prefix<prefix="Q">
+
+    # pins
+    signal G ~ pin 1
+    signal S ~ pin 2
+    signal D ~ pin 3

@@ -1,0 +1,18 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component IND_4U7_3A_package:
+    """
+    4.7uH 3A shielded power inductor, 5x5mm, 32mOhm, 3.5A saturation.
+    Buck output inductor — ~1.1A ripple at 12V in / 5V out, and saturation is
+    ~5x the 0.7A this rail actually draws.
+    """
+    trait is_atomic_part<manufacturer="CENKER", partnumber="CKCS5040-4.7uH/M", footprint="IND-SMD_L5.0-W5.0.kicad_mod", symbol="CKCS5040-4.7UH_M.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C354606", manufacturer="CENKER", partno="CKCS5040-4.7uH/M">
+    trait has_designator_prefix<prefix="L">
+
+    # pins
+    pin 1
+    pin 2

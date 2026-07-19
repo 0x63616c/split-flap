@@ -1,0 +1,23 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component KH_2_54_1X8_FEMALE_package:
+    """
+    1x8 2.54mm female socket header — one row of the TMC2209 StepStick socket.
+    Two of these, 15.24mm apart, accept a standard 2x8 SilentStepStick.
+    """
+    trait is_atomic_part<manufacturer="Shenzhen Kinghelm Elec", partnumber="KH-2.54PH180-1X8P-L11.5", footprint="HDR-TH_8P-P2.54-V-M.kicad_mod", symbol="KH-2.54PH180-1X8P-L11.5.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2905487", manufacturer="Shenzhen Kinghelm Elec", partno="KH-2.54PH180-1X8P-L11.5">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    pin 1
+    pin 2
+    pin 3
+    pin 4
+    pin 5
+    pin 6
+    pin 7
+    pin 8

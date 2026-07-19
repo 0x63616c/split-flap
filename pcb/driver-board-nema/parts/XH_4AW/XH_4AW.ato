@@ -1,0 +1,19 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component XH_4AW_package:
+    """
+    XH 2.54mm 4-pin right-angle shrouded header (JST XH compatible).
+    Bipolar stepper: 1 = A1, 2 = A2, 3 = B1, 4 = B2.
+    """
+    trait is_atomic_part<manufacturer="BOOMELE(Boom Precision Elec)", partnumber="XH-4AW", footprint="CONN-TH_XH2.54-4AW.kicad_mod", symbol="XH2.54-4AW.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C21273", manufacturer="BOOMELE(Boom Precision Elec)", partno="XH-4AW">
+    trait has_designator_prefix<prefix="J">
+
+    # pins
+    pin 1
+    pin 2
+    pin 3
+    pin 4

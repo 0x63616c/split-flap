@@ -1,0 +1,41 @@
+{
+  "name": "q_rev",
+  "atoAddress": "q_rev",
+  "designator": "Q1",
+  "descriptor": "Q1 \u2014 q_rev",
+  "typeName": "main.ato::SplitFlapDriverNema.q_rev|parts/AO3401A/AO3401A.ato::AO3401A_package",
+  "footprintUuid": "c6448e0b-d1ca-47ad-b140-56444642524b",
+  "leads": [
+    {
+      "leadDesignator": "G",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "1-2",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "S",
+      "padNumbers": [
+        "2"
+      ],
+      "netName": "v12_raw",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "D",
+      "padNumbers": [
+        "3"
+      ],
+      "netName": "1-1",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    }
+  ],
+  "warnings": []
+}

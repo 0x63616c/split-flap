@@ -1,0 +1,19 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component CAP_470UF_25V_package:
+    """
+    470uF 25V low-ESR SMD aluminium electrolytic, D10xL10mm.
+    80mOhm ESR / 850mA ripple — the bulk reservoir on VM. POLARIZED:
+    pin 1 = + (POS), pin 2 = - (NEG); the silk hatched half marks the negative
+    side, same convention as the v1 board's 220uF part.
+    """
+    trait is_atomic_part<manufacturer="SamYoung Electronics", partnumber="BXJ25V470M10*10 10.0TP", footprint="CAP-SMD_BD10.0-L10.3-W10.3-LS11.0-FD.kicad_mod", symbol="BXJ25V470M10*1010.0TP.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C3002464", manufacturer="SamYoung Electronics", partno="BXJ25V470M10*10 10.0TP">
+    trait has_designator_prefix<prefix="C">
+
+    # pins
+    signal POS ~ pin 1
+    signal NEG ~ pin 2

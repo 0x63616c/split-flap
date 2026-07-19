@@ -1,0 +1,18 @@
+#pragma experiment("TRAITS")
+import has_designator_prefix
+import has_part_picked
+import is_atomic_part
+
+component CAP0805_22UF_25V_package:
+    """
+    22uF 25V X5R 0805 MLCC. Used on both the 12V and 5V rails; the 25V rating
+    is deliberate so one part number covers both, and it keeps a usable ~10uF
+    of effective capacitance after DC bias derating at 12V.
+    """
+    trait is_atomic_part<manufacturer="YAGEO", partnumber="CC0805MKX5R8BB226", footprint="C0805.kicad_mod", symbol="CC0805MKX5R8BB226.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C784585", manufacturer="YAGEO", partno="CC0805MKX5R8BB226">
+    trait has_designator_prefix<prefix="C">
+
+    # pins
+    pin 1
+    pin 2

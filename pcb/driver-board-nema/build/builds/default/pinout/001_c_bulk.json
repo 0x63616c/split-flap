@@ -1,0 +1,31 @@
+{
+  "name": "c_bulk",
+  "atoAddress": "c_bulk",
+  "designator": "C6",
+  "descriptor": "C6 \u2014 c_bulk",
+  "typeName": "main.ato::SplitFlapDriverNema.c_bulk|parts/CAP_470UF_25V/CAP_470UF_25V.ato::CAP_470UF_25V_package",
+  "footprintUuid": "678cad3b-e1e2-4910-87c0-bbda4642524b",
+  "leads": [
+    {
+      "leadDesignator": "POS",
+      "padNumbers": [
+        "1"
+      ],
+      "netName": "1-1",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    },
+    {
+      "leadDesignator": "NEG",
+      "padNumbers": [
+        "2"
+      ],
+      "netName": "2",
+      "signalType": "signal",
+      "interfaces": [],
+      "isConnected": true
+    }
+  ],
+  "warnings": []
+}

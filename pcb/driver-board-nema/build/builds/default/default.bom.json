@@ -1,0 +1,430 @@
+{
+  "version": "1.0",
+  "build_id": "29d542470177bac5",
+  "components": [
+    {
+      "id": "c784585",
+      "lcsc": "C784585",
+      "manufacturer": "YAGEO",
+      "mpn": "CC0805MKX5R8BB226",
+      "type": "capacitor",
+      "value": "",
+      "package": "CAP0805_22UF_25V:C0805",
+      "description": null,
+      "quantity": 4,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_bin|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
+          "designator": "C2"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_bout1|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
+          "designator": "C3"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_bout2|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
+          "designator": "C4"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_vm|parts/CAP0805_22UF_25V/CAP0805_22UF_25V.ato::CAP0805_22UF_25V_package",
+          "designator": "C7"
+        }
+      ]
+    },
+    {
+      "id": "c23206",
+      "lcsc": "C23206",
+      "manufacturer": "UNI-ROYAL(Uniroyal Elec)",
+      "mpn": "0603WAF5602T5E",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_56K:R0603",
+      "description": null,
+      "quantity": 3,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_en_lo|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
+          "designator": "R2"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_fb_hi|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
+          "designator": "R3"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_gate_lo|parts/R0603_56K/R0603_56K.ato::R0603_56K_package",
+          "designator": "R6"
+        }
+      ]
+    },
+    {
+      "id": "c14663",
+      "lcsc": "C14663",
+      "manufacturer": "YAGEO",
+      "mpn": "CC0603KRX7R9BB104",
+      "type": "capacitor",
+      "value": "",
+      "package": "CC0603_100NF:C0603",
+      "description": null,
+      "quantity": 2,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_5v|parts/CC0603_100NF/CC0603_100NF.ato::CC0603_100NF_package",
+          "designator": "C1"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_bst|parts/CC0603_100NF/CC0603_100NF.ato::CC0603_100NF_package",
+          "designator": "C5"
+        }
+      ]
+    },
+    {
+      "id": "c22548",
+      "lcsc": "C22548",
+      "manufacturer": "YAGEO",
+      "mpn": "RC0603FR-071KL",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_1K:R0603",
+      "description": null,
+      "quantity": 2,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_led|parts/R0603_1K/R0603_1K.ato::R0603_1K_package",
+          "designator": "R7"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_uart|parts/R0603_1K/R0603_1K.ato::R0603_1K_package",
+          "designator": "R8"
+        }
+      ]
+    },
+    {
+      "id": "c25803",
+      "lcsc": "C25803",
+      "manufacturer": "UNI-ROYAL(Uniroyal Elec)",
+      "mpn": "0603WAF1003T5E",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_100K:R0603",
+      "description": null,
+      "quantity": 2,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_en_hi|parts/R0603_100K/R0603_100K.ato::R0603_100K_package",
+          "designator": "R1"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_gate_hi|parts/R0603_100K/R0603_100K.ato::R0603_100K_package",
+          "designator": "R5"
+        }
+      ]
+    },
+    {
+      "id": "c2905487",
+      "lcsc": "C2905487",
+      "manufacturer": "Shenzhen Kinghelm Elec",
+      "mpn": "KH-2.54PH180-1X8P-L11.5",
+      "type": "connector",
+      "value": "",
+      "package": "KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-M",
+      "description": null,
+      "quantity": 2,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.ss_left|parts/KH_2_54_1X8_FEMALE/KH_2_54_1X8_FEMALE.ato::KH_2_54_1X8_FEMALE_package",
+          "designator": "J4"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.ss_right|parts/KH_2_54_1X8_FEMALE/KH_2_54_1X8_FEMALE.ato::KH_2_54_1X8_FEMALE_package",
+          "designator": "J5"
+        }
+      ]
+    },
+    {
+      "id": "c2932700",
+      "lcsc": "C2932700",
+      "manufacturer": "KH",
+      "mpn": "KH-2.54PH180-1X7P-L11.5",
+      "type": "connector",
+      "value": "",
+      "package": "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-M",
+      "description": null,
+      "quantity": 2,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.xiao_left|parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato::KH_2_54_1X7_FEMALE_package",
+          "designator": "J6"
+        },
+        {
+          "address": "main.ato::SplitFlapDriverNema.xiao_right|parts/KH_2_54_1X7_FEMALE/KH_2_54_1X7_FEMALE.ato::KH_2_54_1X7_FEMALE_package",
+          "designator": "J7"
+        }
+      ]
+    },
+    {
+      "id": "c116592",
+      "lcsc": "C116592",
+      "manufacturer": "Texas Instruments",
+      "mpn": "TPS563201DDCR",
+      "type": "ic",
+      "value": "",
+      "package": "TPS563201:SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.u_buck|parts/TPS563201/TPS563201.ato::TPS563201_package",
+          "designator": "U1"
+        }
+      ]
+    },
+    {
+      "id": "c12624",
+      "lcsc": "C12624",
+      "manufacturer": "Hubei KENTO Elec",
+      "mpn": "KT-0603G",
+      "type": "diode",
+      "value": "",
+      "package": "LED_0603_GREEN:LED0603-RD",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.d_pwr|parts/LED_0603_GREEN/LED_0603_GREEN.ato::LED_0603_GREEN_package",
+          "designator": "D1"
+        }
+      ]
+    },
+    {
+      "id": "c15127",
+      "lcsc": "C15127",
+      "manufacturer": "Alpha & Omega Semiconductor",
+      "mpn": "AO3401A",
+      "type": "transistor",
+      "value": "",
+      "package": "AO3401A:SOT-23_L2.9-W1.3-P1.90-LS2.4-BR",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.q_rev|parts/AO3401A/AO3401A.ato::AO3401A_package",
+          "designator": "Q1"
+        }
+      ]
+    },
+    {
+      "id": "c16214",
+      "lcsc": "C16214",
+      "manufacturer": "BOOMELE(Boom Precision Elec)",
+      "mpn": "DC-005 2.0",
+      "type": "connector",
+      "value": "",
+      "package": "DC_005:DC-IN-TH_DC-005-5.5-2.0",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005/DC_005.ato::DC_005_package",
+          "designator": "J3"
+        }
+      ]
+    },
+    {
+      "id": "c21273",
+      "lcsc": "C21273",
+      "manufacturer": "BOOMELE(Boom Precision Elec)",
+      "mpn": "XH-4AW",
+      "type": "connector",
+      "value": "",
+      "package": "XH_4AW:CONN-TH_XH2.54-4AW",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.j_motor|parts/XH_4AW/XH_4AW.ato::XH_4AW_package",
+          "designator": "J2"
+        }
+      ]
+    },
+    {
+      "id": "c3002464",
+      "lcsc": "C3002464",
+      "manufacturer": "SamYoung Electronics",
+      "mpn": "BXJ25V470M10*10 10.0TP",
+      "type": "capacitor",
+      "value": "",
+      "package": "CAP_470UF_25V:CAP-SMD_BD10.0-L10.3-W10.3-LS11.0-FD",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.c_bulk|parts/CAP_470UF_25V/CAP_470UF_25V.ato::CAP_470UF_25V_package",
+          "designator": "C6"
+        }
+      ]
+    },
+    {
+      "id": "c354606",
+      "lcsc": "C354606",
+      "manufacturer": "CENKER",
+      "mpn": "CKCS5040-4.7uH/M",
+      "type": "inductor",
+      "value": "",
+      "package": "IND_4U7_3A:IND-SMD_L5.0-W5.0",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.l_buck|parts/IND_4U7_3A/IND_4U7_3A.ato::IND_4U7_3A_package",
+          "designator": "L1"
+        }
+      ]
+    },
+    {
+      "id": "c51940188",
+      "lcsc": "C51940188",
+      "manufacturer": "XINGYE",
+      "mpn": "XY-B3B-XH-A",
+      "type": "connector",
+      "value": "",
+      "package": "XY_B3B_XH_A:CONN-TH_3P-P2.50_A2501WV2-3P",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.j_hall|parts/XY_B3B_XH_A/XY_B3B_XH_A.ato::XY_B3B_XH_A_package",
+          "designator": "J1"
+        }
+      ]
+    },
+    {
+      "id": "c98220",
+      "lcsc": "C98220",
+      "manufacturer": "YAGEO",
+      "mpn": "RC0603FR-0710KL",
+      "type": "resistor",
+      "value": "",
+      "package": "R0603_10K:R0603",
+      "description": null,
+      "quantity": 1,
+      "unitCost": null,
+      "stock": null,
+      "isBasic": null,
+      "isPreferred": null,
+      "source": "manual",
+      "datasheet": null,
+      "parameters": [],
+      "usages": [
+        {
+          "address": "main.ato::SplitFlapDriverNema.r_fb_lo|parts/R0603_10K/R0603_10K.ato::R0603_10K_package",
+          "designator": "R4"
+        }
+      ]
+    }
+  ]
+}
