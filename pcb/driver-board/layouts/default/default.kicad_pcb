@@ -3097,4 +3097,14 @@
 			)
 		)
 	)
+	(gr_text "Designed by 0x63616c"
+		(at 22.5 57.6 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 0.9 0.9)
+				(thickness 0.135)
+			)
+		)
+	)
 )

@@ -49,6 +49,7 @@ SILK = [
     ("28BYJ-48 MOTOR", 13.5, 54.2, 0.9, 0),
     ("+5V", 7.92, 41.4, 0.8, 0),
     ("HALL", 30.0, 46.8, 0.9, 0),
+    ("Designed by 0x63616c", 22.5, 57.6, 0.9, 0),
 ]
 
 # Footprint-local refdes overrides, for the ones whose stock position lands on
