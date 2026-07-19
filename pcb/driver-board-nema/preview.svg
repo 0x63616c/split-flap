@@ -546,7 +546,7 @@
 <text x="606.0" y="52.8" fill="#dfe7ef" font-size="8.4" text-anchor="middle" opacity="0.75">12V IN</text>
 <text x="606.0" y="31.2" fill="#dfe7ef" font-size="6.7" text-anchor="middle" opacity="0.75">+ CENTRE</text>
 <text x="696.0" y="288.0" fill="#dfe7ef" font-size="6.7" text-anchor="middle" opacity="0.75">5V</text>
-<text x="372.0" y="499.2" fill="#dfe7ef" font-size="8.4" text-anchor="middle" opacity="0.75">TMC2209 StepStick</text>
+<text x="372.0" y="482.4" fill="#dfe7ef" font-size="8.4" text-anchor="middle" opacity="0.75">TMC2209 StepStick</text>
 <text x="372.0" y="574.8" fill="#dfe7ef" font-size="6.7" text-anchor="middle" opacity="0.75">< PIN 1 / PIN 9 THIS END</text>
 <text x="372.0" y="596.4" fill="#dfe7ef" font-size="6.7" text-anchor="middle" opacity="0.75">J5 LOGIC (9-16)</text>
 <text x="372.0" y="618.0" fill="#dfe7ef" font-size="6.7" text-anchor="middle" opacity="0.75">MS1 MS2 SPRD = GND</text>

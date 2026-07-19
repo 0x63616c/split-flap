@@ -110,7 +110,7 @@ SILK = [
     ("12V IN", 50.5, 4.4, 1.0, 0),
     ("+ CENTRE", 50.5, 2.6, 0.8, 0),
     ("5V", 58.0, 24.0, 0.8, 0),
-    ("TMC2209 StepStick", 31.0, 41.6, 1.0, 0),
+    ("TMC2209 StepStick", 31.0, 40.2, 1.0, 0),
     # Pin 1 and pin 9 are at the -x end (x=22.11), so the arrow points -x. It
     # used to read "THIS END >" while pointing at pin 8/16 -- and since both
     # rows are identical 1x8 headers, this marking is the only thing standing
