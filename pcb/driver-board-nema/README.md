@@ -207,8 +207,10 @@ Everything is hand-solderable: 0603/0805 passives, SOT-23 and SOT-23-6, and
 through-hole connectors. Suggested order — SMD first, tallest THT last:
 
 1. **U1 (TPS563201)** and **Q1** — easiest with nothing else in the way.
-2. 0603/0805 passives. **C6 (470 µF) is polarised**: pin 1 is +, and the silk
-   marks the negative half. **D1** is polarised too.
+2. 0603/0805 passives. **C6 (470 µF) is polarised**: pin 1 is +, and the
+   footprint now prints a `+` beside pin 1 and a `−` beside pin 2, clear of
+   the can. **D1** (LED) and **D2** (Schottky) are polarised too; both carry
+   a printed cathode bar at their pin-1 end.
 3. Sockets J4–J7 (**female** receptacles — the modules bring the male pins).
    Seat them square; a tilted socket makes the modules sit crooked. The two
    sockets do **not** share a row spacing:
@@ -239,10 +241,12 @@ Then, before plugging anything in:
 - **Bridge the StepStick's JMP jumper to the PDN side** if you want UART. See
   the note under *StepStick socket* above — it is unbridged from the factory
   and UART does nothing at all until you bridge it.
-- **C6 is polarised and its silk is counter-intuitive.** The footprint's
-  chamfer marks the **positive** end, which is the opposite of what you get
-  reading the can's own stripe. Go by the `+` glyph on the silk at C6's west
-  end, or by pad 1.
+- **C6 is polarised and the can's own marking is counter-intuitive.** The
+  footprint's chamfer marks the **positive** end (SamYoung BXJ case J10: the
+  seating-plate bottom view puts the two chamfered corners on the (+) side,
+  while the can-top's solid black band marks (−)). That is the opposite of
+  what you get reading the stripe on the physical part. Go by the `+` glyph
+  printed on the silk at C6's west end, or by pad 1.
 
 ## Building this from source
 
@@ -258,9 +262,20 @@ self-checks placement numerically (body overlap, off-board, pad-to-pad) before
 writing anything.
 
 atopile's cloud registry was down, so all parts are vendored locally:
-`tools/vendor_part.py <LCSC> <DIR>` (easyeda2kicad → faebryk `kicad.convert`),
-then `tools/trim_lib_silk.py` clips silkscreen out of pads. Run the trim once
-per vendoring — it is not idempotent across repeated runs.
+`tools/vendor_part.py <LCSC> <DIR>` (easyeda2kicad → faebryk `kicad.convert`).
+
+> `tools/trim_lib_silk.py` is kept only for reference. **Do not run it.**
+> Despite its docstring it is not idempotent: each run shrinks every stroke
+> again, eroding silk on footprints it was never aimed at and desyncing the
+> libraries from the layout. `../tools/verify_fab.py` reports silk that
+> actually lands in a mask opening, with the depth, so the handful that
+> matter can be fixed by hand.
+
+A vendored footprint needs three things adding by hand before it is fab-ready:
+an **F.CrtYd courtyard** (EasyEDA emits none, and KiCad's courtyard checks are
+ignored by default, so nothing complains), a **body outline on F.SilkS** (the
+connector parts draw theirs on F.Fab, which is not manufactured), and a
+**polarity marker outside the body** if the part is polarised.
 
 ### DRC status
 
@@ -276,16 +291,26 @@ per vendoring — it is not idempotent across repeated runs.
 > derives by filling the zones with `--refill-zones`. DRC, gerbers, drill and
 > renders all come from that copy. Just run `tools/build_outputs.sh`.
 
-**0 errors, 0 unconnected pads, 0 footprint errors.** Four warnings remain, all
-the same one:
+**0 errors, 0 unconnected pads, 0 footprint errors.**
+
+The build promotes KiCad's courtyard rules to errors in
+`build/filled.kicad_pro`. `missing_courtyard` and `courtyards_overlap` ship as
+*ignored* checks — so for most of this board's life the body-overlap check was
+being **skipped, not passed**, on 30 of 34 footprints. Every footprint now
+carries a courtyard, the checks run, and they pass. `../tools/verify_fab.py`
+re-derives the same conclusions from the exported board independently, and
+also checks board extents, silk width and silk over mask openings.
+
+Four warnings remain, all the same one:
 
 ```
 [silk_overlap] @(40.6, 31.3):    Reference field of C8
                @(45.885, 35.325): Segment of C8 on F.Silkscreen
 ```
 
-Spurious. The two items are 5.2 mm apart, and moving C8's reference field to
-**18.5 mm** away leaves the warning byte-for-byte identical — it does not track
-the geometry at all. It is the same KiCad text-extent mis-attribution recorded
+Spurious, and re-confirmed as such. The two items are 5.2 mm apart, and moving
+C8's reference field ~24 mm away leaves all four warnings byte-for-byte
+identical apart from the reported coordinate of the field itself — the
+*clearance* it claims to have found does not track the geometry at all. It is the same KiCad text-extent mis-attribution recorded
 against C4 on the v1 board, where DRC blames the wrong field. Nothing on the
 silkscreen actually collides; compare `render/top.png`.

@@ -1,0 +1,12 @@
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "missing_courtyard": "error",
+        "courtyards_overlap": "error",
+        "malformed_courtyard": "error"
+      }
+    }
+  },
+  "meta": {"filename": "filled.kicad_pro", "version": 3}
+}
