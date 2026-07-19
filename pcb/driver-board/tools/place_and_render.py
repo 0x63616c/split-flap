@@ -9,6 +9,7 @@ check placement and connectivity without KiCad installed.
 """
 
 import math
+import re
 from pathlib import Path
 
 from faebryk.libs.kicad.fileformats import kicad
@@ -32,6 +33,12 @@ PLACEMENT = {
     "j_hall": (30.0, 50.5, 0),
 }
 BOARD_W, BOARD_H = 45.0, 60.0
+
+# PCBWay's stated minimum silkscreen line width. The vendored footprints draw
+# pin-1 dots at 0.06mm and outlines at 0.10mm, both under it, and a dropped
+# pin-1 dot is not cosmetic -- so widths are normalised here rather than
+# trusted from the libraries. Same value and reasoning as the v2 board.
+MIN_SILK_W = 0.15
 
 # M3 clearance holes, one per corner — heat-set inserts in the back shell.
 MOUNT_HOLES = [(3.5, 3.5), (41.5, 3.5), (3.5, 56.5), (41.5, 56.5)]
@@ -68,8 +75,96 @@ def rot(x, y, deg):
     return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
 
 
+
+
+def fp_boxes(k):
+    """(addr, pad_boxes, body_box) in board coords, honouring pad rotation."""
+    out = []
+    for fp in k.footprints:
+        addr = next(p.value for p in fp.propertys if p.name == "atopile_address").split(".")[-1]
+        fx, fy, fr = fp.at.x, fp.at.y, fp.at.r or 0
+        pads, xs, ys = [], [], []
+        for pad in fp.pads:
+            px, py = rot(pad.at.x, pad.at.y, fr)
+            w, h = pad.size.w, (pad.size.h or pad.size.w)
+            # pad.at.r is ABSOLUTE in a board file (main() folds the
+            # footprint rotation into it), so adding fr again double-counts
+            if round((pad.at.r or 0) % 180) == 90:
+                w, h = h, w
+            box = (fx + px - w / 2, fy + py - h / 2, fx + px + w / 2, fy + py + h / 2)
+            pads.append((pad.name, box))
+            xs += [box[0], box[2]]
+            ys += [box[1], box[3]]
+        for ln in list(fp.fp_lines) + list(fp.fp_rects):
+            if "SilkS" not in str(ln.layer) and "CrtYd" not in str(ln.layer):
+                continue
+            for px, py in (rot(ln.start.x, ln.start.y, fr), rot(ln.end.x, ln.end.y, fr)):
+                xs.append(fx + px)
+                ys.append(fy + py)
+        out.append((addr, pads, (min(xs), min(ys), max(xs), max(ys))))
+    return out
+
+
+def thicken_silk(k):
+    """Raise every footprint silk stroke and text to at least MIN_SILK_W.
+
+    The vendored EasyEDA footprints draw their pin-1 dots as 0.06mm circles and
+    most of their outlines at 0.10mm, both under PCBWay's 0.15mm minimum. A
+    0.06mm dot is the marking that says which way round a polarised part goes,
+    so losing it in production is not cosmetic.
+    """
+    bumped = 0
+    for fp in k.footprints:
+        graphics = (list(fp.fp_lines) + list(fp.fp_rects)
+                    + list(fp.fp_circles) + list(fp.fp_arcs) + list(fp.fp_poly))
+        for g in graphics:
+            if "SilkS" not in str(getattr(g, "layer", "")):
+                continue
+            if g.stroke and g.stroke.width < MIN_SILK_W:
+                g.stroke.width = MIN_SILK_W
+                bumped += 1
+        for t in list(fp.fp_texts) + list(fp.propertys):
+            if "SilkS" not in str(getattr(t, "layer", "")):
+                continue
+            if t.effects and t.effects.font and (t.effects.font.thickness or 0) < MIN_SILK_W:
+                t.effects.font.thickness = MIN_SILK_W
+                bumped += 1
+    print(f"silk: raised {bumped} strokes/texts to >= {MIN_SILK_W}mm")
+
+
+def check(k):
+    """Body overlap / off-board / pad clearance, numerically. Raises on failure."""
+    boxes = fp_boxes(k)
+    errs = []
+
+    def overlap(a, b, gap=0.0):
+        return (a[0] < b[2] - gap and b[0] < a[2] - gap
+                and a[1] < b[3] - gap and b[1] < a[3] - gap)
+
+    for addr, pads, body in boxes:
+        if body[0] < 0 or body[1] < 0 or body[2] > BOARD_W or body[3] > BOARD_H:
+            errs.append(f"{addr}: body off-board {tuple(round(v, 2) for v in body)}")
+        for hx, hy in MOUNT_HOLES:
+            hole = (hx - MOUNT_DIA / 2, hy - MOUNT_DIA / 2, hx + MOUNT_DIA / 2, hy + MOUNT_DIA / 2)
+            if overlap(body, hole):
+                errs.append(f"{addr}: body over mount hole at ({hx}, {hy})")
+
+    for i, (a_addr, a_pads, a_body) in enumerate(boxes):
+        for b_addr, b_pads, b_body in boxes[i + 1:]:
+            if overlap(a_body, b_body, gap=0.01):
+                errs.append(f"{a_addr} <-> {b_addr}: bodies overlap")
+            for an, ab in a_pads:
+                for bn, bb in b_pads:
+                    if overlap(ab, bb, gap=-0.2):  # 0.2mm pad-to-pad minimum
+                        errs.append(f"{a_addr}.{an} <-> {b_addr}.{bn}: pads < 0.2mm apart")
+
+    if errs:
+        raise SystemExit("PLACEMENT CHECK FAILED:\n  " + "\n  ".join(sorted(set(errs))))
+    print(f"placement check ok: {len(boxes)} footprints, none overlapping or off-board")
+
+
 def main():
-    pcb = kicad.loads(kicad.pcb.PcbFile, PCB.read_text())
+    pcb = kicad.loads(kicad.pcb.PcbFile, strip_mount_holes(PCB.read_text()))
     k = pcb.kicad_pcb
 
     for fp in k.footprints:
@@ -120,18 +215,13 @@ def main():
         )
         k.gr_lines.append(line)
 
-    # M3 mounting holes as Edge.Cuts circles (routed, not drilled — no NPTH
-    # footprint library here, and fab treats an inner edge cut as a hole)
+    # M3 mounting holes. These used to be Edge.Cuts circles, i.e. routed inner
+    # contours: a fab does cut those, but `kicad-cli export drill` then wrote an
+    # EMPTY non-plated drill file, so nothing in the fab package declared them
+    # as holes at all. They are emitted as real NPTH pads by add_mount_holes()
+    # below -- same fix the v2 board already carries.
     while len(k.gr_circles):
         k.gr_circles.pop(len(k.gr_circles) - 1)
-    for hx, hy in MOUNT_HOLES:
-        k.gr_circles.append(kicad.pcb.Circle(
-            center=kicad.pcb.Xy(x=hx, y=hy),
-            end=kicad.pcb.Xy(x=hx + MOUNT_DIA / 2, y=hy),
-            stroke=kicad.pcb.Stroke(width=0.1, type="default"),
-            fill="none",
-            layer="Edge.Cuts",
-        ))
 
     # board-level silkscreen
     while len(k.gr_texts):
@@ -143,12 +233,18 @@ def main():
             layer=kicad.pcb.TextLayer(layer="F.SilkS"),
             effects=kicad.pcb.Effects(
                 font=kicad.pcb.Font(size=kicad.pcb.Wh(w=size, h=size),
-                                    thickness=round(size * 0.15, 3)),
+                                    thickness=max(MIN_SILK_W,
+                                                  round(size * 0.15, 3))),
             ),
         ))
 
+    thicken_silk(k)
+    check(k)
+
     route(k)
     kicad.dumps(pcb, PCB)
+    add_mount_holes()
+    set_mask_expansion()
     render(pcb)
 
 
@@ -337,6 +433,88 @@ def render(pcb):
     out.append("</svg>")
     (ROOT / "preview.svg").write_text("\n".join(out))
     print("wrote", ROOT / "preview.svg")
+
+
+
+
+MOUNT_FP_LIB = "SPLITFLAP_MOUNT"
+
+MOUNT_FP = """
+	(footprint "{lib}:M3_NPTH"
+		(layer "F.Cu")
+		(uuid "{uuid}")
+		(at {x} {y})
+		(attr exclude_from_pos_files exclude_from_bom allow_missing_courtyard)
+		(pad "" np_thru_hole circle
+			(at 0 0)
+			(size {d} {d})
+			(drill {d})
+			(layers "F&B.Cu" "F.Mask" "B.Mask")
+			(uuid "{puid}")
+		)
+	)
+"""
+
+
+def strip_mount_holes(text):
+    """Remove mount-hole footprints from a previous run, by paren matching.
+
+    They are spliced in as raw s-expressions after the dump, so they carry no
+    atopile_address and would otherwise trip fp_boxes() on the next run.
+    """
+    while True:
+        i = text.find(f'"{MOUNT_FP_LIB}:')
+        if i == -1:
+            return text
+        start = text.rindex("(footprint", 0, i)
+        depth, j = 0, start
+        while j < len(text):
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    j += 1
+                    break
+            j += 1
+        ls = text.rindex("\n", 0, start)
+        text = text[:ls] + text[j:]
+
+
+def add_mount_holes():
+    """Emit the four M3 holes as real NPTH pads.
+
+    As Edge.Cuts circles they were routed inner contours: the fab cuts them,
+    but `kicad-cli export drill` produced an EMPTY non-plated drill file, so
+    the fab package never actually declared them as holes. A routed 3.2mm
+    contour also carries router tolerance rather than drill tolerance, which
+    matters when an M3 screw head lands next to a 12V trace.
+    """
+    text = PCB.read_text().rstrip()
+    assert text.endswith(")")
+    block = "".join(
+        MOUNT_FP.format(lib=MOUNT_FP_LIB, uuid=kicad.gen_uuid(), puid=kicad.gen_uuid(),
+                        x=hx, y=hy, d=MOUNT_DIA)
+        for hx, hy in MOUNT_HOLES
+    )
+    PCB.write_text(text[:-1] + block + ")\n")
+    print(f"added {len(MOUNT_HOLES)} M3 NPTH pads ({MOUNT_DIA}mm)")
+
+
+def set_mask_expansion():
+    """Solder mask expansion, globally.
+
+    pad_to_mask_clearance 0 makes every mask aperture exactly equal to its
+    copper, so any registration error at all leaves mask creeping onto the
+    pad. 0.05mm is the usual house value and is what the fabs assume.
+    """
+    want = 0.05
+    text = PCB.read_text()
+    new, n = re.subn(r"\(pad_to_mask_clearance [\d.]+\)",
+                     f"(pad_to_mask_clearance {want})", text, count=1)
+    assert n == 1, "pad_to_mask_clearance not found in the board setup block"
+    PCB.write_text(new)
+    print(f"set pad_to_mask_clearance to {want}mm")
 
 
 if __name__ == "__main__":

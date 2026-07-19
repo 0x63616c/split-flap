@@ -1,0 +1,10 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "CAP_220UF_16V")(type "KiCad")(uri "${KIPRJMOD}/parts/CAP_220UF_16V")(options "")(descr "vendored LCSC part"))
+  (lib (name "CC0603_100NF")(type "KiCad")(uri "${KIPRJMOD}/parts/CC0603_100NF")(options "")(descr "vendored LCSC part"))
+  (lib (name "KH_2_54_1X7_FEMALE")(type "KiCad")(uri "${KIPRJMOD}/parts/KH_2_54_1X7_FEMALE")(options "")(descr "vendored LCSC part"))
+  (lib (name "SPLITFLAP_MOUNT")(type "KiCad")(uri "${KIPRJMOD}/parts/SPLITFLAP_MOUNT")(options "")(descr "our own M3 NPTH mounting hole"))
+  (lib (name "ULN2003ADR")(type "KiCad")(uri "${KIPRJMOD}/parts/ULN2003ADR")(options "")(descr "vendored LCSC part"))
+  (lib (name "XH_5AW")(type "KiCad")(uri "${KIPRJMOD}/parts/XH_5AW")(options "")(descr "vendored LCSC part"))
+  (lib (name "XY_B3B_XH_A")(type "KiCad")(uri "${KIPRJMOD}/parts/XY_B3B_XH_A")(options "")(descr "vendored LCSC part"))
+)
