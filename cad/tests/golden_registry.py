@@ -104,10 +104,16 @@ def _ipad_lid():
     return bracket_lid()
 
 
-def _usb_grommet():
-    from splitflap_cad.usbgrommet import usb_grommet
+def _grommet_usb():
+    from splitflap_cad.grommet import grommet_usb
 
-    return usb_grommet()
+    return grommet_usb()
+
+
+def _grommet_bathroom():
+    from splitflap_cad.grommet import grommet_bathroom
+
+    return grommet_bathroom()
 
 
 # name -> builder. All in their own local frames.
@@ -124,7 +130,8 @@ BREP_PARTS = {
     "bridge-nema": _nema_bridge,
     "ipad-body": _ipad_body,
     "ipad-lid": _ipad_lid,
-    "usb-grommet": _usb_grommet,
+    "grommet-usb": _grommet_usb,
+    "grommet-bathroom": _grommet_bathroom,
     "unit-full": _full_unit,
     "unit-nema-full": _full_unit_nema,
 }

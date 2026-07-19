@@ -1,14 +1,17 @@
-"""USB wall-hole grommet — side quest, not part of the split-flap.
+"""Wall-hole grommets — side quest, not part of the split-flap.
 
-Plugs the 38mm hole drilled through the drywall for the USB-C run: a
-face flange with a USB-C-shaped stadium slot in the middle (the small
-molded plug threads straight through — no side slit needed) and a
+Plugs a 38mm hole drilled through the drywall: a face flange with a
 hollow locating ring behind it that sits in the bore. Triangle ribs on
 the ring OD bite the gypsum; both rib faces slope well under 45 deg so
 the part prints flange-down with no overhang. Local frame: axis Z,
 flange back face at z=0, ring running +Z (into the wall).
 
-View: `just cad view usb-grommet`. Print: usb-grommet.
+Two variants share one body:
+- `grommet_usb` — USB-C-shaped stadium slot through the flange (the
+  small molded plug threads straight through, no side slit needed).
+- `grommet_bathroom` — blank flange, no slot: a plain hole cover.
+
+View: `just cad view grommet-usb` / `grommet-bathroom`.
 """
 
 from build123d import Cone, Cylinder, Pos, SlotOverall, extrude
@@ -17,7 +20,8 @@ from .params import P
 from .viewer import Scene
 
 
-def usb_grommet():
+def _grommet_body():
+    """Flange + ribbed hollow barrel, no flange cutout."""
     ft, bl = P.ugrom_flange_t, P.ugrom_barrel_l
     r = P.ugrom_barrel_d / 2
     g = Pos(0, 0, ft / 2) * Cylinder(P.ugrom_flange_d / 2, ft)
@@ -30,13 +34,24 @@ def usb_grommet():
         crest = r + P.ugrom_rib_proud
         g += Pos(0, 0, zc - h / 2) * Cone(r, crest, h)
         g += Pos(0, 0, zc + h / 2) * Cone(crest, r, h)
-    g -= Pos(0, 0, ft + bl / 2) * Cylinder(r - P.ugrom_barrel_wall, bl)
+    return g - Pos(0, 0, ft + bl / 2) * Cylinder(r - P.ugrom_barrel_wall, bl)
+
+
+def grommet_usb():
     slot = extrude(
         SlotOverall(P.ugrom_slot_w, P.ugrom_slot_h),
         amount=P.ugrom_flange_t,
     )
-    return g - slot
+    return _grommet_body() - slot
+
+
+def grommet_bathroom():
+    return _grommet_body()
 
 
 def scene() -> Scene:
-    return Scene().add(usb_grommet(), "usb-grommet")
+    return Scene().add(grommet_usb(), "grommet-usb")
+
+
+def bathroom_scene() -> Scene:
+    return Scene().add(grommet_bathroom(), "grommet-bathroom")

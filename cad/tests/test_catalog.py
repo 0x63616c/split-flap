@@ -37,5 +37,6 @@ def test_printable_builders_exist():
         "holder",
         "ipad-body",
         "ipad-lid",
-        "usb-grommet",
+        "grommet-usb",
+        "grommet-bathroom",
     }

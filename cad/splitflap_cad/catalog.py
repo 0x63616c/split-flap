@@ -86,9 +86,14 @@ MODELS = {
         "SIDE QUEST iPad swivel-bar wall mount: wall + bracket + bar + iPad",
         "ipadwall",
     ),
-    "usb-grommet": Model(
-        "SIDE QUEST 38mm USB wall-hole grommet, side slit",
-        "usbgrommet",
+    "grommet-usb": Model(
+        "SIDE QUEST 38mm wall-hole grommet, USB-C slot",
+        "grommet",
+    ),
+    "grommet-bathroom": Model(
+        "SIDE QUEST 38mm wall-hole grommet, blank flange",
+        "grommet",
+        "bathroom_scene",
     ),
 }
 
@@ -113,5 +118,6 @@ PRINTABLE = {
     "drum-inner-nema": Printable("drum", "drum_inner_nema_print"),
     "ipad-body": Printable("ipadwall", "bracket_body"),
     "ipad-lid": Printable("ipadwall", "bracket_lid"),
-    "usb-grommet": Printable("usbgrommet", "usb_grommet"),
+    "grommet-usb": Printable("grommet", "grommet_usb"),
+    "grommet-bathroom": Printable("grommet", "grommet_bathroom"),
 }
