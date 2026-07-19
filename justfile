@@ -25,3 +25,8 @@ cad cmd="" *args:
     install) uv sync --project cad ;;
     *)       cd tools/ctl && go run . cad {{cmd}} {{args}} ;;
     esac
+
+# --- PCB (atopile + kicad-cli, in pcb/driver-board/) ---
+# `just pcb` = interactive menu. Direct: view | drc | build | place
+pcb cmd="" *args:
+    cd tools/ctl && go run . pcb {{cmd}} {{args}}

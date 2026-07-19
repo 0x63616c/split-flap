@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>split-flap driver — 3D</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #10141a; overflow: hidden; }
+  #c { display: block; width: 100%; height: 100%; }
+  #hud {
+    position: fixed; top: 10px; left: 12px;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #8fa3b8; pointer-events: none; text-shadow: 0 1px 2px #000;
+  }
+  #hud b { color: #e8e0d0; font-weight: 600; }
+  #views { position: fixed; top: 10px; right: 12px; display: flex; gap: 6px; }
+  #views button {
+    font: 11px ui-monospace, Menlo, monospace;
+    color: #c9d6e3; background: #1b2430; border: 1px solid #2f3d4d;
+    border-radius: 4px; padding: 4px 9px; cursor: pointer;
+  }
+  #views button:hover { background: #24303e; color: #fff; }
+  #err {
+    position: fixed; inset: 0; display: none; place-content: center; text-align: center;
+    font: 13px ui-monospace, Menlo, monospace; color: #e07a5f; padding: 2rem;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><b>split-flap driver v1</b> — 45 × 60 mm<br>drag rotate · scroll zoom · right-drag pan</div>
+<div id="views">
+  <button data-v="top">top</button>
+  <button data-v="bottom">bottom</button>
+  <button data-v="iso">iso</button>
+  <button data-v="front">front</button>
+</div>
+<div id="err"></div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { OrbitControls } from './vendor/OrbitControls.js';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x10141a);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 2000);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight(0xdfe9f5, 0x30302c, 2.0));
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(60, 120, 80);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, 0.7);
+fill.position.set(-80, -40, -60);
+scene.add(fill);
+
+let radius = 60, center = new THREE.Vector3();
+
+function setView(v) {
+  const d = radius * 2.6;
+  const p = {
+    top:    [0, d, 0.001],
+    bottom: [0, -d, 0.001],
+    iso:    [d * 0.6, d * 0.7, d * 0.6],
+    front:  [0, d * 0.18, d],
+  }[v] || [d * 0.6, d * 0.7, d * 0.6];
+  camera.position.set(center.x + p[0], center.y + p[1], center.z + p[2]);
+  controls.target.copy(center);
+  camera.up.set(0, v === 'top' || v === 'bottom' ? 0 : 1, v === 'top' || v === 'bottom' ? -1 : 0);
+  controls.update();
+}
+document.querySelectorAll('#views button')
+  .forEach(b => b.onclick = () => setView(b.dataset.v));
+
+new GLTFLoader().load('./board.glb', (gltf) => {
+  const root = gltf.scene;
+  scene.add(root);
+  const box = new THREE.Box3().setFromObject(root);
+  box.getCenter(center);
+  radius = box.getSize(new THREE.Vector3()).length() * 0.5 || 60;
+  camera.near = radius / 100;
+  camera.far = radius * 100;
+  camera.updateProjectionMatrix();
+  setView('iso');
+}, undefined, (e) => {
+  const el = document.getElementById('err');
+  el.style.display = 'grid';
+  el.textContent = 'Failed to load board.glb — ' + e;
+});
+
+// live reload: ctl's pcb viewer bumps /rev after a successful re-export
+(async function watchRev() {
+  let seen = null;
+  for (;;) {
+    try {
+      const r = await fetch('./rev', { cache: 'no-store' });
+      if (r.ok) {
+        const v = (await r.text()).trim();
+        if (seen === null) seen = v;
+        else if (v !== seen) { location.reload(); return; }
+      }
+    } catch { /* server gone (viewer stopped) — keep the last model on screen */ }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+})();
+
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== w || canvas.height !== h) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+}
+(function loop() {
+  requestAnimationFrame(loop);
+  resize();
+  controls.update();
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>

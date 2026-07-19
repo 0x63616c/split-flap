@@ -83,6 +83,23 @@ func streamCmd(cmd *exec.Cmd) *runState {
 	return r
 }
 
+// startPcbView runs the live 3D board viewer (static server, browser tab,
+// fsnotify re-export) with its log routed into the run screen.
+func startPcbView() *runState {
+	ch := make(chan tea.Msg, 256)
+	stopc := make(chan struct{})
+	var once sync.Once
+	r := &runState{
+		ch:   ch,
+		stop: func() { once.Do(func() { close(stopc) }) },
+	}
+	go func() {
+		err := pcbViewJob(func(s string) { ch <- logMsg{s} }, stopc)
+		ch <- runDoneMsg{err}
+	}()
+	return r
+}
+
 // startView runs the live-viewer flow (viewer child, browser tab, fsnotify
 // pushes) with its log routed into the run screen; stop() tears it down.
 func startView(model string) *runState {

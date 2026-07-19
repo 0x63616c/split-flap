@@ -4,7 +4,7 @@ Auto-commit each coherent step, silently. Good trace > big commits.
 
 ## CAD
 
-- `just ctl` = tooling TUI (namespaces: cad, bench). `just cad` = cad menu.
+- `just ctl` = tooling TUI (namespaces: cad, pcb, bench). `just cad` = cad menu.
   Direct: `just cad view [model]` (live viewer in CURRENT cmux pane — tab 1
   logs, tab 2 viewer; no model = follow last-saved; Ctrl-C = full teardown),
   `just cad export [part]`, `just cad list`, `just cad test|install`.
@@ -40,6 +40,13 @@ Auto-commit each coherent step, silently. Good trace > big commits.
 
 ## PCB
 
+- `just pcb` = ctl's pcb menu. Direct: `just pcb view|drc|build|place`.
+  `view` = live 3D board in the CURRENT pane (tab 1 logs, tab 2 GLB viewer;
+  Ctrl-C = full teardown) — same shape as `just cad view`, own port (3950+),
+  own watcher. Saving `place_and_render.py` or `main.ato` re-places, re-exports
+  the GLB and reloads the page; a failure keeps the last good model on screen.
+  `drc` = place + KiCad DRC (fast loop), `build` = `tools/build_outputs.sh`
+  (place → DRC → 5 renders → gerbers+zip; DRC failure aborts the rest).
 - `pcb/driver-board/` = atopile project (ato 0.15.7 via uv tool, needs py3.14).
   Circuit in `main.ato` (module SplitFlapDriver); parts vendored in `parts/`
   (atomic parts: .ato + kicad_mod + kicad_sym, LCSC-pinned). Skills for the
