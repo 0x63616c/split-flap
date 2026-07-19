@@ -43,7 +43,7 @@ PLACEMENT = {
     "xiao_left": (12.0, 16.0, 270),    # D0..D6
     "xiao_right": (27.24, 16.0, 270),  # 5V/GND/3V3/D10..D7
     # 5V -> XIAO blocking Schottky, on the 5V run just before the socket
-    "d_usb": (30.5, 6.4, 0),
+    "d_usb": (31.3, 6.4, 0),   # 0.8mm east: at 30.5 its courtyard bit the XIAO socket's
     # 12V input + reverse-polarity gate
     "j_pwr": (56.0, 13.0, 0),          # barrel faces the right edge
     "q_rev": (42.0, 10.5, 0),          # pin3=D (west, jack side), pin2=S (east, rail)
@@ -64,15 +64,15 @@ PLACEMENT = {
     # It sits NORTH of the buck rather than west: west is where VBST and its
     # bootstrap cap live, and crowding those two nets together is how you get
     # a switcher that oscillates.
-    "r_fb_hi": (44.65, 20.6, 270),  # pin1 = 5V (north), pin2 = VFB (south)
-    "c_ff": (42.3, 20.6, 270),      # feedforward cap, parallel with r_fb_hi
-    "r_fb_lo": (47.2, 21.35, 0),    # pin1 = VFB (west), pin2 = GND (east)
+    "r_fb_hi": (44.65, 20.3, 270),  # pin1 = 5V (north), pin2 = VFB (south)
+    "c_ff": (42.3, 20.3, 270),      # feedforward cap, parallel with r_fb_hi
+    "r_fb_lo": (47.35, 21.05, 0),   # pin1 = VFB (west), pin2 = GND (east)
     "c_5v": (58.0, 34.5, 0),
     "r_led": (55.0, 18.0, 0),
     "d_pwr": (55.0, 21.0, 0),
     # signal conditioning
     "r_uart": (19.0, 30.0, 0),
-    "r_hall": (16.5, 63.0, 0),     # pin1 = connector (west), pin2 = D8 (east)
+    "r_hall": (16.5, 62.5, 0),     # pin1 = connector (west), pin2 = D8 (east)
     # TMC2209 StepStick socket -- rows 12.70mm apart, NOT 15.24mm
     "ss_right": (31.0, 44.54, 0),  # pins 9..16  DIR STEP PDN UART SPRD MS2 MS1 EN
     "ss_left": (31.0, 57.24, 0),   # pins 1..8   GND VIO M1B M1A M2A M2B GND VM
@@ -121,10 +121,9 @@ SILK = [
     ("MS1 MS2 SPRD = GND", 31.0, 51.5, 0.8, 0),
     ("J4 VM + COILS (1-8)", 31.0, 53.3, 0.8, 0),
     ("VM BULK 470u  + = WEST END", 50.0, 49.4, 0.8, 0),
-    # C6 is polarised and its footprint chamfer marks the POSITIVE end, which
-    # is the opposite of what a builder reading the can's stripe expects. Say
-    # it in words, beside pad 1.
-    ("+", 41.8, 57.6, 1.4, 0),
+    # C6's "+" and "-" now live in the CAP_470UF_25V footprint itself, so they
+    # travel with the part. The board-level "+" that used to sit here collided
+    # with J4's new silkscreen body outline.
     ("MOTOR", 30.0, 64.0, 1.0, 0),
     # Coil labels follow the DRIVER's internal naming, not the connector's:
     # on a SilentStepStick M1 is coil B and M2 is coil A (Watterott). The
@@ -256,10 +255,10 @@ ROUTES = [
     # The whole divider now sits within ~2mm of the VFB pin. VFB is the only
     # high-Z node on the buck and it used to run ~10mm alongside the switch
     # node before reaching its resistors.
-    ("u_buck.4", SIG, [("F", 44.65, 23.05), ("F", 44.65, 21.35)]),   # VFB -> r_fb_hi.2
-    ("r_fb_lo.1", SIG, [("F", 46.45, 21.35), ("F", 44.65, 21.35)]),  # VFB -> r_fb_lo
-    ("c_ff.2", SIG, [("F", 42.30, 21.30), ("F", 43.90, 21.35), ("F", 44.65, 21.35)]),  # Cff -> VFB
-    ("c_ff.1", SIG, [("F", 42.30, 19.90), ("F", 43.90, 19.85), ("F", 44.65, 19.85)]),  # Cff -> 5V
+    ("u_buck.4", SIG, [("F", 44.65, 23.05), ("F", 44.65, 21.05)]),   # VFB -> r_fb_hi.2
+    ("r_fb_lo.1", SIG, [("F", 46.60, 21.05), ("F", 44.65, 21.05)]),  # VFB -> r_fb_lo
+    ("c_ff.2", SIG, [("F", 42.30, 21.00), ("F", 43.90, 21.05), ("F", 44.65, 21.05)]),  # Cff -> VFB
+    ("c_ff.1", SIG, [("F", 42.30, 19.60), ("F", 43.90, 19.55), ("F", 44.65, 19.55)]),  # Cff -> 5V
 
     # ---- 5V rail ------------------------------------------------------------
     ("l_buck.1", PWR, [("F", 55.50, 29.50), ("F", 57.60, 29.50), ("F", 57.60, 33.00),
@@ -271,7 +270,7 @@ ROUTES = [
     # 5V up to the feedback divider and the Cff, which now live by the VFB pin.
     # Sense point is the output cap bank, not the inductor -- that is the node
     # the load actually sees.
-    ("c_ff.1", PWR, [("F", 42.30, 19.90), ("F", 41.00, 19.90), ("F", 41.00, 32.00),
+    ("c_ff.1", PWR, [("F", 42.30, 19.60), ("F", 41.00, 19.60), ("F", 41.00, 32.00),
                      ("F", 43.00, 33.00)]),
     ("r_led.1", SIG, [("F", 54.25, 18.00), ("F", 54.25, 17.00), ("F", 57.60, 17.00), ("F", 57.60, 29.50)]),
 
@@ -281,10 +280,10 @@ ROUTES = [
     # XIAO's 5V pad. Everything upstream of d_usb is still a full 5V.
     ("c_bout3.1", PWR, [("F", 43.00, 34.50), ("F", 41.00, 34.50), ("F", 41.00, 31.00), ("via",),
                         ("B", 41.00, 31.00), ("B", 41.00, 29.00), ("B", 34.00, 29.00),
-                        ("B", 34.00, 6.40), ("via",), ("F", 34.00, 6.40), ("F", 32.20, 6.40)]),
+                        ("B", 34.00, 6.40), ("via",), ("F", 34.00, 6.40), ("F", 33.00, 6.40)]),
     ("j_hall.1", PWR, [("B", 8.50, 66.50), ("B", 4.50, 66.50), ("B", 4.50, 6.40), ("B", 34.00, 6.40)]),
     # cathode side -> the XIAO socket's 5V pin, and nothing else on the board
-    ("d_usb.1", PWR, [("F", 28.80, 6.40), ("F", 27.24, 6.40), ("F", 27.24, 8.38)]),
+    ("d_usb.1", PWR, [("F", 29.60, 6.40), ("F", 27.24, 6.40), ("F", 27.24, 8.38)]),
 
     # ---- 5V power LED -------------------------------------------------------
     ("r_led.2", SIG, [("F", 55.75, 18.00), ("F", 55.75, 21.00)]),
@@ -324,8 +323,8 @@ ROUTES = [
     # open-collector part we assume.
     ("xiao_right.6", SIG, [("F", 27.24, 21.08), ("F", 30.60, 21.08), ("F", 30.60, 25.00),
                            ("F", 10.60, 25.00), ("F", 10.60, 59.00), ("F", 19.00, 59.00),
-                           ("F", 19.00, 63.00), ("F", 17.25, 63.00)]),
-    ("r_hall.1", SIG, [("F", 15.75, 63.00), ("F", 13.50, 63.00), ("F", 13.50, 66.50)]),
+                           ("F", 19.00, 62.50), ("F", 17.25, 62.50)]),
+    ("r_hall.1", SIG, [("F", 15.75, 62.50), ("F", 13.50, 62.50), ("F", 13.50, 66.50)]),
 
     # ---- motor coils --------------------------------------------------------
     # The StepStick coil order (M1B M1A M2A M2B) is the reverse of the
@@ -391,7 +390,9 @@ def fp_boxes(k):
         for pad in fp.pads:
             px, py = rot(pad.at.x, pad.at.y, fr)
             w, h = pad.size.w, (pad.size.h or pad.size.w)
-            if round(((pad.at.r or 0) + fr) % 180) == 90:
+            # pad.at.r is ABSOLUTE in a board file (main() folds the
+            # footprint rotation into it), so adding fr again double-counts
+            if round((pad.at.r or 0) % 180) == 90:
                 w, h = h, w
             box = (fx + px - w / 2, fy + py - h / 2, fx + px + w / 2, fy + py + h / 2)
             pads.append((pad.name, box))

@@ -37,6 +37,25 @@ cp "$SRC" "$PCB"
 cp "$ROOT/fp-lib-table" "$ROOT/build/fp-lib-table"
 ln -sfn "$ROOT/parts" "$ROOT/build/parts"
 
+# KiCad ships "missing_courtyard" as an IGNORED check, so a board with no
+# courtyards anywhere passes DRC while the courtyard-overlap check silently
+# never runs. Promote both to errors for the derived board, so the report has
+# to prove every footprint has a courtyard and none of them collide.
+cat > "$ROOT/build/filled.kicad_pro" <<'PRO'
+{
+  "board": {
+    "design_settings": {
+      "rule_severities": {
+        "missing_courtyard": "error",
+        "courtyards_overlap": "error",
+        "malformed_courtyard": "error"
+      }
+    }
+  },
+  "meta": {"filename": "filled.kicad_pro", "version": 3}
+}
+PRO
+
 echo "==> DRC"
 "$KICAD" pcb drc --severity-error --severity-warning --refill-zones --save-board \
     --units mm -o "$ROOT/build/drc.rpt" "$PCB" >/dev/null 2>&1 || {
@@ -45,6 +64,9 @@ echo "==> DRC"
     exit 1
 }
 grep -E "^\*\* Found" "$ROOT/build/drc.rpt"
+
+echo "==> geometry checks"
+python3 "$ROOT/../tools/verify_fab.py" "$PCB"
 
 if [ "${1:-}" = "--quick" ]; then
     echo "==> --quick: skipping renders and fab output"
