@@ -4,7 +4,7 @@
   "designator": "C6",
   "descriptor": "C6 \u2014 c_bulk",
   "typeName": "main.ato::SplitFlapDriverNema.c_bulk|parts/CAP_470UF_25V/CAP_470UF_25V.ato::CAP_470UF_25V_package",
-  "footprintUuid": "678cad3b-e1e2-4910-87c0-bbda4642524b",
+  "footprintUuid": "f5c7946a-062c-4a68-88e1-c3064642524b",
   "leads": [
     {
       "leadDesignator": "POS",

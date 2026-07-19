@@ -4,7 +4,7 @@
   "designator": "J3",
   "descriptor": "J3 \u2014 j_pwr",
   "typeName": "main.ato::SplitFlapDriverNema.j_pwr|parts/DC_005/DC_005.ato::DC_005_package",
-  "footprintUuid": "030459ef-b668-417b-902e-03fa4642524b",
+  "footprintUuid": "8a6ba58b-0a39-4c75-965c-dfa34642524b",
   "leads": [
     {
       "leadDesignator": "SLEEVE",

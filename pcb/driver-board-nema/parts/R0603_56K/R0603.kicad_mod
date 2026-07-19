@@ -4,11 +4,11 @@
 	(generator_version "v5")
 	(layer "F.Cu")
 	(tedit "5DC5F6A4")
-	(uuid "c4e34d65-f6bb-4471-a099-a2e351be43db")
+	(uuid "c555dbd4-bf16-4229-ba86-7e258856ec0a")
 	(property "Reference" "REF**"
 		(at 0 -4 0)
 		(layer "F.SilkS")
-		(uuid "17262290-837f-4fc1-936a-c8daeb203047")
+		(uuid "08be2a97-1153-42e8-a271-2cebac63ebdc")
 		(effects
 			(font
 				(size 1 1)
@@ -19,7 +19,7 @@
 	(property "Value" "R0603"
 		(at 0 4 0)
 		(layer "F.Fab")
-		(uuid "0000dc50-dd7e-471c-a1f8-d4c9da7e013d")
+		(uuid "610fe81a-9d04-48f2-8aff-4486b4c444b5")
 		(effects
 			(font
 				(size 1 1)
@@ -37,7 +37,7 @@
 		)
 		(layer "F.Fab")
 		(locked no)
-		(uuid "68114b65-dba4-43f9-b4e7-2a5bf068bf24")
+		(uuid "8ede60b6-ac87-4c88-b1f8-472aff3e09bb")
 	)
 	(fp_line
 		(start 0.43 0.66)
@@ -49,7 +49,7 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "2876ec2b-c80f-4a17-a8db-954574a491ee")
+		(uuid "70c22ab0-acc7-4e45-a318-5cba4bf9992d")
 	)
 	(fp_line
 		(start 1.39 0.66)
@@ -61,7 +61,7 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "1448d244-1db2-4b35-876e-04407f3acce6")
+		(uuid "1d95f942-23d1-44c6-8009-04ba42c19d93")
 	)
 	(fp_line
 		(start 1.39 -0.66)
@@ -73,7 +73,7 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "d6fa257b-ebbc-4ffa-911c-f3c94c25d7ae")
+		(uuid "2f7abe12-7e8b-4aaf-85b5-bd93cb4b58f6")
 	)
 	(fp_line
 		(start -0.43 0.66)
@@ -85,7 +85,7 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "e4053935-4c79-483e-8d81-69e57591e41b")
+		(uuid "5fa0e086-aeb5-4e5e-9a57-e767e5dd13ad")
 	)
 	(fp_line
 		(start -1.39 0.66)
@@ -97,7 +97,7 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "3b9e0b3a-34a8-4791-bc04-77e845cfed3c")
+		(uuid "8f594246-33d4-4e8e-9ea8-160e032d22d5")
 	)
 	(fp_line
 		(start -1.39 -0.66)
@@ -109,12 +109,12 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "40870b25-f0c2-4ee8-a120-3631fd429f03")
+		(uuid "26d71d06-84b5-4aed-af0f-9bfa616d4648")
 	)
 	(fp_text user "%R"
 		(at 0 0)
 		(layer "F.Fab")
-		(uuid "cc481725-f9b8-4f6e-9edb-631d5538e538")
+		(uuid "111fc835-10bc-437f-a340-354cef5fdbb9")
 		(effects
 			(font
 				(size 1 1)
@@ -126,13 +126,13 @@
 		(at 0.75 0 0)
 		(size 0.81 0.86)
 		(layers "F.Cu" "F.Paste" "F.Mask")
-		(uuid "a4d0b9a2-64d6-4e3d-beae-6200b278006c")
+		(uuid "eb3d37b6-6b12-4ee2-afe9-ecfd1d193e8d")
 	)
 	(pad "1" smd rect
 		(at -0.75 0 0)
 		(size 0.81 0.86)
 		(layers "F.Cu" "F.Paste" "F.Mask")
-		(uuid "748b7b21-c20d-4a22-8de3-780693f3b79f")
+		(uuid "55556d96-5beb-4759-b75c-2d519316f140")
 	)
 	(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C23206/C23206.3dshapes/R0603.wrl"
 		(offset

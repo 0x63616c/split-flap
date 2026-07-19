@@ -134,8 +134,8 @@ module SplitFlapDriverNema:
     v12 ~ c_bin.1
     gnd ~ c_bin.2
     sw_node ~ u_buck.SW
-    sw_node ~ l_buck.1
-    p5v ~ l_buck.2
+    sw_node ~ l_buck.2   # pin 2 faces the IC
+    p5v ~ l_buck.1       # pin 1 faces the output caps
     vbst ~ u_buck.VBST
     vbst ~ c_bst.1
     sw_node ~ c_bst.2

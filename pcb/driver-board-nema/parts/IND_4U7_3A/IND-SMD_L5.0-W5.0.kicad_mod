@@ -4,11 +4,11 @@
 	(generator_version "v5")
 	(layer "F.Cu")
 	(tedit "5DC5F6A4")
-	(uuid "6eab3cba-5b03-41b6-9169-d9c259e169d7")
+	(uuid "1c9f6772-1223-45ba-b081-432b61d6e7bd")
 	(property "Reference" "REF**"
 		(at 0 -4 0)
 		(layer "F.SilkS")
-		(uuid "b014a5e0-ed76-4d1a-b82c-0bda29a2922c")
+		(uuid "9486b334-1376-4337-975a-68be0b1f7a80")
 		(effects
 			(font
 				(size 1 1)
@@ -19,7 +19,7 @@
 	(property "Value" "IND-SMD_L5.0-W5.0"
 		(at 0 4 0)
 		(layer "F.Fab")
-		(uuid "9895e05c-90b3-4cd7-b707-244b10b6a54f")
+		(uuid "f751ae82-c22f-4d23-a397-20a7910a6bd6")
 		(effects
 			(font
 				(size 1 1)
@@ -37,11 +37,11 @@
 		)
 		(layer "F.Fab")
 		(locked no)
-		(uuid "0ee05ec2-cca5-4426-944b-02870136e7b2")
+		(uuid "2cc26ec3-2c73-44cc-ad20-dfc930d32372")
 	)
 	(fp_line
-		(start -2.53 -2.26)
-		(end -2.53 -2.53)
+		(start -2.53 -2.42875)
+		(end -2.53 -2.445625)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -49,11 +49,11 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "9f4f1df4-2aca-4b9a-a5ed-52959fe5d282")
+		(uuid "a3e8f87c-c85d-46ca-852c-df6412fd352f")
 	)
 	(fp_line
-		(start -2.53 -2.53)
-		(end 2.53 -2.53)
+		(start -2.53 -2.445625)
+		(end 1.39 -2.4102075)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -61,11 +61,11 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "493af2f0-2681-4c32-a9c2-3f691fc47bc3")
+		(uuid "e5a77f53-68d6-42cb-b9a7-c04df31c1354")
 	)
 	(fp_line
 		(start 2.53 -2.53)
-		(end 2.53 -2.26)
+		(end 2.53 -2.395)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -73,11 +73,11 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "0d169dab-2f30-481c-ad71-4df27f869204")
+		(uuid "22f7c3cc-9d4e-4786-b6cd-7af588ad3aeb")
 	)
 	(fp_line
-		(start -2.53 2.26)
-		(end -2.53 2.53)
+		(start -2.53 2.42875)
+		(end -2.53 2.445625)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -85,11 +85,11 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "c5f653fe-ebf2-4e86-8f2f-b8f8ef224aa0")
+		(uuid "3c63785b-cce8-467b-b320-5727cfda7699")
 	)
 	(fp_line
-		(start -2.53 2.53)
-		(end 2.53 2.53)
+		(start -2.53 2.445625)
+		(end 1.39 2.4102075)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -97,11 +97,11 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "47575295-d997-4f6d-bca2-a02c27639826")
+		(uuid "6341272c-6059-4d02-8c36-e772c8a3167a")
 	)
 	(fp_line
 		(start 2.53 2.53)
-		(end 2.53 2.26)
+		(end 2.53 2.395)
 		(stroke
 			(width 0.15)
 			(type solid)
@@ -109,12 +109,12 @@
 		(layer "F.SilkS")
 		(layers "F.SilkS")
 		(locked no)
-		(uuid "f8e48576-5e5d-495c-a6e9-13a169599f97")
+		(uuid "579bf45a-88a4-4122-8ae3-22a01af84516")
 	)
 	(fp_text user "%R"
 		(at 0 0)
 		(layer "F.Fab")
-		(uuid "6de2ff6f-8589-4aad-85b2-f3e0d02fa7a6")
+		(uuid "f5ed9d17-acb8-487c-988b-9fa1c9caf855")
 		(effects
 			(font
 				(size 1 1)
@@ -126,13 +126,13 @@
 		(at 2 0 0)
 		(size 2.12 4.22)
 		(layers "F.Cu" "F.Paste" "F.Mask")
-		(uuid "481f204b-f9f2-42d8-a90e-cc59b628fac4")
+		(uuid "0ff67b17-7869-4f9f-8ee7-796b929bab71")
 	)
 	(pad "2" smd rect
 		(at -2 0 0)
 		(size 2.12 4.22)
 		(layers "F.Cu" "F.Paste" "F.Mask")
-		(uuid "1cc74d84-5af9-474b-a746-e6d81b80e92f")
+		(uuid "c8df0a38-2a06-4e5b-8939-4e564ba03b5e")
 	)
 	(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C354606/C354606.3dshapes/IND-SMD_L5.0-W5.0-H2.1.wrl"
 		(offset

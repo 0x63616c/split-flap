@@ -4,7 +4,7 @@
   "designator": "U1",
   "descriptor": "U1 \u2014 u_buck",
   "typeName": "main.ato::SplitFlapDriverNema.u_buck|parts/TPS563201/TPS563201.ato::TPS563201_package",
-  "footprintUuid": "a0ef2505-c7b9-447a-bb61-90b44642524b",
+  "footprintUuid": "4fa21074-d546-46e8-bb78-afce4642524b",
   "leads": [
     {
       "leadDesignator": "GND",
@@ -21,7 +21,7 @@
       "padNumbers": [
         "2"
       ],
-      "netName": "sw_node",
+      "netName": "2-1",
       "signalType": "signal",
       "interfaces": [],
       "isConnected": true

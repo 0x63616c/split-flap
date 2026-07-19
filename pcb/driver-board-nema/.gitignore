@@ -1,1 +1,7 @@
+# derived: KiCad's copy of the board (zone fill + its own dialect) and the
+# symlinks/config the DRC run needs alongside it
+build/filled.kicad_pcb
+build/filled.kicad_prl
+build/fp-lib-table
+build/parts
 build/builds/default/backups/
