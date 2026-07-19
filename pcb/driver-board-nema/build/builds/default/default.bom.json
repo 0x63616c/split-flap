@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "build_id": "7876b110608fba9f",
+  "build_id": "d288872debe013f2",
   "components": [
     {
       "id": "c784585",
@@ -155,13 +155,13 @@
       ]
     },
     {
-      "id": "c2905487",
-      "lcsc": "C2905487",
+      "id": "c2905417",
+      "lcsc": "C2905417",
       "manufacturer": "Shenzhen Kinghelm Elec",
-      "mpn": "KH-2.54PH180-1X8P-L11.5",
+      "mpn": "KH-2.54FH-1X8P-H8.5",
       "type": "connector",
       "value": "",
-      "package": "KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-M",
+      "package": "KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-F",
       "description": null,
       "quantity": 2,
       "unitCost": null,
@@ -183,13 +183,13 @@
       ]
     },
     {
-      "id": "c2932700",
-      "lcsc": "C2932700",
-      "manufacturer": "KH",
-      "mpn": "KH-2.54PH180-1X7P-L11.5",
+      "id": "c2932672",
+      "lcsc": "C2932672",
+      "manufacturer": "Shenzhen Kinghelm Elec",
+      "mpn": "KH-2.54FH-1X7P-H8.5",
       "type": "connector",
       "value": "",
-      "package": "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-M",
+      "package": "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-F",
       "description": null,
       "quantity": 2,
       "unitCost": null,

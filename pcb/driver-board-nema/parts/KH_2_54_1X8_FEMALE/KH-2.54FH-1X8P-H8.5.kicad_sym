@@ -1,8 +1,8 @@
 (kicad_symbol_lib
 	(version 20211014)
 	(generator "https://github.com/uPesy/easyeda2kicad.py")
-	(symbol "KH-2.54PH180-1X8P-L11.5"
-		(property "Reference" "H"
+	(symbol "KH-2.54FH-1X8P-H8.5"
+		(property "Reference" "U"
 			(id 0)
 			(at 0 13.97 0)
 			(effects
@@ -11,7 +11,7 @@
 				)
 			)
 		)
-		(property "Value" "KH-2.54PH180-1X8P-L11.5"
+		(property "Value" "KH-2.54FH-1X8P-H8.5"
 			(id 1)
 			(at 0 -13.97 0)
 			(effects
@@ -20,7 +20,7 @@
 				)
 			)
 		)
-		(property "Footprint" "C2905487:HDR-TH_8P-P2.54-V-M"
+		(property "Footprint" "C2905417:HDR-TH_8P-P2.54-V-F"
 			(id 2)
 			(at 0 -16.51 0)
 			(effects
@@ -30,7 +30,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part" "C2905487"
+		(property "LCSC Part" "C2905417"
 			(id 5)
 			(at 0 -19.05 0)
 			(effects
@@ -42,7 +42,7 @@
 		)
 		(in_bom yes)
 		(on_board yes)
-		(symbol "KH-2.54PH180-1X8P-L11.5_0_1"
+		(symbol "KH-2.54FH-1X8P-H8.5_0_1"
 			(rectangle
 				(start -2.54 11.43)
 				(end 2.54 -11.43)

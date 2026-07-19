@@ -8,7 +8,19 @@ silk-over-copper. This trims the library files rather than the board so that
 the board stays in parity with its libraries; `ato build` then picks up the
 already-clean footprints.
 
-Idempotent: re-running finds nothing left to trim.
+NOT idempotent — run it exactly ONCE per newly vendored footprint, and never
+across the whole library twice.
+
+Each pass re-clips segments it has already clipped: MIN_KEEP drops the short
+stubs left by the previous pass, so the outline erodes a little more every
+time and the file hash differs on every run. Verified empirically: three
+consecutive runs over parts/ produced three different files for the LED and
+XH footprints.
+
+Because `ato build` copies footprint graphics into the layout only when a
+footprint is first placed, an accidental extra pass also desyncs the board
+from its library and shows up as a [lib_footprint_mismatch] DRC warning that
+no amount of rebuilding clears. Recovery is `git checkout -- parts/ layouts/`.
 """
 
 import math

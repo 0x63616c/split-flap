@@ -205,12 +205,8 @@
 <circle cx="162.0" cy="798.0" r="9.3" fill="#d4b03c"/>
 <circle cx="162.0" cy="798.0" r="5.4" fill="#10141a"/>
 <text x="132.0" y="795.0" fill="#e8e0d0" font-size="9" text-anchor="middle">J1</text>
-<line x1="159.0" y1="115.8" x2="129.0" y2="115.8" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="129.0" y1="85.3" x2="129.0" y2="298.7" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="159.0" y1="85.3" x2="129.0" y2="85.3" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="129.0" y1="298.7" x2="159.0" y2="298.7" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="159.0" y1="298.7" x2="159.0" y2="85.3" stroke="#8fa3b8" stroke-width="1"/>
-<rect x="133.8" y="90.4" width="20.4" height="20.4" rx="0" fill="#d4b03c"/>
+<line x1="157.7" y1="115.8" x2="130.3" y2="115.8" stroke="#8fa3b8" stroke-width="1"/>
+<rect x="134.6" y="90.4" width="18.8" height="20.4" rx="0" fill="#d4b03c"/>
 <circle cx="144.0" cy="100.6" r="6.6" fill="#10141a"/>
 <circle cx="144.0" cy="131.0" r="10.2" fill="#d4b03c"/>
 <circle cx="144.0" cy="131.0" r="6.6" fill="#10141a"/>
@@ -225,12 +221,8 @@
 <circle cx="144.0" cy="283.4" r="10.2" fill="#d4b03c"/>
 <circle cx="144.0" cy="283.4" r="6.6" fill="#10141a"/>
 <text x="144.0" y="189.0" fill="#e8e0d0" font-size="9" text-anchor="middle">J6</text>
-<line x1="341.9" y1="115.8" x2="311.9" y2="115.8" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="311.9" y1="85.3" x2="311.9" y2="298.7" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="341.9" y1="85.3" x2="311.9" y2="85.3" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="311.9" y1="298.7" x2="341.9" y2="298.7" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="341.9" y1="298.7" x2="341.9" y2="85.3" stroke="#8fa3b8" stroke-width="1"/>
-<rect x="316.7" y="90.4" width="20.4" height="20.4" rx="0" fill="#d4b03c"/>
+<line x1="340.6" y1="115.8" x2="313.2" y2="115.8" stroke="#8fa3b8" stroke-width="1"/>
+<rect x="317.5" y="90.4" width="18.8" height="20.4" rx="0" fill="#d4b03c"/>
 <circle cx="326.9" cy="100.6" r="6.6" fill="#10141a"/>
 <circle cx="326.9" cy="131.0" r="10.2" fill="#d4b03c"/>
 <circle cx="326.9" cy="131.0" r="6.6" fill="#10141a"/>
@@ -245,49 +237,41 @@
 <circle cx="326.9" cy="283.4" r="10.2" fill="#d4b03c"/>
 <circle cx="326.9" cy="283.4" r="6.6" fill="#10141a"/>
 <text x="326.9" y="189.0" fill="#e8e0d0" font-size="9" text-anchor="middle">J7</text>
-<line x1="493.9" y1="671.6" x2="493.9" y2="702.1" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="493.9" y1="702.1" x2="250.1" y2="702.1" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="250.1" y1="702.1" x2="250.1" y2="671.6" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="250.1" y1="671.6" x2="493.9" y2="671.6" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="280.8" y1="671.6" x2="280.8" y2="702.1" stroke="#8fa3b8" stroke-width="1"/>
-<rect x="256.3" y="677.9" width="18.0" height="18.0" rx="0" fill="#d4b03c"/>
-<circle cx="265.3" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="295.8" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="295.8" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="326.3" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="326.3" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="356.8" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="356.8" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="387.2" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="387.2" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="417.7" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="417.7" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="448.2" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="448.2" cy="686.9" r="6.0" fill="#10141a"/>
-<circle cx="478.7" cy="686.9" r="9.0" fill="#d4b03c"/>
-<circle cx="478.7" cy="686.9" r="6.0" fill="#10141a"/>
+<line x1="280.6" y1="673.2" x2="280.6" y2="700.6" stroke="#8fa3b8" stroke-width="1"/>
+<rect x="255.9" y="676.7" width="18.8" height="20.4" rx="0" fill="#d4b03c"/>
+<circle cx="265.3" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="295.8" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="295.8" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="326.3" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="326.3" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="356.8" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="356.8" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="387.2" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="387.2" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="417.7" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="417.7" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="448.2" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="448.2" cy="686.9" r="6.6" fill="#10141a"/>
+<circle cx="478.7" cy="686.9" r="10.2" fill="#d4b03c"/>
+<circle cx="478.7" cy="686.9" r="6.6" fill="#10141a"/>
 <text x="372.0" y="683.9" fill="#e8e0d0" font-size="9" text-anchor="middle">J4</text>
-<line x1="493.9" y1="488.8" x2="493.9" y2="519.2" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="493.9" y1="519.2" x2="250.1" y2="519.2" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="250.1" y1="519.2" x2="250.1" y2="488.8" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="250.1" y1="488.8" x2="493.9" y2="488.8" stroke="#8fa3b8" stroke-width="1"/>
-<line x1="280.8" y1="488.8" x2="280.8" y2="519.2" stroke="#8fa3b8" stroke-width="1"/>
-<rect x="256.3" y="495.0" width="18.0" height="18.0" rx="0" fill="#d4b03c"/>
-<circle cx="265.3" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="295.8" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="295.8" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="326.3" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="326.3" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="356.8" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="356.8" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="387.2" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="387.2" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="417.7" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="417.7" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="448.2" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="448.2" cy="504.0" r="6.0" fill="#10141a"/>
-<circle cx="478.7" cy="504.0" r="9.0" fill="#d4b03c"/>
-<circle cx="478.7" cy="504.0" r="6.0" fill="#10141a"/>
+<line x1="280.6" y1="490.3" x2="280.6" y2="517.7" stroke="#8fa3b8" stroke-width="1"/>
+<rect x="255.9" y="493.8" width="18.8" height="20.4" rx="0" fill="#d4b03c"/>
+<circle cx="265.3" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="295.8" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="295.8" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="326.3" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="326.3" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="356.8" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="356.8" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="387.2" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="387.2" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="417.7" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="417.7" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="448.2" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="448.2" cy="504.0" r="6.6" fill="#10141a"/>
+<circle cx="478.7" cy="504.0" r="10.2" fill="#d4b03c"/>
+<circle cx="478.7" cy="504.0" r="6.6" fill="#10141a"/>
 <text x="372.0" y="501.0" fill="#e8e0d0" font-size="9" text-anchor="middle">J5</text>
 <line x1="495.6" y1="117.4" x2="495.6" y2="108.0" stroke="#8fa3b8" stroke-width="1"/>
 <line x1="495.6" y1="108.0" x2="507.6" y2="108.0" stroke="#8fa3b8" stroke-width="1"/>

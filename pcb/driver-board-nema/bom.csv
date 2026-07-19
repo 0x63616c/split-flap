@@ -6,8 +6,8 @@ D1,LED_0603_GREEN:LED0603-RD,1,green LED 0603,Hubei KENTO Elec,KT-0603G,C12624,5
 J1,XY_B3B_XH_A:CONN-TH_3P-P2.50_A2501WV2-3P,1,JST-XH 3P vertical,XINGYE,XY-B3B-XH-A,C51940188,hall sensor: 5V GND DO
 J2,XH_4AW:CONN-TH_XH2.54-4AW,1,JST-XH 4P right-angle,BOOMELE(Boom Precision Elec),XH-4AW,C21273,stepper motor; pads run B2 B1 A2 A1 left to right
 J3,DC_005:DC-IN-TH_DC-005-5.5-2.0,1,5.5x2.1mm barrel jack,BOOMELE(Boom Precision Elec),DC-005 2.0,C16214,"12V input, centre positive"
-"J4, J5",KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-M,2,1x8 2.54mm socket,Shenzhen Kinghelm Elec,KH-2.54PH180-1X8P-L11.5,C2905487,TMC2209 StepStick socket row
-"J6, J7",KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-M,2,1x7 2.54mm socket,KH,KH-2.54PH180-1X7P-L11.5,C2932700,XIAO ESP32-C6 socket row
+"J4, J5",KH_2_54_1X8_FEMALE:HDR-TH_8P-P2.54-V-F,2,1x8 2.54mm FEMALE socket,Shenzhen Kinghelm Elec,KH-2.54FH-1X8P-H8.5,C2905417,TMC2209 StepStick socket row (receptacle)
+"J6, J7",KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-F,2,1x7 2.54mm FEMALE socket,Shenzhen Kinghelm Elec,KH-2.54FH-1X7P-H8.5,C2932672,XIAO ESP32-C6 socket row (receptacle)
 L1,IND_4U7_3A:IND-SMD_L5.0-W5.0,1,4.7uH 3A shielded,CENKER,CKCS5040-4.7uH/M,C354606,buck output inductor
 Q1,AO3401A:SOT-23_L2.9-W1.3-P1.90-LS2.4-BR,1,-30V -4A P-MOSFET,Alpha & Omega Semiconductor,AO3401A,C15127,reverse-polarity gate on the 12V input
 "R1, R5",R0603_100K:R0603,2,100k 1% 0603,UNI-ROYAL(Uniroyal Elec),0603WAF1003T5E,C25803,"enable + gate dividers, high side"

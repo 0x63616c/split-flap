@@ -5,11 +5,20 @@ import is_atomic_part
 
 component KH_2_54_1X8_FEMALE_package:
     """
-    1x8 2.54mm female socket header — one row of the TMC2209 StepStick socket.
-    Two of these, 15.24mm apart, accept a standard 2x8 SilentStepStick.
+    1x8 2.54mm FEMALE socket header (receptacle) — one row of the TMC2209
+    StepStick socket. Two of these, 12.70mm apart, accept a standard 2x8
+    SilentStepStick.
+
+    Kinghelm naming: PH = Pin Header (male pins), FH = Female Header
+    (receptacle). This part must be FH — the StepStick is a module with male
+    pins soldered in, so the board side has to be a receptacle.
+
+    12.70mm, not 15.24mm: the 0.6"x0.8" StepStick figure is the module's BOARD
+    OUTLINE. The pin rows are inset 1.27mm from each long edge, so row
+    centre-to-centre is 15.24 - 2*1.27 = 12.70mm.
     """
-    trait is_atomic_part<manufacturer="Shenzhen Kinghelm Elec", partnumber="KH-2.54PH180-1X8P-L11.5", footprint="HDR-TH_8P-P2.54-V-M.kicad_mod", symbol="KH-2.54PH180-1X8P-L11.5.kicad_sym">
-    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2905487", manufacturer="Shenzhen Kinghelm Elec", partno="KH-2.54PH180-1X8P-L11.5">
+    trait is_atomic_part<manufacturer="Shenzhen Kinghelm Elec", partnumber="KH-2.54FH-1X8P-H8.5", footprint="HDR-TH_8P-P2.54-V-F.kicad_mod", symbol="KH-2.54FH-1X8P-H8.5.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2905417", manufacturer="Shenzhen Kinghelm Elec", partno="KH-2.54FH-1X8P-H8.5">
     trait has_designator_prefix<prefix="J">
 
     # pins
