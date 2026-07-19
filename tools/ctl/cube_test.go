@@ -15,7 +15,7 @@ func nonBlank(lines []string) int {
 }
 
 func TestRenderCubeGrid(t *testing.T) {
-	lines := renderCube(50, 25, [3]float64{0.6, 0.4, 0.2}, false)
+	lines := renderCube(50, 25, [3]float64{0.6, 0.4, 0.2}, 1, false)
 	if len(lines) != 25 {
 		t.Fatalf("got %d rows, want 25", len(lines))
 	}
@@ -52,7 +52,7 @@ func TestRenderCubeClipsCleanly(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		ang := [3]float64{float64(i) * 0.5, float64(i) * 0.31, float64(i) * 0.17}
 		for _, wire := range []bool{false, true} {
-			for _, l := range renderCube(60, 25, ang, wire) {
+			for _, l := range renderCube(60, 25, ang, 1, wire) {
 				if len([]rune(l)) != 60 {
 					t.Fatalf("ang %v wire %v: row is %d cols, want 60", ang, wire, len([]rune(l)))
 				}
@@ -63,8 +63,8 @@ func TestRenderCubeClipsCleanly(t *testing.T) {
 
 func TestRenderCubeWireframeDropsFaces(t *testing.T) {
 	ang := [3]float64{0.6, 0.4, 0.2}
-	plain := strings.Join(renderCube(50, 25, ang, false), "\n")
-	wired := strings.Join(renderCube(50, 25, ang, true), "\n")
+	plain := strings.Join(renderCube(50, 25, ang, 1, false), "\n")
+	wired := strings.Join(renderCube(50, 25, ang, 1, true), "\n")
 	if strings.ContainsRune(plain, cubeWire) {
 		t.Fatal("wire char leaked into the shaded-only render")
 	}
@@ -80,7 +80,7 @@ func TestRenderCubeWireframeDropsFaces(t *testing.T) {
 // inside the near one, so the middle row crosses four separate edges. Only
 // two would mean the back edges are being occluded.
 func TestRenderCubeWireframeShowsBackEdges(t *testing.T) {
-	lines := renderCube(60, 25, [3]float64{}, true)
+	lines := renderCube(60, 25, [3]float64{}, 1, true)
 	mid := lines[len(lines)/2]
 	runs, in := 0, false
 	for _, r := range mid {
@@ -99,7 +99,7 @@ func TestRenderCubeWireframeShowsBackEdges(t *testing.T) {
 func TestRenderCubeShowsNearFace(t *testing.T) {
 	near, far := 1/(cubeDist-cubeHalf), 1/(cubeDist+cubeHalf)
 	for _, ang := range [][3]float64{{}, {0.6, 0.4, 0.2}, {1.1, 0.9, 0.3}, {2.4, 1.7, 0.8}} {
-		c := renderCubeCanvas(60, 25, ang, false)
+		c := renderCubeCanvas(60, 25, ang, 1, false)
 		got := c.depth[(c.h/2)*c.w+c.w/2]
 		if got == 0 {
 			t.Fatalf("ang %v: centre cell empty", ang)
@@ -112,7 +112,7 @@ func TestRenderCubeShowsNearFace(t *testing.T) {
 }
 
 func TestRenderCubeDegenerateSize(t *testing.T) {
-	if got := renderCube(0, 10, [3]float64{}, false); got != nil {
+	if got := renderCube(0, 10, [3]float64{}, 1, false); got != nil {
 		t.Fatalf("want nil for zero width, got %v", got)
 	}
 }

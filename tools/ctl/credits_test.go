@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strings"
 	"testing"
 
@@ -95,5 +96,49 @@ func TestCreditsPauseAndRewind(t *testing.T) {
 	m.creditsKey(tea.KeyMsg{Type: tea.KeyEsc})
 	if m.credits != nil || m.top().id != "root" {
 		t.Error("esc did not drop back to the menu")
+	}
+}
+
+func TestCreditsSpeedClamps(t *testing.T) {
+	c := newCreditsModel()
+	for i := 0; i < 50; i++ {
+		c.faster(creditsRateBy)
+	}
+	if c.rate != creditsRateMax {
+		t.Errorf("rate ran to %v, want the %v ceiling", c.rate, creditsRateMax)
+	}
+	for i := 0; i < 100; i++ {
+		c.faster(1 / creditsRateBy)
+	}
+	if c.rate != creditsRateMin {
+		t.Errorf("rate ran to %v, want the %v floor", c.rate, creditsRateMin)
+	}
+}
+
+// Rate scales how far one frame moves the crawl.
+func TestCreditsRateScalesTheStep(t *testing.T) {
+	c := newCreditsModel()
+	c.rate = 2
+	c.step()
+	if want := 2 * creditsSpeed; math.Abs(c.t-want) > 1e-9 {
+		t.Errorf("one frame at 2× moved %v, want %v", c.t, want)
+	}
+}
+
+// Scrubbing holds the crawl where you left it and wraps at both ends rather
+// than piling up outside the span.
+func TestCreditsScrubHoldsAndWraps(t *testing.T) {
+	c := newCreditsModel()
+	c.scrub(-creditsScrub)
+	if !c.paused {
+		t.Error("scrubbing did not hold the crawl")
+	}
+	if c.t < 0 || c.t >= c.span() {
+		t.Errorf("scrubbing back off the start left t = %v, outside [0, %v)", c.t, c.span())
+	}
+	c.t = c.span() - creditsScrub/2
+	c.scrub(creditsScrub)
+	if c.t < 0 || c.t >= c.span() {
+		t.Errorf("scrubbing past the end left t = %v", c.t)
 	}
 }

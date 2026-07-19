@@ -124,8 +124,8 @@ func (c *canvas) lines() []string {
 }
 
 // renderCube draws the cube at the given orientation into a w×h char grid.
-func renderCube(w, h int, ang [3]float64, wire bool) []string {
-	c := renderCubeCanvas(w, h, ang, wire)
+func renderCube(w, h int, ang [3]float64, zoom float64, wire bool) []string {
+	c := renderCubeCanvas(w, h, ang, zoom, wire)
 	if c == nil {
 		return nil
 	}
@@ -134,11 +134,11 @@ func renderCube(w, h int, ang [3]float64, wire bool) []string {
 
 // renderCubeCanvas is renderCube's guts, kept separate so tests can inspect
 // the depth buffer and not just the chars.
-func renderCubeCanvas(w, h int, ang [3]float64, wire bool) *canvas {
+func renderCubeCanvas(w, h int, ang [3]float64, zoom float64, wire bool) *canvas {
 	if w < 1 || h < 1 {
 		return nil
 	}
-	c := newCanvas(w, h, cubeHalf*math.Sqrt(3), viewFill)
+	c := newCanvas(w, h, cubeHalf*math.Sqrt(3), viewFill*zoom)
 	light := [3]float64{0, cubeLight, -1} // towards the viewer, slightly above
 	steps := 2 * max(w, h)
 

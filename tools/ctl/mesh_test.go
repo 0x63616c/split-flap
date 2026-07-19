@@ -107,7 +107,7 @@ func TestRenderMeshFillsAndFits(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	lines := renderMesh(m, 60, 25, [3]float64{}, false)
+	lines := renderMesh(m, 60, 25, [3]float64{}, 1, false)
 	if len(lines) != 25 {
 		t.Fatalf("got %d rows, want 25", len(lines))
 	}
@@ -134,7 +134,7 @@ func TestRenderMeshDepthSortsNearestFirst(t *testing.T) {
 	lo, hi := math.Inf(1), math.Inf(-1)
 	m.each(func(p [3]float64) { lo, hi = math.Min(lo, p[2]), math.Max(hi, p[2]) })
 
-	c := renderMeshCanvas(m, 40, 20, [3]float64{}, false)
+	c := renderMeshCanvas(m, 40, 20, [3]float64{}, 1, false)
 	near, far := 1/(cubeDist+lo), 1/(cubeDist+hi)
 	got := c.depth[(c.h/2)*c.w+c.w/2]
 	if math.Abs(got-near) > math.Abs(got-far) {
@@ -147,7 +147,7 @@ func TestRenderMeshWireframeDropsFill(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wired := strings.Join(renderMesh(m, 60, 25, [3]float64{0.3, 0.2, 0}, true), "\n")
+	wired := strings.Join(renderMesh(m, 60, 25, [3]float64{0.3, 0.2, 0}, 1, true), "\n")
 	if !strings.ContainsRune(wired, cubeWire) {
 		t.Fatal("wireframe drew no edges")
 	}
@@ -157,7 +157,7 @@ func TestRenderMeshWireframeDropsFill(t *testing.T) {
 }
 
 func TestRenderMeshDegenerate(t *testing.T) {
-	if got := renderMesh(nil, 40, 20, [3]float64{}, false); got != nil {
+	if got := renderMesh(nil, 40, 20, [3]float64{}, 1, false); got != nil {
 		t.Fatalf("nil mesh should render nil, got %v", got)
 	}
 }
@@ -183,7 +183,7 @@ func TestRenderRealUnit(t *testing.T) {
 			t.Errorf("%s: no triangles", filepath.Base(p))
 			continue
 		}
-		lines := renderMesh(m, 80, 30, [3]float64{0.6, 0.4, 0.2}, false)
+		lines := renderMesh(m, 80, 30, [3]float64{0.6, 0.4, 0.2}, 1, false)
 		if n := nonBlank(lines); n < 100 {
 			t.Errorf("%s: only %d chars drawn, expected a solid body", filepath.Base(p), n)
 		}

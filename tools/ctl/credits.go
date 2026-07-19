@@ -14,8 +14,12 @@ import (
 const (
 	creditsFPS     = 20
 	creditsSpacing = 0.13  // gap between lines in plane units
-	creditsSpeed   = 0.007 // plane units per frame
+	creditsSpeed   = 0.007 // plane units per frame at 1× speed
 	creditsNear    = 1.0   // depth of the bottom row
+	creditsRateMin = 0.25
+	creditsRateMax = 4.0
+	creditsRateBy  = 1.25 // speed multiplier per keypress
+	creditsScrub   = 0.25 // plane units per scrub keypress
 )
 
 // creditsFade is the yellow the crawl burns through as it recedes: hot at the
@@ -75,12 +79,28 @@ var creditsText = []string{
 
 type creditsModel struct {
 	t      float64 // how far the crawl has travelled up the plane
+	rate   float64 // speed multiplier
 	paused bool
 	lines  []string
 }
 
 func newCreditsModel() *creditsModel {
-	return &creditsModel{lines: creditsText}
+	return &creditsModel{lines: creditsText, rate: 1}
+}
+
+// faster scales the crawl speed, clamped either side of a crawl you cannot
+// read and one that never gets anywhere.
+func (c *creditsModel) faster(f float64) {
+	c.rate = math.Min(math.Max(c.rate*f, creditsRateMin), creditsRateMax)
+}
+
+// scrub jogs the crawl by hand and holds it there, so you can stop on a line
+// and read it. Wraps at both ends rather than sticking.
+func (c *creditsModel) scrub(d float64) {
+	c.paused = true
+	c.t += d
+	span := c.span()
+	c.t = math.Mod(math.Mod(c.t, span)+span, span)
 }
 
 // span is how far the crawl must travel before the last line has receded past
@@ -94,7 +114,7 @@ func (c *creditsModel) step() {
 	if c.paused {
 		return
 	}
-	c.t += creditsSpeed
+	c.t += creditsSpeed * c.rate
 	if c.t > c.span() {
 		c.t = 0 // loop, so the crawl never just stops on a blank field
 	}

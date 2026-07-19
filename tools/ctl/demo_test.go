@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -110,5 +111,96 @@ func TestDemoJumpTo(t *testing.T) {
 	}
 	if d.jumpTo("no-such-model") {
 		t.Fatal("jumpTo accepted a label that does not exist")
+	}
+}
+
+// Taking hold of the model stops the tumble: otherwise the drift fights
+// every keypress.
+func TestOrbitPausesAndTurns(t *testing.T) {
+	d := newDemoModel(1, "")
+	if d.paused {
+		t.Fatal("the demo should open spinning")
+	}
+	d.orbit(demoStep, 0, 0)
+	if !d.paused {
+		t.Error("orbiting did not pause the tumble")
+	}
+	if d.ang[0] == 0 {
+		t.Error("orbiting did not turn the model")
+	}
+	before := d.ang
+	d.step()
+	if d.ang != before {
+		t.Error("a held model kept drifting")
+	}
+}
+
+func TestZoomClamps(t *testing.T) {
+	d := newDemoModel(1, "")
+	for i := 0; i < 200; i++ {
+		d.zoomBy(demoZoomIn)
+	}
+	if d.zoom != demoZoomMax {
+		t.Errorf("zoom in ran to %v, want the %v ceiling", d.zoom, demoZoomMax)
+	}
+	for i := 0; i < 400; i++ {
+		d.zoomBy(1 / demoZoomIn)
+	}
+	if d.zoom != demoZoomMin {
+		t.Errorf("zoom out ran to %v, want the %v floor", d.zoom, demoZoomMin)
+	}
+}
+
+// Snapping to an axis holds the model still at a right angle, and the shift
+// (upper case) form looks from the other side.
+func TestSnapToAxis(t *testing.T) {
+	d := newDemoModel(1, "")
+	d.snap('y')
+	if !d.paused || d.vel != [3]float64{} {
+		t.Error("snap did not stop the tumble")
+	}
+	if d.ang != [3]float64{math.Pi / 2, 0, 0} {
+		t.Errorf("snap('y') = %v", d.ang)
+	}
+	d.snap('X')
+	if d.ang != [3]float64{0, -math.Pi / 2, 0} {
+		t.Errorf("snap('X') = %v, want the far side of snap('x')", d.ang)
+	}
+}
+
+func TestResetRestoresTheOpeningView(t *testing.T) {
+	d := newDemoModel(1, "")
+	d.orbit(1, 1, 1)
+	d.zoomBy(demoZoomIn)
+	d.reset()
+	if d.ang != [3]float64{} || d.zoom != 1 || d.paused {
+		t.Errorf("reset left ang=%v zoom=%v paused=%v", d.ang, d.zoom, d.paused)
+	}
+}
+
+// fit fills the pane without spilling out of it: the worst-case default fit
+// leaves most orientations small, which is the whole point of the key.
+func TestFitFillsThePaneWithoutClipping(t *testing.T) {
+	const w, h = 80, 30
+	d := newDemoModel(1, "")
+	d.snap('z') // face on: the cube's smallest silhouette, so fit has work to do
+	d.fit(w, h)
+	if d.zoom <= 1 {
+		t.Errorf("fit did not zoom in on a face-on cube: %v", d.zoom)
+	}
+	lines := d.render(w, h)
+	filled := 0
+	for _, l := range lines {
+		if strings.TrimSpace(l) != "" {
+			filled++
+		}
+	}
+	if filled < h-2 {
+		t.Errorf("fitted model covers %d of %d rows", filled, h)
+	}
+	for _, l := range lines {
+		if len([]rune(l)) > w {
+			t.Fatalf("fitted model overflows the pane: %d cells", len([]rune(l)))
+		}
 	}
 }

@@ -20,6 +20,7 @@ type tri struct{ a, b, c [3]float64 }
 type mesh struct {
 	name string
 	tris []tri
+	dims [3]float64 // bounding box in the STL's own units (mm), pre-normalisation
 }
 
 const stlHeader = 84 // 80-byte header + uint32 triangle count
@@ -87,6 +88,7 @@ func (m *mesh) normalise() {
 	var mid [3]float64
 	for i := 0; i < 3; i++ {
 		mid[i] = (lo[i] + hi[i]) / 2
+		m.dims[i] = hi[i] - lo[i] // kept for the HUD: the part's real size
 	}
 
 	r := 0.0
@@ -132,19 +134,19 @@ func norm(v [3]float64) [3]float64 {
 }
 
 // renderMesh draws the mesh at the given orientation into a w×h char grid.
-func renderMesh(m *mesh, w, h int, ang [3]float64, wire bool) []string {
-	c := renderMeshCanvas(m, w, h, ang, wire)
+func renderMesh(m *mesh, w, h int, ang [3]float64, zoom float64, wire bool) []string {
+	c := renderMeshCanvas(m, w, h, ang, zoom, wire)
 	if c == nil {
 		return nil
 	}
 	return c.lines()
 }
 
-func renderMeshCanvas(m *mesh, w, h int, ang [3]float64, wire bool) *canvas {
+func renderMeshCanvas(m *mesh, w, h int, ang [3]float64, zoom float64, wire bool) *canvas {
 	if w < 1 || h < 1 || m == nil {
 		return nil
 	}
-	c := newCanvas(w, h, 1, viewFill)
+	c := newCanvas(w, h, 1, viewFill*zoom)
 	light := norm([3]float64{0, cubeLight, -1})
 
 	for _, t := range m.tris {

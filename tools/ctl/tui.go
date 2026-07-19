@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -387,10 +388,16 @@ func (m *appModel) demoKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	switch msg.String() {
-	case "right":
-		m.cube.next()
 	case "left":
-		m.cube.prev()
+		m.cube.orbit(0, -demoStep, 0)
+	case "right":
+		m.cube.orbit(0, demoStep, 0)
+	case "up":
+		m.cube.orbit(-demoStep, 0, 0)
+	case "down":
+		m.cube.orbit(demoStep, 0, 0)
+	case "shift+left", "shift+right", "shift+up", "shift+down":
+		m.cube.reset()
 	case "esc":
 		m.stack = m.stack[:len(m.stack)-1]
 		m.cube = nil
@@ -399,16 +406,39 @@ func (m *appModel) demoKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *appModel) demoRune(r rune) {
+	d := m.cube
 	switch r {
 	case 'w':
-		s := m.cube.scene()
+		s := d.scene()
 		s.wire = !s.wire
-	case 'p':
-		m.cube.paused = !m.cube.paused
-	case 'l':
-		m.cube.next()
+	case 'p', ' ':
+		d.paused = !d.paused
 	case 'h':
-		m.cube.prev()
+		d.orbit(0, -demoStep, 0)
+	case 'l':
+		d.orbit(0, demoStep, 0)
+	case 'k':
+		d.orbit(-demoStep, 0, 0)
+	case 'j':
+		d.orbit(demoStep, 0, 0)
+	case 'q':
+		d.orbit(0, 0, -demoStep)
+	case 'e':
+		d.orbit(0, 0, demoStep)
+	case '+', '=':
+		d.zoomBy(demoZoomIn)
+	case '-', '_':
+		d.zoomBy(1 / demoZoomIn)
+	case 'f':
+		d.fit(m.demoSize())
+	case '0':
+		d.reset()
+	case 'x', 'y', 'z', 'X', 'Y', 'Z':
+		d.snap(r)
+	case ']':
+		d.next()
+	case '[':
+		d.prev()
 	}
 }
 
@@ -425,8 +455,17 @@ func (m *appModel) creditsKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "p", " ":
 		m.credits.paused = !m.credits.paused
+	case ">", ".":
+		m.credits.faster(creditsRateBy)
+	case "<", ",":
+		m.credits.faster(1 / creditsRateBy)
+	case "down", "j":
+		m.credits.scrub(-creditsScrub)
+	case "up", "k":
+		m.credits.scrub(creditsScrub)
 	case "r":
 		m.credits.t = 0
+		m.credits.paused = false
 	case "esc":
 		m.stack = m.stack[:len(m.stack)-1]
 		m.credits = nil
@@ -488,10 +527,12 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 		case 0:
 			m.stack = append(m.stack, cadScreen())
 		case 1:
-			m.stack = append(m.stack, benchScreen())
+			m.stack = append(m.stack, pcbScreen())
 		case 2:
-			return m.startDemo("demo", "")
+			m.stack = append(m.stack, benchScreen())
 		case 3:
+			return m.startDemo("demo", "")
+		case 4:
 			return m.startCredits()
 		}
 	case "cad":
@@ -506,6 +547,17 @@ func (m *appModel) select_() (tea.Model, tea.Cmd) {
 			m.stack = append(m.stack, listScreen(m.catalog()))
 		case 4:
 			return m.startRun("golden test", startGoldenTest(m.root))
+		}
+	case "pcb":
+		switch s.cursor {
+		case 0:
+			return m.startRun("pcb view", startPcbView())
+		case 1:
+			return m.startRun("pcb drc", streamCmd(pcbBuild(m.root, true)))
+		case 2:
+			return m.startRun("pcb build", streamCmd(pcbBuild(m.root, false)))
+		case 3:
+			return m.startRun("pcb place", streamCmd(pcbPlace(m.root)))
 		}
 	case "bench-menu":
 		switch s.cursor {
@@ -646,7 +698,7 @@ func creditsTick() tea.Cmd {
 
 // creditsView renders the crawl in the same slot the demo uses.
 func (m *appModel) creditsView() string {
-	w, h := m.width, m.demoAvail()
+	w, h := m.width, m.creditsAvail()
 	if w == 0 {
 		w = 80
 	}
@@ -654,12 +706,12 @@ func (m *appModel) creditsView() string {
 	for _, line := range m.credits.render(w, h) {
 		out += line + "\n"
 	}
-	roll := "rolling"
+	roll := fmt.Sprintf("rolling %.2f×", m.credits.rate)
 	if m.credits.paused {
-		roll = warnStyle.Render("paused")
+		roll = warnStyle.Render(fmt.Sprintf("held %.2f×", m.credits.rate))
 	}
-	return out + "\n  " + dimStyle.Render("[p] ") + roll +
-		dimStyle.Render(" · [r] rewind · [esc] back")
+	return out + "\n  " + roll +
+		dimStyle.Render(" · [p] pause · [↑↓] scrub · [< >] speed · [r] rewind · [esc] back")
 }
 
 type cubeFrameMsg struct{}
@@ -668,37 +720,77 @@ func cubeTick() tea.Cmd {
 	return tea.Tick(time.Second/cubeFPS, func(time.Time) tea.Msg { return cubeFrameMsg{} })
 }
 
-// demoView renders the tumbling cube centred between the header and footer.
+// demoView renders the model centred between the header and footer, with the
+// axis triad in the bottom-left corner and a HUD line under it.
 func (m *appModel) demoView() string {
-	w, h := m.width, m.demoAvail()
+	w, h := m.demoSize()
+	lines := overlayGizmo(m.cube.render(w, h), m.cube.ang, w)
+	out := ""
+	for _, line := range lines {
+		out += line + "\n"
+	}
+	// Clipped, not wrapped: a footer that wraps steals a row from the model
+	// and the whole layout walks up the screen. Full list lives in [h]elp.
+	return out + "\n" + m.demoHUD() + "\n" + dimStyle.Render(truncLine(demoHelp, w))
+}
+
+const demoHelp = "  orbit hjkl/←↓↑→ · roll qe · zoom -+ · fit f · reset 0 · " +
+	"axis xyz · wire w · spin p · model [] · back esc"
+
+// demoHUD is the status line: which model, how big it really is, how it is
+// currently turned, and how far in the view is zoomed.
+func (m *appModel) demoHUD() string {
+	d := m.cube
+	s := d.scene()
+
+	name := okStyle.Render(s.label)
+	if len(d.scenes) > 1 {
+		name += dimStyle.Render(fmt.Sprintf(" (%d/%d)", d.idx+1, len(d.scenes)))
+	}
+
+	facts := []string{}
+	if s.mesh != nil {
+		facts = append(facts,
+			fmt.Sprintf("%.1f×%.1f×%.1f mm", s.mesh.dims[0], s.mesh.dims[1], s.mesh.dims[2]),
+			fmt.Sprintf("%d tris", len(s.mesh.tris)))
+	}
+	deg := func(rad float64) int { return int(math.Round(rad*180/math.Pi)) % 360 }
+	facts = append(facts,
+		fmt.Sprintf("p%d° y%d° r%d°", deg(d.ang[0]), deg(d.ang[1]), deg(d.ang[2])),
+		fmt.Sprintf("%.2f×", d.zoom))
+	if s.wire {
+		facts = append(facts, "wire")
+	}
+	if d.paused {
+		return "  " + name + dimStyle.Render("  ·  "+strings.Join(facts, " · ")+"  ·  ") +
+			warnStyle.Render("held")
+	}
+	return "  " + name + dimStyle.Render("  ·  "+strings.Join(facts, " · ")+"  ·  spinning")
+}
+
+// demoSize is the model pane's size, standing in a sensible default before
+// the first WindowSizeMsg lands.
+func (m *appModel) demoSize() (int, int) {
+	w := m.width
 	if w == 0 {
 		w = 80
 	}
-	out := ""
-	for _, line := range m.cube.render(w, h) {
-		out += line + "\n"
-	}
-	wire := "off"
-	if m.cube.scene().wire {
-		wire = "on"
-	}
-	spin := "spinning"
-	if m.cube.paused {
-		spin = warnStyle.Render("paused")
-	}
-	s := m.cube.scene()
-	name := okStyle.Render(s.label)
-	if len(m.cube.scenes) > 1 {
-		name += dimStyle.Render(fmt.Sprintf(" (%d/%d)", m.cube.idx+1, len(m.cube.scenes)))
-	}
-	return out + "\n  " + name + dimStyle.Render("  ·  [←→] model · [w] wireframe: "+wire+" · [p] ") +
-		spin + dimStyle.Render(" · [esc] back")
+	return w, m.demoAvail()
 }
 
 // demoAvail is how many rows the model gets: everything between the header
-// and a footer pinned to the last row. header(3) + model + gap(1) + footer(1)
-// fills the terminal exactly, so the model takes all the space going.
+// and the two status rows pinned to the bottom. header(3) + model + gap(1) +
+// hud(1) + help(1) fills the terminal exactly.
 func (m *appModel) demoAvail() int {
+	height := m.height
+	if height == 0 {
+		height = 24
+	}
+	return max(height-6, 1)
+}
+
+// creditsAvail is the same sum for the crawl, which has one status row.
+func (m *appModel) creditsAvail() int {
 	height := m.height
 	if height == 0 {
 		height = 24
@@ -784,6 +876,11 @@ func helpScreen() screen {
 		row("h", "this help (h or esc closes)"),
 		row("ctrl+c", "quit — a running job is shut down first"),
 		{label: "", disabled: true},
+		row("demo / render", "←↓↑→ or hjkl orbit · q e roll · - + zoom · f fit · 0 reset"),
+		row("", "x y z snap to an axis (shift: the far side)"),
+		row("", "w wireframe · p pause the tumble · [ ] step models"),
+		row("credits", "↑↓ scrub · < > speed · p pause · r rewind"),
+		{label: "", disabled: true},
 		row("runs", "export/view stream their logs right here;"),
 		row("", "view keeps re-rendering on every .py save"),
 	}}
@@ -792,6 +889,7 @@ func helpScreen() screen {
 func rootScreen() screen {
 	return screen{id: "root", title: "home", items: []menuItem{
 		{label: "cad", help: "viewers & exports"},
+		{label: "pcb", help: "driver board — 3D viewer, DRC, gerbers"},
 		{label: "bench", help: "drive the breadboard module over serial"},
 		{label: "demo", help: "a cube, tumbling, for no reason at all"},
 		{label: "credits", help: "a long time ago, on a breadboard far, far away"},
@@ -805,6 +903,15 @@ func cadScreen() screen {
 		{label: "render", help: "spin an exported part in ASCII, right here"},
 		{label: "list models", help: "the model catalog"},
 		{label: "golden test", help: "pytest -m slow — XOR every model against cad/tests/golden/"},
+	}}
+}
+
+func pcbScreen() screen {
+	return screen{id: "pcb", title: "pcb", items: []menuItem{
+		{label: "view", help: "live 3D board in this pane, re-exports on save"},
+		{label: "drc", help: "place + route + KiCad DRC — the fast check"},
+		{label: "build", help: "everything: place, DRC, 5 renders, gerbers + zip"},
+		{label: "place", help: "placement & routing only, no kicad"},
 	}}
 }
 
@@ -889,6 +996,9 @@ func listScreen(cat catalog) screen {
 func runRootMenu() error { return runTUI(nil) }
 func runCadMenu() error {
 	return runTUI(func(m *appModel) tea.Cmd { m.stack = append(m.stack, cadScreen()); return nil })
+}
+func runPcbMenu() error {
+	return runTUI(func(m *appModel) tea.Cmd { m.stack = append(m.stack, pcbScreen()); return nil })
 }
 
 // runTUI boots the menu. open, if given, pushes a deeper starting screen (and
