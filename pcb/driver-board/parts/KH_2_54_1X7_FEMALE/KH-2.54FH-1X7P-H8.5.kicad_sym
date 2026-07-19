@@ -1,8 +1,8 @@
 (kicad_symbol_lib
 	(version 20211014)
 	(generator "https://github.com/uPesy/easyeda2kicad.py")
-	(symbol "KH-2.54PH180-1X7P-L11.5"
-		(property "Reference" "H"
+	(symbol "KH-2.54FH-1X7P-H8.5"
+		(property "Reference" "U"
 			(id 0)
 			(at 0 12.7 0)
 			(effects
@@ -11,7 +11,7 @@
 				)
 			)
 		)
-		(property "Value" "KH-2.54PH180-1X7P-L11.5"
+		(property "Value" "KH-2.54FH-1X7P-H8.5"
 			(id 1)
 			(at 0 -12.7 0)
 			(effects
@@ -20,7 +20,7 @@
 				)
 			)
 		)
-		(property "Footprint" "C2932700:HDR-TH_7P-P2.54-V-M"
+		(property "Footprint" "C2932672:HDR-TH_7P-P2.54-V-F"
 			(id 2)
 			(at 0 -15.24 0)
 			(effects
@@ -30,49 +30,9 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/C2932700.pdf"
-			(id 3)
-			(at 0 -17.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Manufacturer" "kinghelm(金航标)"
-			(id 4)
-			(at 0 -20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "MPN" "KH-2.54PH180-1X7P-L11.5"
+		(property "LCSC Part" "C2932672"
 			(id 5)
-			(at 0 -22.86 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C2932700"
-			(id 6)
-			(at 0 -25.4 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "ki_keywords" "Pin Headers"
-			(id 8)
-			(at 0 -27.94 0)
+			(at 0 -17.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -82,10 +42,10 @@
 		)
 		(in_bom yes)
 		(on_board yes)
-		(symbol "KH-2.54PH180-1X7P-L11.5_0_1"
+		(symbol "KH-2.54FH-1X7P-H8.5_0_1"
 			(rectangle
-				(start -1.27 10.16)
-				(end 3.81 -10.16)
+				(start -2.54 10.16)
+				(end 2.54 -10.16)
 				(stroke
 					(width 0)
 					(type default)
@@ -96,7 +56,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 7.62 0)
+				(at -5.08 7.62 0)
 				(length 2.54)
 				(name "1"
 					(effects
@@ -114,7 +74,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 5.08 0)
+				(at -5.08 5.08 0)
 				(length 2.54)
 				(name "2"
 					(effects
@@ -132,7 +92,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 2.54 0)
+				(at -5.08 2.54 0)
 				(length 2.54)
 				(name "3"
 					(effects
@@ -150,7 +110,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 -0 0)
+				(at -5.08 -0 0)
 				(length 2.54)
 				(name "4"
 					(effects
@@ -168,7 +128,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 -2.54 0)
+				(at -5.08 -2.54 0)
 				(length 2.54)
 				(name "5"
 					(effects
@@ -186,7 +146,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 -5.08 0)
+				(at -5.08 -5.08 0)
 				(length 2.54)
 				(name "6"
 					(effects
@@ -204,7 +164,7 @@
 				)
 			)
 			(pin unspecified line
-				(at -3.81 -7.62 0)
+				(at -5.08 -7.62 0)
 				(length 2.54)
 				(name "7"
 					(effects

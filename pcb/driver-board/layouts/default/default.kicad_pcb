@@ -125,7 +125,7 @@
 	(net 23 "xiao_right-5")
 	(net 24 "xiao_right-7")
 	(net 1 "2")
-	(footprint "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-M"
+	(footprint "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-F"
 		(layer "F.Cu")
 		(uuid "0759de83-6980-4e68-bdda-41d24642524b")
 		(at 14.88 14 270)
@@ -151,22 +151,22 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C2932700"
+		(property "LCSC Part" "C2932672"
 			(at 0 0 270)
 		)
-		(property "LCSC" "C2932700"
+		(property "LCSC" "C2932672"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
 			(uuid "baf60f59-ca79-4001-a514-75174642524b")
 		)
-		(property "Manufacturer" "KH"
+		(property "Manufacturer" "Shenzhen Kinghelm Elec"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
 			(uuid "cc19f833-86bf-49e8-8020-3dd04642524b")
 		)
-		(property "Partnumber" "KH-2.54PH180-1X7P-L11.5"
+		(property "Partnumber" "KH-2.54FH-1X7P-H8.5"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
@@ -178,7 +178,7 @@
 			(hide yes)
 			(uuid "929234bc-69d1-4358-b0b6-88814642524b")
 		)
-		(property "lcsc_id" "C2932700"
+		(property "lcsc_id" "C2932672"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
@@ -186,8 +186,8 @@
 		)
 		(attr through_hole)
 		(fp_line
-			(start -6.35 -1.25)
-			(end -6.35 1.25)
+			(start -6.35 -1.14)
+			(end -6.35 1.14)
 			(stroke
 				(width 0.25)
 				(type solid)
@@ -195,119 +195,71 @@
 			(layer "F.SilkS")
 			(layers "F.SilkS")
 			(locked no)
-			(uuid "9bc6a7e9-97f8-4b86-8579-8c69bd291fe3")
+			(uuid "78c91960-148c-4a4e-b22d-82bda3d6cf2b")
 		)
 		(fp_line
-			(start -8.89 1.25)
-			(end 8.89 1.25)
+			(start -9.13 -1.2)
+			(end 9.13 -1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "34ce98f8-fd8c-477d-a60c-8f46c71f3cbd")
+			(uuid "d9c8cc88-34aa-4deb-9bbb-e12ae3b4fa11")
 		)
 		(fp_line
-			(start -8.89 -1.25)
-			(end -8.89 1.25)
+			(start 9.13 -1.2)
+			(end 9.13 1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "ff47aa14-e5fb-49d9-9cce-edf7a170cb96")
+			(uuid "bf4d9bf5-46b1-44e4-b3ee-3c22fd8be287")
 		)
 		(fp_line
-			(start 8.89 1.25)
-			(end 8.89 -1.25)
+			(start 9.13 1.2)
+			(end -9.13 1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "5ff0bb73-05f9-48f3-9618-0d2d4d143bc6")
+			(uuid "14b28015-41d6-433d-9128-9aca50080aca")
 		)
 		(fp_line
-			(start 8.89 -1.25)
-			(end -8.89 -1.25)
+			(start -9.13 -1.2)
+			(end -9.13 -1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "6966e0bf-e2f7-4eaa-bf55-6fb76a5e02b8")
-		)
-		(fp_line
-			(start 8.89 -1.25)
-			(end -8.89 -1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "6c1710ed-2efa-40e1-994b-bd4d042ad13a")
-		)
-		(fp_line
-			(start -8.89 -1.25)
-			(end -8.89 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "a2fd7fd1-14c4-4b12-a0ef-0a4812de4645")
-		)
-		(fp_line
-			(start -8.89 1.25)
-			(end 8.89 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "94db4eeb-399a-4f23-8cae-2cfab5873e48")
-		)
-		(fp_line
-			(start 8.89 1.25)
-			(end 8.89 -1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "5568374c-84d3-418b-a6e1-f6f0fbc1a4ca")
+			(uuid "4758c3be-8b31-4e4b-a704-ad1fdad28bdc")
 		)
 		(fp_circle
-			(center -8.88 1.25)
-			(end -8.85 1.25)
+			(center -9.14 1.25)
+			(end -9.11 1.25)
 			(stroke
 				(width 0.06)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "F.Fab")
 			(locked no)
-			(uuid "b61b7efa-9284-4415-9c02-39525afdbc7b")
+			(uuid "a04b4fc6-c6a6-4599-9aa8-ca6eb2f966bc")
 		)
 		(pad "1" thru_hole rect
 			(at -7.62 0 270)
-			(size 1.7 1.7)
-			(drill 1.100024)
+			(size 1.57 1.7)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 15 "1-1")
 			(uuid "6fcef6d9-d9dd-4ebc-9bec-eada7b45f55f")
@@ -315,7 +267,7 @@
 		(pad "2" thru_hole circle
 			(at -5.08 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 10 "2-1")
 			(uuid "41c08bba-4e9a-45ab-aba8-824548258f44")
@@ -323,7 +275,7 @@
 		(pad "3" thru_hole circle
 			(at -2.54 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 16 "3")
 			(uuid "e2321143-607f-4a10-ad90-620e5128a061")
@@ -331,7 +283,7 @@
 		(pad "4" thru_hole circle
 			(at 0 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 11 "4")
 			(uuid "04402291-b1ee-4e0d-9f92-9f2da529c9da")
@@ -339,7 +291,7 @@
 		(pad "5" thru_hole circle
 			(at 2.54 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 17 "xiao_left-5")
 			(uuid "3171a8be-1105-4f67-b151-5c7f6ac218b0")
@@ -347,7 +299,7 @@
 		(pad "6" thru_hole circle
 			(at 5.08 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 18 "xiao_left-6")
 			(uuid "245a680c-acfd-4c08-80c4-dcddf5aa1154")
@@ -355,15 +307,15 @@
 		(pad "7" thru_hole circle
 			(at 7.62 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 19 "xiao_left-7")
 			(uuid "ecbbca0d-7b60-4838-a328-7c0b3381d373")
 		)
 		(embedded_fonts no)
-		(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board/parts_raw/C2932700/C2932700.3dshapes/HDR-TH_7P-P2.54-M-LI-1X7P.wrl"
+		(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C2932672/C2932672.3dshapes/HDR-TH_7P-P2.54-F-LI-1X7P.wrl"
 			(offset
-				(xyz 0 0 0)
+				(xyz 0 -0 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -373,7 +325,7 @@
 			)
 		)
 	)
-	(footprint "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-M"
+	(footprint "KH_2_54_1X7_FEMALE:HDR-TH_7P-P2.54-V-F"
 		(layer "F.Cu")
 		(uuid "54d650d3-fba6-4b85-a365-c1084642524b")
 		(at 30.12 14 270)
@@ -399,22 +351,22 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C2932700"
+		(property "LCSC Part" "C2932672"
 			(at 0 0 270)
 		)
-		(property "LCSC" "C2932700"
+		(property "LCSC" "C2932672"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
 			(uuid "99c068ef-a6a8-4779-b7ad-7ee14642524b")
 		)
-		(property "Manufacturer" "KH"
+		(property "Manufacturer" "Shenzhen Kinghelm Elec"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
 			(uuid "4056a503-ce88-4a1a-91ed-b0ca4642524b")
 		)
-		(property "Partnumber" "KH-2.54PH180-1X7P-L11.5"
+		(property "Partnumber" "KH-2.54FH-1X7P-H8.5"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
@@ -426,7 +378,7 @@
 			(hide yes)
 			(uuid "244829b7-5525-4f0f-be9f-0a9c4642524b")
 		)
-		(property "lcsc_id" "C2932700"
+		(property "lcsc_id" "C2932672"
 			(at 0 0 270)
 			(layer "User.9")
 			(hide yes)
@@ -434,8 +386,8 @@
 		)
 		(attr through_hole)
 		(fp_line
-			(start -6.35 -1.25)
-			(end -6.35 1.25)
+			(start -6.35 -1.14)
+			(end -6.35 1.14)
 			(stroke
 				(width 0.25)
 				(type solid)
@@ -443,119 +395,71 @@
 			(layer "F.SilkS")
 			(layers "F.SilkS")
 			(locked no)
-			(uuid "9bc6a7e9-97f8-4b86-8579-8c69bd291fe3")
+			(uuid "de9373ff-d557-41f4-9529-7ba87b0186c0")
 		)
 		(fp_line
-			(start -8.89 1.25)
-			(end 8.89 1.25)
+			(start -9.13 -1.2)
+			(end 9.13 -1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "34ce98f8-fd8c-477d-a60c-8f46c71f3cbd")
+			(uuid "a9edf260-14e3-479d-86ea-2a985f06aa41")
 		)
 		(fp_line
-			(start -8.89 -1.25)
-			(end -8.89 1.25)
+			(start 9.13 -1.2)
+			(end 9.13 1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "ff47aa14-e5fb-49d9-9cce-edf7a170cb96")
+			(uuid "2e7f91b9-4f9d-44b9-87b3-14a22c66ff93")
 		)
 		(fp_line
-			(start 8.89 1.25)
-			(end 8.89 -1.25)
+			(start 9.13 1.2)
+			(end -9.13 1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "5ff0bb73-05f9-48f3-9618-0d2d4d143bc6")
+			(uuid "1b6dbf98-0b60-4bbb-9344-1ecc78380188")
 		)
 		(fp_line
-			(start 8.89 -1.25)
-			(end -8.89 -1.25)
+			(start -9.13 -1.2)
+			(end -9.13 -1.2)
 			(stroke
-				(width 0.25)
+				(width 3)
 				(type solid)
 			)
-			(layer "F.SilkS")
-			(layers "F.SilkS")
+			(layer "F.Fab")
+			(layers "F.Fab")
 			(locked no)
-			(uuid "6966e0bf-e2f7-4eaa-bf55-6fb76a5e02b8")
-		)
-		(fp_line
-			(start 8.89 -1.25)
-			(end -8.89 -1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "6c1710ed-2efa-40e1-994b-bd4d042ad13a")
-		)
-		(fp_line
-			(start -8.89 -1.25)
-			(end -8.89 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "a2fd7fd1-14c4-4b12-a0ef-0a4812de4645")
-		)
-		(fp_line
-			(start -8.89 1.25)
-			(end 8.89 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "94db4eeb-399a-4f23-8cae-2cfab5873e48")
-		)
-		(fp_line
-			(start 8.89 1.25)
-			(end 8.89 -1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(layers "F.CrtYd")
-			(locked no)
-			(uuid "5568374c-84d3-418b-a6e1-f6f0fbc1a4ca")
+			(uuid "bb005f8a-05c6-4d8e-b05f-7464e17097e6")
 		)
 		(fp_circle
-			(center -8.88 1.25)
-			(end -8.85 1.25)
+			(center -9.14 1.25)
+			(end -9.11 1.25)
 			(stroke
 				(width 0.06)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "F.Fab")
 			(locked no)
-			(uuid "b61b7efa-9284-4415-9c02-39525afdbc7b")
+			(uuid "15197325-21ac-4719-a3c7-729cbc897864")
 		)
 		(pad "1" thru_hole rect
 			(at -7.62 0 270)
-			(size 1.7 1.7)
-			(drill 1.100024)
+			(size 1.57 1.7)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 20 "1")
 			(uuid "6fcef6d9-d9dd-4ebc-9bec-eada7b45f55f")
@@ -563,7 +467,7 @@
 		(pad "2" thru_hole circle
 			(at -5.08 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 1 "2")
 			(uuid "41c08bba-4e9a-45ab-aba8-824548258f44")
@@ -571,7 +475,7 @@
 		(pad "3" thru_hole circle
 			(at -2.54 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 21 "p3v3")
 			(uuid "e2321143-607f-4a10-ad90-620e5128a061")
@@ -579,7 +483,7 @@
 		(pad "4" thru_hole circle
 			(at 0 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 22 "xiao_right-4")
 			(uuid "04402291-b1ee-4e0d-9f92-9f2da529c9da")
@@ -587,7 +491,7 @@
 		(pad "5" thru_hole circle
 			(at 2.54 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 23 "xiao_right-5")
 			(uuid "3171a8be-1105-4f67-b151-5c7f6ac218b0")
@@ -595,7 +499,7 @@
 		(pad "6" thru_hole circle
 			(at 5.08 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 2 "hall_do")
 			(uuid "245a680c-acfd-4c08-80c4-dcddf5aa1154")
@@ -603,15 +507,15 @@
 		(pad "7" thru_hole circle
 			(at 7.62 0 270)
 			(size 1.7 1.7)
-			(drill 1.100024)
+			(drill 1.1000232)
 			(layers "*.Cu" "*.Mask")
 			(net 24 "xiao_right-7")
 			(uuid "ecbbca0d-7b60-4838-a328-7c0b3381d373")
 		)
 		(embedded_fonts no)
-		(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board/parts_raw/C2932700/C2932700.3dshapes/HDR-TH_7P-P2.54-M-LI-1X7P.wrl"
+		(model "/Users/calum/code/github.com/0x63616c/split-flap/pcb/driver-board-nema/parts_raw/C2932672/C2932672.3dshapes/HDR-TH_7P-P2.54-F-LI-1X7P.wrl"
 			(offset
-				(xyz 0 0 0)
+				(xyz 0 -0 0)
 			)
 			(scale
 				(xyz 1 1 1)

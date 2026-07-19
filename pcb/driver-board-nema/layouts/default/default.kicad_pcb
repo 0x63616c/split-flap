@@ -1189,7 +1189,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C2932700"
+		(property "LCSC Part" "C2932672"
 			(at 0 0 270)
 		)
 		(property "LCSC" "C2932672"
@@ -1389,7 +1389,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C2932700"
+		(property "LCSC Part" "C2932672"
 			(at 0 0 270)
 		)
 		(property "LCSC" "C2932672"

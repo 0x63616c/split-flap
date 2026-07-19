@@ -5,11 +5,15 @@ import is_atomic_part
 
 component KH_2_54_1X7_FEMALE_package:
     """
-    1x7 2.54mm female socket header, 11.5mm — one row of the XIAO socket.
-    Two of these accept a Seeed XIAO ESP32-C6 on pin headers.
+    1x7 2.54mm FEMALE socket header (receptacle), 8.5mm — one row of the XIAO
+    socket. Two of these accept a Seeed XIAO ESP32-C6 on its male pin headers.
+
+    Kinghelm naming: PH = Pin Header (male pins), FH = Female Header
+    (receptacle). This part must be FH — a PH here would give two male headers
+    that cannot mate with the XIAO's own male pins.
     """
-    trait is_atomic_part<manufacturer="KH", partnumber="KH-2.54PH180-1X7P-L11.5", footprint="HDR-TH_7P-P2.54-V-M.kicad_mod", symbol="KH-2.54PH180-1X7P-L11.5.kicad_sym">
-    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2932700", manufacturer="KH", partno="KH-2.54PH180-1X7P-L11.5">
+    trait is_atomic_part<manufacturer="Shenzhen Kinghelm Elec", partnumber="KH-2.54FH-1X7P-H8.5", footprint="HDR-TH_7P-P2.54-V-F.kicad_mod", symbol="KH-2.54FH-1X7P-H8.5.kicad_sym">
+    trait has_part_picked::by_supplier<supplier_id="lcsc", supplier_partno="C2932672", manufacturer="Shenzhen Kinghelm Elec", partno="KH-2.54FH-1X7P-H8.5">
     trait has_designator_prefix<prefix="J">
 
     # pins

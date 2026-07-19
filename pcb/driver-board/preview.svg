@@ -45,12 +45,8 @@
 <line x1="421.7" y1="267.1" x2="560.0" y2="308.0" stroke="#b0433b" stroke-width="5.6" stroke-linecap="round" opacity="0.9"/>
 <line x1="560.0" y1="308.0" x2="560.0" y2="672.0" stroke="#b0433b" stroke-width="5.6" stroke-linecap="round" opacity="0.9"/>
 <line x1="560.0" y1="672.0" x2="455.0" y2="707.0" stroke="#b0433b" stroke-width="5.6" stroke-linecap="round" opacity="0.9"/>
-<line x1="225.8" y1="107.1" x2="190.8" y2="107.1" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="190.8" y1="71.5" x2="190.8" y2="320.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="225.8" y1="71.5" x2="190.8" y2="71.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="190.8" y1="320.5" x2="225.8" y2="320.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="225.8" y1="320.5" x2="225.8" y2="71.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<rect x="196.4" y="77.4" width="23.8" height="23.8" rx="0" fill="#d4b03c"/>
+<line x1="224.3" y1="107.1" x2="192.4" y2="107.1" stroke="#8fa3b8" stroke-width="1.2"/>
+<rect x="196.4" y="78.3" width="23.8" height="22.0" rx="0" fill="#d4b03c"/>
 <circle cx="208.3" cy="89.3" r="7.7" fill="#10141a"/>
 <circle cx="208.3" cy="124.9" r="11.9" fill="#d4b03c"/>
 <circle cx="208.3" cy="124.9" r="7.7" fill="#10141a"/>
@@ -65,12 +61,8 @@
 <circle cx="208.3" cy="302.7" r="11.9" fill="#d4b03c"/>
 <circle cx="208.3" cy="302.7" r="7.7" fill="#10141a"/>
 <text x="208.3" y="192.0" fill="#e8e0d0" font-size="11" text-anchor="middle">J3 xiao_left</text>
-<line x1="439.2" y1="107.1" x2="404.2" y2="107.1" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="404.2" y1="71.5" x2="404.2" y2="320.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="439.2" y1="71.5" x2="404.2" y2="71.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="404.2" y1="320.5" x2="439.2" y2="320.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<line x1="439.2" y1="320.5" x2="439.2" y2="71.5" stroke="#8fa3b8" stroke-width="1.2"/>
-<rect x="409.8" y="77.4" width="23.8" height="23.8" rx="0" fill="#d4b03c"/>
+<line x1="437.6" y1="107.1" x2="405.7" y2="107.1" stroke="#8fa3b8" stroke-width="1.2"/>
+<rect x="409.8" y="78.3" width="23.8" height="22.0" rx="0" fill="#d4b03c"/>
 <circle cx="421.7" cy="89.3" r="7.7" fill="#10141a"/>
 <circle cx="421.7" cy="124.9" r="11.9" fill="#d4b03c"/>
 <circle cx="421.7" cy="124.9" r="7.7" fill="#10141a"/>
