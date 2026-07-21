@@ -111,18 +111,17 @@ MODELS = {
         "poopbucket",
     ),
     "mirror-light": Model(
-        "SIDE QUEST arched-mirror LED halo: glass ghost, spacers, strip, spool",
+        "SIDE QUEST arched-mirror LED halo: glass, 21 spacers, closed strip loop",
         "mirrorlight",
     ),
     "mirror-spacer": Model(
-        "mirror halo: the two printable spacers, strip ghost in the groove",
+        "mirror halo: the three printable spacers, strip ghost in the groove",
         "mirrorlight",
         "spacer_scene",
     ),
-    "mirror-spool": Model(
-        "mirror halo: slack spool with the coiled surplus strip",
-        "mirrorlight",
-        "spool_scene",
+    "mirror-jigs": Model(
+        "mirror halo: the four placement jigs, as printed",
+        "mirrorjig",
     ),
 }
 
@@ -152,7 +151,11 @@ PRINTABLE = {
     "poop-bucket": Printable("poopbucket", "poop_bucket"),
     "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
     "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
-    "mirror-slack-spool": Printable("mirrorlight", "slack_spool"),
+    "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
+    "mirror-jig-bottom": Printable("mirrorjig", "jig_bottom"),
+    "mirror-jig-side": Printable("mirrorjig", "jig_side"),
+    "mirror-jig-arch": Printable("mirrorjig", "jig_arch"),
+    "mirror-jig-corner": Printable("mirrorjig", "jig_corner"),
 }
 
 
@@ -164,7 +167,7 @@ PRINTABLE = {
 STEP = {
     "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
     "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
-    "mirror-slack-spool": Printable("mirrorlight", "slack_spool"),
+    "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
     "mirror-light-assembly": Printable("mirrorlight", "assembly"),
 }
 

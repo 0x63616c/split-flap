@@ -16,7 +16,7 @@ Written by `python -m splitflap_cad render` into cad/export/.
 import math
 from pathlib import Path
 
-from .mirrorlight import arch_angles, layout, report
+from .mirrorlight import arch_angles, layout, report, spacer_count
 from .params import IN, P
 
 FIG_DPI = 160
@@ -42,15 +42,27 @@ def _mirror_outline(n: int = 200):
 
 
 def _inset_contour(n: int = 200):
-    """The lit path: up one side, round the arch, down the other."""
-    x, r = P.ml_path_x, P.ml_path_r
-    xs, ys = [-x, -x], [P.ml_inset, P.ml_path_junction_y]
-    for i in range(n + 1):
+    """The lit loop: bottom, both corners, both sides, the arch."""
+    x, r, cr = P.ml_path_x, P.ml_path_r, P.ml_corner_r
+    xs, ys = [0.0, -P.ml_corner_cx], [P.ml_inset, P.ml_inset]
+    for i in range(n // 4 + 1):  # left corner, sweeping up to the side
+        a = math.radians(270 - i * 90 / (n // 4))
+        xs.append(-P.ml_corner_cx + cr * math.cos(a))
+        ys.append(P.ml_corner_cy + cr * math.sin(a))
+    ys.append(P.ml_path_junction_y)
+    xs.append(-x)
+    for i in range(n + 1):  # arch
         a = math.radians(180 - P.ml_path_phi - i * (180 - 2 * P.ml_path_phi) / n)
         xs.append(r * math.cos(a))
         ys.append(P.ml_arch_cy + r * math.sin(a))
-    xs += [x, x]
-    ys += [P.ml_path_junction_y, P.ml_inset]
+    xs.append(x)
+    ys.append(P.ml_corner_cy)
+    for i in range(n // 4 + 1):  # right corner, down to the bottom run
+        a = math.radians(i * 90 / (n // 4))
+        xs.append(P.ml_corner_cx + cr * math.cos(a))
+        ys.append(P.ml_corner_cy - cr * math.sin(a))
+    xs.append(0.0)
+    ys.append(P.ml_inset)
     return xs, ys
 
 
@@ -76,7 +88,6 @@ def render_layout(out: Path) -> Path:
     import matplotlib.pyplot as plt
     from matplotlib.patches import Circle, Rectangle, Wedge
 
-    side, arch, _ = layout()
     fig, ax = plt.subplots(figsize=(7.2, 13.5), dpi=FIG_DPI)
 
     ax.fill(*_mirror_outline(), color=GLASS, alpha=0.18, zorder=0)
@@ -87,51 +98,48 @@ def render_layout(out: Path) -> Path:
     )
 
     t, L = P.ml_spacer_t, P.ml_spacer_len
+    bottom, corner, side, arch, *_ = layout()
     for sign in (1, -1):
-        for s in side.at:
-            y = P.ml_inset + s
+        for sp in side.at:
+            y = P.ml_corner_cy + sp
             x0 = sign * P.ml_path_x - (t if sign > 0 else 0)
             ax.add_patch(
                 Rectangle((x0, y - L / 2), t, L, fc=PART, ec=INK, lw=0.5, zorder=4)
             )
-    for a in arch_angles():
+    for sp in bottom.at:
+        x = -P.ml_corner_cx + sp
+        ax.add_patch(
+            Rectangle((x - L / 2, P.ml_inset, ), L, t, fc=PART, ec=INK, lw=0.5,
+                      zorder=4)
+        )
+    for a_deg in arch_angles():
         ax.add_patch(
             Wedge(
                 (0, P.ml_arch_cy), P.ml_path_r,
-                a - P.ml_spacer_dphi / 2, a + P.ml_spacer_dphi / 2,
+                a_deg - P.ml_spacer_dphi / 2, a_deg + P.ml_spacer_dphi / 2,
                 width=t, fc=PART, ec=INK, lw=0.5, zorder=4,
             )
         )
+    for sign, a0 in ((1, -90), (-1, 180)):
+        ax.add_patch(
+            Wedge(
+                (sign * P.ml_corner_cx, P.ml_corner_cy), P.ml_corner_r,
+                a0, a0 + 90, width=t, fc="#c96f1e", ec=INK, lw=0.5, zorder=4,
+            )
+        )
     ax.add_patch(Rectangle((0, 0), 0, 0, fc=PART, ec=INK, label="spacer (3 in)"))
-
-    sy = P.ml_inset + P.ml_spool_coil_od / 2 + P.ml_spool_wall
     ax.add_patch(
-        Circle((0, sy), P.ml_spool_coil_od / 2 + P.ml_spool_wall,
-               fc="none", ec=PART, lw=1.4, zorder=4)
-    )
-    ax.add_patch(
-        Circle((0, sy), P.ml_spool_hub_d / 2, fc="none", ec=STRIP, lw=1.2, zorder=4)
-    )
-    ax.text(
-        0, sy - P.ml_spool_coil_od / 2 - 26,
-        f"slack spool — {P.ml_slack / IN:.1f} in coiled",
-        ha="center", va="center", fontsize=7, color=INK,
+        Rectangle((0, 0), 0, 0, fc="#c96f1e", ec=INK,
+                  label=f'corner spacer (R {P.ml_corner_r / IN:.0f}")')
     )
 
-    # feed end + dark bottom edge
-    ax.plot([-P.ml_path_x], [P.ml_inset], "o", color=INK, ms=5, zorder=6)
+    # the seam: strip ends meet in the middle gap of the bottom run
+    ax.plot([0], [P.ml_inset], "o", color=INK, ms=5, zorder=6)
     ax.annotate(
-        "strip start (feed)", xy=(-P.ml_path_x, P.ml_inset),
-        xytext=(-P.ml_mirror_w / 2 - 40, -70), fontsize=7, color=INK,
-        arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
-    )
-    ax.plot(
-        [-P.ml_path_x, P.ml_path_x], [P.ml_inset * 0.5] * 2,
-        ls=(0, (2, 3)), color=GHOST, lw=1.2,
-    )
-    ax.text(
-        0, -46, "bottom edge unlit", ha="center",
-        fontsize=7, color=GHOST,
+        f"seam + feed — strip ends meet here\n{P.ml_slack / IN:.1f} in spare "
+        "tucks behind the glass",
+        xy=(0, P.ml_inset), xytext=(0, -168), fontsize=7, color=INK,
+        ha="center", arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
     )
 
     # dimensions
@@ -141,17 +149,18 @@ def render_layout(out: Path) -> Path:
     _dim(ax, (w2 + 210, 0), (w2 + 210, P.ml_mirror_h), f'76" overall', rot=90)
     _dim(
         ax, (P.ml_path_x, P.ml_path_junction_y + 8), (w2, P.ml_path_junction_y + 8),
-        f'2.2"', offset=(0, 34), fs=6.5,
+        f'{P.ml_inset / IN:.1f}"', offset=(0, 34), fs=6.5,
     )
-    g0 = P.ml_inset + side.at[0] + L / 2
+    g0 = P.ml_corner_cy + side.at[0] + L / 2
     _dim(
         ax, (-P.ml_path_x - 46, g0), (-P.ml_path_x - 46, g0 + side.gap),
         f"gap {side.gap / IN:.2f}\"", rot=90, fs=6.5,
     )
     _dim(
-        ax, (-P.ml_path_x - 46, P.ml_path_junction_y - side.tail),
+        ax, (-P.ml_path_x - 46, P.ml_path_junction_y - side.gap / 2),
         (-P.ml_path_x - 46, P.ml_path_junction_y + arch.lead),
-        f"junction gap {P.ml_gap / IN:.2f}\"", rot=90, fs=6.5, offset=(-24, 0),
+        f"junction {(side.gap / 2 + arch.lead) / IN:.2f}\"", rot=90, fs=6.5,
+        offset=(-24, 0),
     )
     ax.plot(
         [-P.ml_mirror_w / 2 - 60, P.ml_mirror_w / 2],
@@ -165,15 +174,15 @@ def render_layout(out: Path) -> Path:
 
     ax.set_title(
         "Arched mirror backlight — layout (front elevation, mm)\n"
-        + f"{2 * side.n + arch.n} spacers · arch R {P.ml_arch_r:.1f} mm "
-        f"({P.ml_arch_r / IN:.3f} in) · strip 16.4 ft, "
-        f"{P.ml_slack / IN:.1f} in slack",
+        + f"{spacer_count()['total']} spacers · arch R {P.ml_arch_r:.1f} mm "
+        f"({P.ml_arch_r / IN:.3f} in) · closed loop "
+        f"{P.ml_path_len / IN / 12:.2f} ft of 16.4 ft",
         fontsize=9,
     )
     ax.legend(loc="lower right", fontsize=7, framealpha=0.9)
     ax.set_aspect("equal")
     ax.set_xlim(-w2 - 300, w2 + 300)
-    ax.set_ylim(-190, P.ml_mirror_h + 90)
+    ax.set_ylim(-235, P.ml_mirror_h + 90)
     ax.grid(alpha=0.12)
     ax.tick_params(labelsize=6)
     fig.tight_layout()
@@ -191,7 +200,7 @@ def render_section(out: Path) -> Path:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle
+    from matplotlib.patches import Polygon, Rectangle
 
     fig = plt.figure(figsize=(13.5, 7.6), dpi=FIG_DPI)
     ax = fig.add_axes([0.02, 0.02, 0.60, 0.88])
@@ -206,22 +215,23 @@ def render_section(out: Path) -> Path:
 
     spacer = Rectangle((0, -t), H, t, fc=PART, ec=INK, lw=1.1, zorder=3)
     ax.add_patch(spacer)
-    ax.add_patch(Rectangle((gz0, -gd), gw, gd, fc="white", ec=INK, lw=0.9, zorder=4))
+    gz = H - gz0 - gw  # channel measured DOWN from the mirror face
+    ax.add_patch(Rectangle((gz, -gd), gw, gd, fc="white", ec=INK, lw=0.9, zorder=4))
     ax.add_patch(
         Rectangle(
-            (gz0 + P.ml_groove_clear, -gd + P.ml_groove_over),
+            (gz + P.ml_groove_clear, -gd + P.ml_groove_over),
             P.ml_strip_w, P.ml_strip_t, fc=STRIP, ec=INK, lw=0.8, zorder=5,
         )
     )
     ax.annotate(
         f"Hue Solo sleeve {P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}\n"
         f"emitting face {P.ml_groove_over:.1f} shy of the mouth",
-        xy=(gz0 + gw / 2, -gd / 2), xytext=(H + 46, 34), fontsize=7,
+        xy=(gz + gw / 2, -gd / 2), xytext=(H + 46, 34), fontsize=7,
         color=INK, ha="center",
         arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
     )
 
-    # glass: back face on the spacer top, running out past the inset
+    # glass: back face on the spacer tops, running out past the inset
     ax.add_patch(
         Rectangle((H, -t - 34), P.ml_mirror_t, t + 34 + P.ml_inset,
                   fc=GLASS, ec=INK, alpha=0.45, lw=1.0, zorder=3)
@@ -230,65 +240,48 @@ def render_section(out: Path) -> Path:
         H + P.ml_mirror_t + 4, -t - 4, "mirror\n(back face)",
         fontsize=7.5, color=INK, va="top",
     )
-
-    # screw: counterbore + through-hole + shank into the stud
-    yc = -t + P.ml_screw_r
-    ax.add_patch(
-        Rectangle((0, yc - P.ml_screw_d / 2), H, P.ml_screw_d, fc="white",
-                  ec=INK, lw=0.8, zorder=6)
-    )
-    ax.add_patch(
-        Rectangle((H - P.ml_cbore_depth, yc - P.ml_screw_head_d / 2),
-                  P.ml_cbore_depth, P.ml_screw_head_d, fc="white", ec=INK,
-                  lw=0.8, zorder=6)
-    )
-    ax.add_patch(
-        Rectangle((-26, yc - 4.17 / 2), 26 + P.ml_screw_meat, 4.17,
-                  fc="#b8bcc2", ec=INK, lw=0.7, zorder=7)
-    )
-    ax.add_patch(
-        Rectangle((P.ml_screw_meat - 3.5, yc - 7.9 / 2), 3.5, 7.9,
-                  fc="#b8bcc2", ec=INK, lw=0.7, zorder=7)
+    # the bond: glue on the mirror face, the wall face just rests
+    ax.plot([H, H], [-t, 0], color="#c0392b", lw=3, zorder=6)
+    ax.annotate(
+        "glued to the frame back\n(no fasteners)",
+        xy=(H, -t / 2), xytext=(H + 46, -t - 20), fontsize=7, color="#c0392b",
+        ha="center", arrowprops=dict(arrowstyle="->", lw=0.8, color="#c0392b"),
     )
     ax.annotate(
-        f"#8 head, buried {P.ml_cbore_depth:.1f} deep\n"
-        f"(bore {P.ml_screw_head_d:.1f}, through {P.ml_screw_d:.1f})",
-        xy=(P.ml_screw_meat - 1, yc), xytext=(H + 26, yc - 26), fontsize=7,
-        color=INK, ha="center",
-        arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
+        "rests on the wall",
+        xy=(0, -t * 0.75), xytext=(-24, -t - 22), fontsize=7, color=INK,
+        ha="center", arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
     )
 
     # light out of the gap, washing the wall
     for dz in (-5, 1, 7):
         ax.annotate(
-            "", xy=(gz0 + gw / 2 + dz, P.ml_inset + 24),
-            xytext=(gz0 + gw / 2 + dz, -gd + P.ml_strip_t + 1),
+            "", xy=(gz + gw / 2 + dz, P.ml_inset + 24),
+            xytext=(gz + gw / 2 + dz, -gd + P.ml_strip_t + 1),
             arrowprops=dict(arrowstyle="-|>", color="#d9a400", lw=1.4),
         )
     ax.text(
-        gz0 + gw / 2 + 1, P.ml_inset + 30, "light out through the gap,\n"
+        gz + gw / 2 + 1, P.ml_inset + 30, "light out through the gap,\n"
         "washing the wall", ha="center", fontsize=8, color="#a87b00",
     )
 
     _dim(ax, (0, -t - 14), (H, -t - 14), f'standoff {H:.1f} (1.5in)', offset=(0, -4.5))
     _dim(ax, (-34, -t), (-34, 0), f"{t:.0f} thick", rot=90)
-    _dim(ax, (gz0, 8), (gz0 + gw, 8), f"groove {gw:.1f}", offset=(0, 3.6), fs=7)
-    _dim(ax, (gz0 - 7, -gd), (gz0 - 7, 0), f"{gd:.1f}", rot=90, fs=7)
+    _dim(ax, (gz, 8), (gz + gw, 8), f"channel {gw:.1f}", offset=(0, 3.6), fs=7)
+    _dim(ax, (gz - 7, -gd), (gz - 7, 0), f"{gd:.1f}", rot=90, fs=7)
     _dim(
-        ax, (H - P.ml_cbore_depth, -t - 6), (H, -t - 6),
-        f"counterbore {P.ml_cbore_depth:.1f}", offset=(0, -4.4), fs=7,
+        ax, (gz + gw, 20), (H, 20),
+        f"{P.ml_groove_wall:.0f} off the glass", offset=(0, 3.6), fs=7,
     )
-    _dim(
-        ax, (0, -t + 2), (P.ml_screw_meat, -t + 2),
-        f"{P.ml_screw_meat:.0f} under the head", offset=(-2, -4.6), fs=7,
-    )
-    _dim(ax, (H + 8, 0), (H + 8, P.ml_inset), 'inset 2.2"', rot=90, fs=7)
+    _dim(ax, (H + 8, 0), (H + 8, P.ml_inset),
+         f'inset {P.ml_inset / IN:.1f}"', rot=90, fs=7)
     ax.plot([0, H + 34], [P.ml_inset] * 2, ls=(0, (4, 4)), color=GHOST, lw=0.7)
     ax.text(H + 34, P.ml_inset + 3, "mirror edge", fontsize=7, color=GHOST)
 
     ax.set_title(
-        "Spacer cross-section (straight variant, cut at a screw) — mm\n"
-        "prints wall-face-down: groove opens up, screw bores run horizontal",
+        "Spacer cross-section (straight variant) — mm\n"
+        "prints MIRROR-face-down: that face is the bond face and the bed "
+        "gives it the best finish",
         fontsize=9,
     )
     ax.set_aspect("equal")
@@ -296,7 +289,7 @@ def render_section(out: Path) -> Path:
     ax.set_ylim(-t - 34, P.ml_inset + 46)
     ax.axis("off")
     fig.text(
-        0.635, 0.90, "\n".join(report()), fontsize=6.8, family="monospace",
+        0.622, 0.90, "\n".join(report()), fontsize=5.6, family="monospace",
         va="top", color=INK,
     )
     fig.savefig(out)

@@ -830,17 +830,24 @@ class Params:
     ml_mirror_h: float = 76 * IN      # overall height at the apex
     ml_mirror_t: float = 6.0          # ASSUMED glass thickness — ghost only
     ml_standoff: float = 1.5 * IN     # wall face -> mirror back face
-    ml_inset: float = 2.2 * IN        # spacer outer face inset from the mirror edge
-    ml_bottom_dark: bool = True       # bottom edge unlit — path is side/arch/side
+    ml_inset: float = 4 * IN          # spacer outer face inset from the mirror edge
+    ml_corner_r: float = 2 * IN       # bottom-corner turn radius on the inset
+                                      # contour — the strip cannot turn square
 
     # Hue Solo lightstrip, silicone sleeve: 14.0 x 4.5mm (Philips spec),
-    # 5m nominal. Not cut here — see mirrorlight.py on the slack.
+    # 5m nominal. Never cut: the loop is sized to swallow the whole roll.
     ml_strip_w: float = 14.0          # sleeve width -> groove width (along Z)
     ml_strip_t: float = 4.5           # sleeve height -> groove depth (radial)
     ml_strip_len: float = 5000.0      # 16.4 ft roll, uncut
     ml_groove_clear: float = 0.4      # per side, FDM slip fit
     ml_groove_over: float = 0.1       # groove floor drop: emitting face sits
                                       # 0.1 shy of the mouth, near flush
+    ml_groove_wall: float = 4.0       # material between the MIRROR face and
+                                      # the channel — the groove rides tight
+                                      # to the glass, not centred in the gap:
+                                      # the emitter hides deeper behind the
+                                      # edge and the wash leaves the wall
+                                      # softer. 4mm keeps the bond face stiff
 
     # spacer block: section is ml_spacer_t (radial) x ml_standoff (Z)
     ml_spacer_t: float = 20.0         # radial thickness — set by the screw
@@ -848,22 +855,21 @@ class Params:
     ml_spacer_len: float = 3 * IN     # length along the contour
     ml_gap: float = 6 * IN            # target gap between spacers
 
-    # #8 wood screws, two per spacer so it cannot rotate. Head buries in a
-    # counterbore sunk from the MIRROR side; ml_screw_meat is what is left
-    # under the head (and what sets the screw length to buy).
-    ml_screw_d: float = 4.6           # #8 shank 4.17 + FDM clearance
-    ml_screw_head_d: float = 9.0      # counterbore bore (#8 pan head ~7.9)
-    ml_screw_meat: float = 12.0       # material under the head, wall side
-    ml_screw_r: float = 7.5           # screw axis, from the INNER face
-    ml_screw_pitch: float = 50.0      # the two screws, along the contour
+    # No fasteners: the spacers glue to the back of the mirror frame and
+    # the mirror rests against the wall on them, so there is nothing to
+    # drive and nothing to counterbore. The mirror face (z=0) is the bond
+    # face — flat, bed-finished, unbroken.
 
-    # slack spool: the uncut roll is longer than the lit path; the surplus
-    # coils flat on this, hidden behind the glass at the bottom centre.
-    ml_spool_hub_d: float = 90.0      # coil ID — near the shipping reel
-    ml_spool_wall: float = 3.0
-    ml_spool_base_t: float = 3.0
-    ml_spool_rim_h: float = 20.0      # wall height over the base: strip + slip
-    ml_spool_vent_n: int = 6          # hub vents — a coiled strip still runs warm
+    # placement jigs: flat plates that hook the mirror edge and land the next
+    # spacer at the right inset AND the right gap. Print flat, no supports.
+    ml_jig_t: float = 3.0             # plate thickness
+    ml_jig_lip: float = 4.0           # edge lip: thickness past the glass edge
+    ml_jig_lip_drop: float = 4.0      # how far it wraps the edge (< glass t)
+    ml_jig_fence_h: float = 12.0      # inset fence height over the plate
+    ml_jig_finger_w: float = 8.0      # gap finger thickness along the contour
+    ml_jig_finger_l: float = 16.0     # gap finger reach past the fence
+    ml_jig_text_h: float = 9.0        # engraved label cap height
+    ml_jig_text_depth: float = 0.6
 
     @property
     def unit_back_rise(self) -> float:
@@ -931,9 +937,29 @@ class Params:
         return self.ml_arch_cy + math.sqrt(r * r - x * x)
 
     @property
+    def ml_corner_cx(self) -> float:
+        """Bottom-corner turn centre, |x|: inboard of the side contour."""
+        return self.ml_path_x - self.ml_corner_r
+
+    @property
+    def ml_corner_cy(self) -> float:
+        """Bottom-corner turn centre height: above the bottom contour."""
+        return self.ml_inset + self.ml_corner_r
+
+    @property
     def ml_side_run(self) -> float:
-        """Lit length of one straight side: bottom inset up to the junction."""
-        return self.ml_path_junction_y - self.ml_inset
+        """Lit length of one straight side: corner tangent to arch junction."""
+        return self.ml_path_junction_y - self.ml_corner_cy
+
+    @property
+    def ml_bottom_run(self) -> float:
+        """Lit length of the bottom, between the two corner tangents."""
+        return 2 * self.ml_corner_cx
+
+    @property
+    def ml_corner_run(self) -> float:
+        """Arc length of one bottom corner (a quarter turn)."""
+        return math.pi / 2 * self.ml_corner_r
 
     @property
     def ml_arch_run(self) -> float:
@@ -942,12 +968,18 @@ class Params:
 
     @property
     def ml_path_len(self) -> float:
-        """Total lit path: side + arch + side."""
-        return 2 * self.ml_side_run + self.ml_arch_run
+        """The whole loop: bottom, both corners, both sides, arch."""
+        return (
+            self.ml_bottom_run
+            + 2 * self.ml_corner_run
+            + 2 * self.ml_side_run
+            + self.ml_arch_run
+        )
 
     @property
     def ml_slack(self) -> float:
-        """Strip left over once the lit path is covered. Goes on the spool."""
+        """Strip left over once the loop is closed. Tucks behind the glass
+        at the feed; too short to be worth cutting (cut marks are 330mm)."""
         return self.ml_strip_len - self.ml_path_len
 
     @property
@@ -962,27 +994,29 @@ class Params:
 
     @property
     def ml_groove_z0(self) -> float:
-        """Groove floor edge, from the wall face: centred in the standoff."""
-        return (self.ml_standoff - self.ml_groove_w) / 2
+        """Groove's mirror-side edge, from the MIRROR face (z=0, the print
+        bed). Set by ml_groove_wall, NOT centred — the strip rides tight to
+        the glass."""
+        return self.ml_groove_wall
 
     @property
-    def ml_cbore_depth(self) -> float:
-        """Counterbore depth from the mirror-side face. Derived from the
-        material we insist on keeping under the head."""
-        return self.ml_standoff - self.ml_screw_meat
+    def ml_groove_wall_far(self) -> float:
+        """Material left between the channel (roof chamfer included) and the
+        WALL face. The chamfer is what eats into it, so check it."""
+        return self.ml_standoff - self.ml_groove_z0 - self.ml_groove_w - self.ml_groove_depth
+
+    @property
+    def ml_emitter_hide_deg(self) -> float:
+        """How far off the wall plane your eye has to get before the emitting
+        face itself comes into view past the mirror edge."""
+        return math.degrees(
+            math.atan((self.ml_groove_z0 + self.ml_groove_clear) / self.ml_inset)
+        )
 
     @property
     def ml_spacer_dphi(self) -> float:
         """Angular span of one arch spacer at the inset radius, deg."""
         return math.degrees(self.ml_spacer_len / self.ml_path_r)
-
-    @property
-    def ml_spool_coil_od(self) -> float:
-        """Outer diameter of the coiled slack: turns stack radially on
-        the hub. Rounded UP to a whole turn's worth of build."""
-        hub_c = math.pi * self.ml_spool_hub_d
-        turns = self.ml_slack / hub_c  # under-counts (later turns are longer)
-        return self.ml_spool_hub_d + 2 * math.ceil(turns) * self.ml_strip_t
 
     @property
     def flap_pin_w(self) -> float:

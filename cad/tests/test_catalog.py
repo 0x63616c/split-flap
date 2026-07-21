@@ -42,7 +42,11 @@ def test_printable_builders_exist():
         "poop-bucket",
         "mirror-spacer-straight",
         "mirror-spacer-arch",
-        "mirror-slack-spool",
+        "mirror-spacer-corner",
+        "mirror-jig-bottom",
+        "mirror-jig-side",
+        "mirror-jig-arch",
+        "mirror-jig-corner",
     }
 
 

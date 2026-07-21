@@ -9,7 +9,15 @@ junction or collide with its neighbour.
 import math
 
 import pytest
-from splitflap_cad.mirrorlight import arch_angles, layout, report
+from build123d import Pos, Rot
+from splitflap_cad.mirrorlight import (
+    arch_angles,
+    layout,
+    report,
+    spacer_corner,
+    spacer_count,
+    spacer_straight,
+)
 from splitflap_cad.params import IN, P
 
 
@@ -36,33 +44,73 @@ def test_junction_is_on_both_inset_curves():
     assert P.ml_path_x == pytest.approx(P.ml_mirror_w / 2 - P.ml_inset)
 
 
-def test_strip_budget_has_slack_and_never_needs_cutting():
+def test_loop_closes_with_the_roll_to_spare():
+    """Wrapping the bottom is what lets the uncut 16.4ft roll go all the way
+    round. What is left over gets tucked behind the glass by hand — it just
+    must never go NEGATIVE, which would mean a dark stretch."""
     assert P.ml_path_len == pytest.approx(
-        2 * P.ml_side_run + P.ml_arch_run, abs=1e-9
+        P.ml_bottom_run + 2 * P.ml_corner_run + 2 * P.ml_side_run + P.ml_arch_run,
+        abs=1e-9,
     )
-    assert P.ml_slack > 0, "lit path longer than the strip — nothing to cut it with"
-    assert P.ml_slack / IN == pytest.approx(36.7, abs=0.2)
+    assert 0 < P.ml_slack < 24 * IN, "no strip left, or more than a tuck's worth"
+
+
+def test_corner_turns_are_tangent_to_both_contours():
+    """A corner spacer only works if its arc leaves the bottom run and
+    joins the side run tangentially — otherwise the strip kinks."""
+    assert P.ml_corner_cx == pytest.approx(P.ml_path_x - P.ml_corner_r)
+    assert P.ml_corner_cy == pytest.approx(P.ml_inset + P.ml_corner_r)
+    assert P.ml_corner_r >= 1.5 * IN, "tighter than the strip will bend"
 
 
 def test_layout_gaps_are_all_near_target():
-    side, arch, _ = layout()
-    junction = side.tail + arch.lead
-    assert junction == pytest.approx(P.ml_gap)
-    for g in (side.gap, arch.gap, junction):
-        assert abs(g - P.ml_gap) < 0.5 * IN, "gap wanders too far from 6in"
+    bottom, corner, side, arch, *_ = layout()
+    assert corner.n == 1 and corner.gap == 0
+    junction = 0.5 * side.gap + arch.lead
+    for g in (bottom.gap, side.gap, arch.gap, junction, side.lead):
+        # the segments solve independently, so the family spreads a little;
+        # an inch either side of target still reads as "evenly spaced"
+        assert abs(g - P.ml_gap) < 1.0 * IN, "gap wanders too far from 6in"
 
 
 def test_no_spacer_straddles_or_overruns_a_segment_end():
     half = P.ml_spacer_len / 2
-    for run in layout()[:2]:
+    for run in layout():
         assert run.at[0] - half >= run.lead - 1e-9
-        assert run.at[-1] + half <= run.length - run.tail + 1e-9
+        assert run.at[-1] + half <= run.length - run.tail_k * run.gap + 1e-9
 
 
 def test_spacers_never_collide_within_a_segment():
-    for run in layout()[:2]:
+    for run in layout():
         for a, b in zip(run.at, run.at[1:]):
             assert b - a - P.ml_spacer_len > 0.5 * IN
+
+
+def test_bottom_seam_lands_on_the_centreline():
+    """The strip's two ends meet in the bottom run's middle gap — so that
+    gap has to straddle x=0, or the seam sits under a spacer."""
+    bottom = layout()[0]
+    mid = [a + b for a, b in zip(bottom.at, reversed(bottom.at))]
+    assert all(m == pytest.approx(bottom.length) for m in mid)
+    assert bottom.n % 2 == 0, "an odd count puts a spacer on the seam"
+
+
+def test_curved_spacers_have_a_flat_inner_face():
+    """Flattening the chord is what makes them print as stable blocks."""
+    for part in (spacer_corner(),):
+        bb = part.bounding_box()
+        slab = bb.max.X - bb.min.X
+        assert slab > P.ml_spacer_t, "no chord material — inner face still arced"
+    assert spacer_count()["total"] == sum(
+        (spacer_count()[k] for k in ("straight", "arch", "corner"))
+    )
+
+
+def test_every_part_prints_off_the_mirror_face():
+    """z=0 is the bond face and the bed; nothing may hang below it."""
+    for part in (spacer_straight(), spacer_corner()):
+        assert part.bounding_box().min.Z == pytest.approx(0, abs=1e-6)
+        assert part.bounding_box().max.Z == pytest.approx(P.ml_standoff, abs=1e-6)
 
 
 def test_arch_spacers_are_inside_the_arch_and_symmetric():
@@ -78,21 +126,61 @@ def test_groove_holds_the_strip_with_clearance_and_sits_near_flush():
     assert P.ml_groove_w - P.ml_strip_w == pytest.approx(2 * P.ml_groove_clear)
     proud = P.ml_groove_depth - P.ml_groove_over - P.ml_strip_t
     assert -0.5 <= proud <= 0.0, "emitting face should sit ~flush with the mouth"
-    assert P.ml_groove_z0 > 0 and P.ml_groove_z0 + P.ml_groove_w < P.ml_standoff
+    assert P.ml_groove_z0 >= 3.0, "too little plastic between channel and glass"
+    assert P.ml_groove_wall_far >= 6.0, "channel too close to the wall face"
+    assert P.ml_groove_z0 < (P.ml_standoff - P.ml_groove_w) / 2, (
+        "channel should ride tight to the glass, not centred in the gap"
+    )
+    assert P.ml_emitter_hide_deg < 8.0, "emitter visible too easily"
 
 
-def test_screw_pocket_has_walls_on_both_sides_and_meat_under_the_head():
-    head_r = P.ml_screw_head_d / 2
-    inner_wall = P.ml_screw_r - head_r
-    to_groove = P.ml_spacer_t - P.ml_groove_depth - (P.ml_screw_r + head_r)
-    assert inner_wall >= 2.0, "counterbore too close to the wall-side face"
-    assert to_groove >= 2.0, "counterbore breaks into the groove floor"
-    assert P.ml_cbore_depth + P.ml_screw_meat == pytest.approx(P.ml_standoff)
-    assert P.ml_screw_meat >= 8.0, "not enough plastic under the head to pull on"
-    assert P.ml_screw_pitch + P.ml_screw_head_d < P.ml_spacer_len
+def test_bond_face_is_unbroken_and_the_channel_clears_it():
+    """No fasteners: the mirror face is pure bonding area, and the channel
+    must not eat into it."""
+    part = spacer_straight()
+    bond = [f for f in part.faces() if abs(f.center().Z) < 1e-6]
+    area = sum(f.area for f in bond)
+    assert area == pytest.approx(P.ml_spacer_t * P.ml_spacer_len, rel=1e-9), (
+        "something is cutting into the glue face"
+    )
+    assert P.ml_groove_z0 > 0, "channel opens onto the bond face"
 
 
 def test_report_covers_the_numbers_worth_buying_from():
     text = "\n".join(report())
-    for want in ("lit path", "slack", "spacers", "gaps", "groove", "#8"):
+    for want in ("loop", "spare", "spacers", "gaps", "groove", "no fasteners"):
         assert want in text
+
+
+def test_jig_windows_land_the_spacers_where_the_layout_says():
+    """A jig is only useful if its windows agree with the layout: the
+    catch window over the spacer you just placed, the far window a whole
+    gap later, both clearing the part they capture."""
+    from splitflap_cad.mirrorjig import CLEAR, jig_side
+    from splitflap_cad.mirrorlight import spacer_straight
+
+    side = next(r for r in layout() if r.name == "side")
+    jig = jig_side()
+    spacer = spacer_straight()
+    for y in (-P.ml_spacer_len / 2, side.gap + P.ml_spacer_len / 2):
+        placed = Pos(P.ml_inset, y, 0) * Rot(0, 0, 180) * spacer
+        assert (jig & placed).volume == pytest.approx(0, abs=1e-6), (
+            "spacer fouls the jig window"
+        )
+    assert CLEAR <= 1.0, "window slop would blur the placement"
+
+
+def test_posed_spacers_put_the_channel_against_the_glass():
+    """The parts are modelled bond-face-down but hang bond-face-UP on the
+    wall — if the pose forgets to flip them, the strip ends up firing from
+    the wall side of the gap."""
+    from splitflap_cad.mirrorlight import posed_spacers, strip_solids
+
+    strip = strip_solids()[0].bounding_box()
+    glass = P.ml_standoff
+    assert glass - strip.max.Z == pytest.approx(P.ml_groove_wall, abs=0.5)
+    assert strip.min.Z > 2.0, "strip hard against the wall face"
+    for part in posed_spacers()[:3]:
+        bb = part.bounding_box()
+        assert bb.min.Z == pytest.approx(0, abs=1e-6)
+        assert bb.max.Z == pytest.approx(glass, abs=1e-6)

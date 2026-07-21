@@ -1,16 +1,21 @@
 """Arched-mirror LED backlight — side quest, not part of the split-flap.
 
-A 34 x 76in tombstone mirror hangs flat on the wall. Printed spacers screw
-to the wall and hold it off by ml_standoff; a Hue Solo lightstrip lies in a
-groove on their OUTER face, firing radially OUTWARD, so light leaves through
-the wall/mirror gap and washes the wall — a halo, no fixture in sight. The
-spacers sit ml_inset in from the mirror edge, hidden behind the glass.
+A 34 x 76in tombstone mirror hangs flat on the wall. Printed spacers glue to
+the back of its frame and hold it off the wall by ml_standoff; a Hue Solo lightstrip lies in a groove on their OUTER
+face, firing radially OUTWARD, so light leaves through the wall/mirror gap
+and washes the wall — a halo, no fixture in sight. The spacers sit ml_inset
+in from the mirror edge, hidden behind the glass.
+
+The strip runs the WHOLE way round — bottom, both corners, both sides, the
+arch — because the 16.4ft roll is longer than the three-sided path and it
+cannot be usefully cut (Philips' cut marks are 330mm apart). Closing the
+loop leaves ~8.8in, which tucks behind the glass at the feed.
 
 Why the groove faces out and the strip's width runs along Z: a strip only
-bends about its width axis. Following the arch curves the strip in the
+bends about its width axis. Following the contour curves the strip in the
 mirror plane, so the width MUST lie along the wall normal — which is exactly
-the pose that aims the emitting face radially outward. Easy bend, right
-direction, one groove.
+the pose that aims the emitting face radially outward. The bottom corners
+get a ml_corner_r turn for the same reason: the strip cannot go square.
 
 Arch geometry is derived, not measured: params holds width / side height /
 overall height, and P.ml_arch_r + P.ml_arch_cy fall out of them.
@@ -18,16 +23,20 @@ overall height, and P.ml_arch_r + P.ml_arch_cy fall out of them.
 World frame: wall = XY plane at z=0, +Z out of the wall, +Y up, X across,
 origin on the mirror's bottom centreline.
 
-Parts (all print wall-face-down, groove opening UP — no overhang over the
-groove, screw bores run horizontally):
-- `spacer_straight` — the sides. Local: outer face the x=0 plane facing +X,
-  body to -X, length along Y centred, wall face z=0.
-- `spacer_arch` — the arch, swept about the inset radius; every arch spacer
-  is identical. Same local frame, curvature centre at (-P.ml_path_r, 0).
-- `slack_spool` — the uncut roll is longer than the lit path; the surplus
-  coils flat on this, hidden behind the glass. Local: base bottom at z=0.
+Parts. Local frame for all three: MIRROR face at z=0 (the print bed — it is
+the bonding face and wants a bed-quality finish), wall face at z=standoff,
+outer face the x=0 plane facing +X, body to -X, length along Y.
+- `spacer_straight` — sides and bottom.
+- `spacer_arch` — swept about the inset arch radius; all identical.
+- `spacer_corner` — the quarter turn at each bottom corner.
+The swept pair keep a curved OUTER face (the strip needs it) but their inner
+face is FLAT — the chord — so they print as stable blocks.
 
-View: `just cad view mirror-light` (also mirror-spacer / mirror-section).
+No fasteners anywhere: the z=0 face glues to the back of the mirror frame and
+the mirror rests on the spacers against the wall. That is why z=0 is the bed
+face — it is the bond face, and it stays unbroken.
+
+View: `just cad view mirror-light` (also mirror-spacer). Jigs: mirrorjig.py.
 """
 
 import math
@@ -41,6 +50,7 @@ from build123d import (
     Compound,
     Cylinder,
     Plane,
+    Polygon,
     Pos,
     Rectangle,
     Rot,
@@ -56,173 +66,202 @@ from .viewer import Scene
 
 @dataclass(frozen=True)
 class Run:
-    """One straight or arch segment of the lit path, with its spacers laid
-    out flush to the segment ends minus the reserved junction half-gaps.
-    `at` is each spacer centre as arc length from the segment start."""
+    """One segment of the loop with its spacers laid out along it.
+
+    End reserves are expressed as MULTIPLES of the gap, not fixed lengths:
+    `lead_k`/`tail_k` of 0.5 means "half a gap" (shared with a neighbouring
+    run that also reserves half), 1.0 means "a whole gap" (the neighbour is
+    a corner spacer, which reserves nothing). Solving for the gap with the
+    reserves in the equation is what keeps every gap in the family — the
+    junctions read the same as everywhere else.
+    """
 
     name: str
-    length: float  # full lit length of the segment
-    lead: float  # reserved before the first spacer (half a junction gap)
-    tail: float  # reserved after the last
+    length: float
+    lead_k: float
+    tail_k: float
     n: int
-    gap: float  # gap between consecutive spacers, this segment
+    gap: float
+
+    @property
+    def lead(self) -> float:
+        return self.lead_k * self.gap
 
     @property
     def at(self) -> list[float]:
+        """Each spacer's centre, as arc length from the segment start."""
         pitch = P.ml_spacer_len + self.gap
         return [self.lead + P.ml_spacer_len / 2 + i * pitch for i in range(self.n)]
 
 
-def _fit(length: float, lead: float, tail: float, name: str) -> Run:
+def _fit(name: str, length: float, lead_k: float, tail_k: float) -> Run:
     """Pick the spacer count whose resulting gap lands nearest P.ml_gap.
-    Spacers sit flush to both ends of the usable span, so the count alone
-    sets the gap — no free phase to slide, and nothing can drift into a
-    junction because the lead/tail reserves are cut off the span first."""
-    usable = length - lead - tail
+
+    length = n·spacer + (n - 1 + lead_k + tail_k)·gap, so the count alone
+    sets the gap: there is no free phase for a spacer to slide into a
+    junction, and no way for one to overhang the segment end."""
+    def gap(n: int) -> float:
+        return (length - n * P.ml_spacer_len) / (n - 1 + lead_k + tail_k)
+
     best = min(
-        (n for n in range(2, 40) if n * P.ml_spacer_len < usable),
-        key=lambda n: abs((usable - n * P.ml_spacer_len) / (n - 1) - P.ml_gap),
+        (n for n in range(1, 40) if n * P.ml_spacer_len < length and gap(n) > 0),
+        key=lambda n: abs(gap(n) - P.ml_gap),
     )
-    return Run(name, length, lead, tail, best, (usable - best * P.ml_spacer_len) / (best - 1))
+    return Run(name, length, lead_k, tail_k, best, gap(best))
+
+
+def _corner_run() -> Run:
+    """The corner spacer IS its segment — a fixed quarter turn, no gap to
+    solve and no reserves (its neighbours reserve a whole gap each)."""
+    return Run("corner", P.ml_corner_run, 0.0, 0.0, 1, 0.0)
 
 
 def layout() -> list[Run]:
-    """The three lit segments, bottom-left round to bottom-right.
+    """The loop's segments, in path order from the bottom-centre seam:
+    bottom, corner, side, arch, side, corner (back to the seam).
 
-    Junction handling: each side reserves half a gap at its top and the
-    arch reserves half at both ends, so the straight->arch gap comes out at
-    exactly P.ml_gap — never a collision, never a butt joint, and it reads
-    the same as every other gap. The bottom ends start flush (a spacer
-    right at the bottom of each side, where the mirror wants support)."""
-    half = P.ml_gap / 2
-    side = _fit(P.ml_side_run, 0.0, half, "side")
-    arch = _fit(P.ml_arch_run, half, half, "arch")
-    return [side, arch, side]
+    The bottom run is symmetric with an odd gap count, so its middle gap
+    lands on the centreline — that is the seam, where the strip's two ends
+    meet and the lead wire drops away."""
+    bottom = _fit("bottom", P.ml_bottom_run, 1.0, 1.0)
+    side = _fit("side", P.ml_side_run, 1.0, 0.5)
+    arch = _fit("arch", P.ml_arch_run, 0.5, 0.5)
+    corner = _corner_run()
+    return [bottom, corner, side, arch, side, corner]
 
 
 # ---------------------------------------------------------------- parts
 
 
-def _groove(length: float) -> Box:
-    """Strip channel cutter for a straight spacer: full length along Y,
-    open on the +X (outer) face."""
-    return Pos(0, 0, P.ml_groove_z0 + P.ml_groove_w / 2) * Box(
-        2 * P.ml_groove_depth, length, P.ml_groove_w
-    )
-
-
-def _screw_cutter():
-    """One screw: through-hole the whole standoff, plus the counterbore
-    sunk from the mirror-side face. Axis +Z, at the origin."""
-    through = Pos(0, 0, P.ml_standoff / 2) * Cylinder(P.ml_screw_d / 2, 2 * P.ml_standoff)
-    cbore = Pos(0, 0, P.ml_standoff - P.ml_cbore_depth / 2) * Cylinder(
-        P.ml_screw_head_d / 2, P.ml_cbore_depth
-    )
-    return through + cbore
+def _groove_profile(r: float):
+    """Groove section in the XZ plane at radius r (r=0 for a straight
+    spacer): a plain rectangle. The channel's roof is a 4.6mm overhang when
+    printed mirror-face-down — short enough that FDM bridges it, and the
+    strip is held by its own adhesive anyway, so no chamfer, no fuss."""
+    d, z0 = P.ml_groove_depth, P.ml_groove_z0
+    return Plane.XZ * Rectangle(
+        d, P.ml_groove_w, align=(Align.MAX, Align.MIN)
+    ).moved(Pos(r, z0))
 
 
 def spacer_straight():
-    """Straight spacer for the mirror's vertical sides."""
+    """Straight spacer — the sides and the bottom run."""
     t, L = P.ml_spacer_t, P.ml_spacer_len
     body = Pos(-t / 2, 0, P.ml_standoff / 2) * Box(t, L, P.ml_standoff)
-    body -= _groove(2 * L)
-    for dy in (-P.ml_screw_pitch / 2, P.ml_screw_pitch / 2):
-        body -= Pos(-t + P.ml_screw_r, dy, 0) * _screw_cutter()
-    return body
+    return body - extrude(_groove_profile(0), amount=L, both=True)
+
+
+def _swept_spacer(r: float, sweep: float):
+    """A spacer swept about radius r through `sweep` degrees: curved outer
+    face (the strip demands it), FLAT inner face on the chord (a stable,
+    print-friendly block, and it wastes nothing worth keeping).
+
+    Local frame: outer face midpoint at the origin, +X radially out,
+    curvature centre at (-r, 0)."""
+    t = P.ml_spacer_t
+    half = math.radians(sweep / 2)
+    sag = (r - t) * (1 - math.cos(half))  # chord depth past the inner arc
+    sec = Plane.XZ * Pos(r - t - sag, 0) * Rectangle(
+        t + sag, P.ml_standoff, align=(Align.MIN, Align.MIN)
+    )
+    body = revolve(sec, axis=Axis.Z, revolution_arc=sweep)
+    body -= revolve(_groove_profile(r), axis=Axis.Z, revolution_arc=360)
+    body = Pos(-r, 0, 0) * Rot(0, 0, -sweep / 2) * body
+    # trim the inner arc back to its chord — the flat face
+    chord = Pos(-(t + sag) - r, 0, P.ml_standoff / 2) * Box(
+        2 * r, 4 * r, 2 * P.ml_standoff
+    )
+    return body - chord
 
 
 def spacer_arch():
-    """Arch spacer: the same section swept about the inset arch radius.
-    All arch spacers are identical — the arch is a single circular arc."""
-    r, t, dphi = P.ml_path_r, P.ml_spacer_t, P.ml_spacer_dphi
-    sec = Plane.XZ * Pos(r - t, 0) * Rectangle(
-        t, P.ml_standoff, align=(Align.MIN, Align.MIN)
-    )
-    body = revolve(sec, axis=Axis.Z, revolution_arc=dphi)
-    # groove: annular channel open on the outer face
-    ring = Pos(0, 0, P.ml_groove_z0) * Cylinder(
-        r + 1, P.ml_groove_w, align=(Align.CENTER, Align.CENTER, Align.MIN)
-    )
-    ring -= Pos(0, 0, P.ml_groove_z0) * Cylinder(
-        r - P.ml_groove_depth, P.ml_groove_w, align=(Align.CENTER, Align.CENTER, Align.MIN)
-    )
-    body -= ring
-    # screws on the same arc, +-half the screw pitch measured along it
-    for s in (-P.ml_screw_pitch / 2, P.ml_screw_pitch / 2):
-        a = dphi / 2 + math.degrees(s / r)
-        body -= Rot(0, 0, a) * Pos(r - t + P.ml_screw_r, 0, 0) * _screw_cutter()
-    # local frame: outer face midpoint at the origin, +X radially out
-    return Pos(-r, 0, 0) * Rot(0, 0, -dphi / 2) * body
+    """Arch spacer. One part for the whole arch: it is a single circular
+    arc, so every spacer on it is identical."""
+    return _swept_spacer(P.ml_path_r, P.ml_spacer_dphi)
 
 
-def slack_spool():
-    """Flat spool for the leftover strip: hub, base, retaining rim, vents.
-    Two screws to the wall; the whole stack clears the mirror easily."""
-    hub_r, wall = P.ml_spool_hub_d / 2, P.ml_spool_wall
-    rim_r = P.ml_spool_coil_od / 2
-    base_t, rim_h = P.ml_spool_base_t, P.ml_spool_rim_h
-    base = Cylinder(
-        rim_r + wall, base_t, align=(Align.CENTER, Align.CENTER, Align.MIN)
-    )
-    up = (Align.CENTER, Align.CENTER, Align.MIN)
-    hub = Pos(0, 0, base_t) * (
-        Cylinder(hub_r, rim_h, align=up) - Cylinder(hub_r - wall, rim_h, align=up)
-    )
-    rim = Pos(0, 0, base_t) * (
-        Cylinder(rim_r + wall, rim_h, align=up) - Cylinder(rim_r, rim_h, align=up)
-    )
-    spool = base + hub + rim
-    # vents through hub + base: a coiled strip has nowhere to dump heat
-    vent_w = 2 * math.pi * (hub_r - wall / 2) / (2 * P.ml_spool_vent_n)
-    for i in range(P.ml_spool_vent_n):
-        v = Pos(hub_r, 0, base_t + rim_h / 2) * Box(4 * wall, vent_w, rim_h)
-        spool -= Rot(0, 0, i * 360 / P.ml_spool_vent_n) * v
-    for dx in (-hub_r / 2, hub_r / 2):
-        spool -= Pos(dx, 0, base_t / 2) * Cylinder(P.ml_screw_d / 2, 4 * base_t)
-    return spool
+def spacer_corner():
+    """Bottom-corner spacer: a quarter turn at ml_corner_r. The strip
+    cannot turn square, so the corner is a part, not a mitre."""
+    return _swept_spacer(P.ml_corner_r, 90)
 
 
 # ------------------------------------------------------------- placement
 
 
-def side_poses(sign: int) -> list:
-    """Locations for one straight side's spacers. sign=+1 is the right
-    side (+X); the left is the same part turned 180 about Z."""
+def _seat():
+    """Local -> world: the parts are modelled bond-face-down (z=0 on the
+    print bed, the face that glues to the mirror). On the wall that face is
+    the TOP one, so every pose flips them over onto the glass — which is
+    what puts the strip channel ml_groove_wall off the MIRROR, not the wall."""
+    return Pos(0, 0, P.ml_standoff) * Rot(180, 0, 0)
+
+
+def bottom_poses() -> list:
+    """Bottom run: outer face down (-Y), length along X."""
     run = layout()[0]
+    return [
+        _seat() * Pos(-P.ml_corner_cx + s, P.ml_inset, 0) * Rot(0, 0, -90)
+        for s in run.at
+    ]
+
+
+def corner_poses() -> list:
+    """The two bottom corners, right first (the seam runs bottom-centre ->
+    right -> up -> over -> down -> back)."""
+    out = []
+    for sign, mid in ((1, -45.0), (-1, 225.0)):
+        out.append(
+            _seat()
+            * Pos(sign * P.ml_corner_cx, P.ml_corner_cy, 0)
+            * Rot(0, 0, mid)
+            * Pos(P.ml_corner_r, 0, 0)
+        )
+    return out
+
+
+def side_poses(sign: int) -> list:
+    """One straight side. sign=+1 is the right side (+X); the left is the
+    same part turned 180 about Z."""
+    run = layout()[2]
     rot = Rot(0, 0, 0) if sign > 0 else Rot(0, 0, 180)
     return [
-        Pos(sign * P.ml_path_x, P.ml_inset + s, 0) * rot for s in run.at
+        _seat() * Pos(sign * P.ml_path_x, P.ml_corner_cy + s, 0) * rot
+        for s in run.at
     ]
 
 
 def arch_angles() -> list[float]:
     """Polar angle (deg from +X, about the arch centre) of each arch
-    spacer's mid-point. Walking the arc from the LEFT junction round to
-    the right, so the strip runs up the left side and over the top."""
-    run = layout()[1]
+    spacer's mid-point, walking from the LEFT junction over the top."""
+    run = layout()[3]
     return [
         180 - P.ml_path_phi - math.degrees(s / P.ml_path_r) for s in run.at
     ]
 
 
 def arch_poses() -> list:
-    """Locations for the arch spacers, swept round the inset arc."""
     return [
-        Pos(0, P.ml_arch_cy, 0) * Rot(0, 0, a) * Pos(P.ml_path_r, 0, 0)
+        _seat() * Pos(0, P.ml_arch_cy, 0) * Rot(0, 0, a) * Pos(P.ml_path_r, 0, 0)
         for a in arch_angles()
     ]
 
 
-def spool_pose():
-    """Slack spool: bottom centre, behind the glass, clear of the bottom
-    spacers and of the strip runs up both sides."""
-    return Pos(0, P.ml_inset + P.ml_spool_coil_od / 2 + P.ml_spool_wall, 0)
-
-
 def posed_spacers() -> list:
-    straight, arch = spacer_straight(), spacer_arch()
-    out = [loc * straight for loc in side_poses(1) + side_poses(-1)]
-    return out + [loc * arch for loc in arch_poses()]
+    straight, arch, corner = spacer_straight(), spacer_arch(), spacer_corner()
+    out = [loc * straight for loc in bottom_poses() + side_poses(1) + side_poses(-1)]
+    out += [loc * arch for loc in arch_poses()]
+    return out + [loc * corner for loc in corner_poses()]
+
+
+def spacer_count() -> dict:
+    bottom, corner, side, arch, *_ = layout()
+    return {
+        "straight": bottom.n + 2 * side.n,
+        "arch": arch.n,
+        "corner": 2,
+        "total": bottom.n + 2 * side.n + arch.n + 2,
+    }
 
 
 # ------------------------------------------------------------- reference
@@ -237,91 +276,88 @@ def mirror_ghost():
     return Pos(0, 0, P.ml_standoff) * extrude(face + cap, amount=P.ml_mirror_t)
 
 
-def strip_solids() -> list:
-    """The lightstrip as laid: two straight runs and the arch, sitting on
-    the groove floors. Three solids because the path kinks slightly at the
-    junction — same as the real strip."""
+def _band(r: float, cx: float, cy: float, a0: float, sweep: float):
+    """Strip ghost following an arc of radius r about (cx, cy)."""
     w, t = P.ml_strip_w, P.ml_strip_t
-    z = P.ml_groove_z0 + P.ml_groove_w / 2
-    out = []
-    for sign in (1, -1):
-        x = sign * (P.ml_path_x - P.ml_groove_depth + t / 2)
-        out.append(
-            Pos(x, P.ml_inset + P.ml_side_run / 2, z) * Box(t, P.ml_side_run, w)
-        )
-    r = P.ml_path_r - P.ml_groove_depth
-    band = Pos(0, 0, z - w / 2) * (
-        Cylinder(r + t, w, align=(Align.CENTER, Align.CENTER, Align.MIN))
-        - Cylinder(r, w, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    z = P.ml_standoff - P.ml_groove_z0 - w  # measured DOWN from the glass
+    up = (Align.CENTER, Align.CENTER, Align.MIN)
+    ring = Pos(0, 0, z) * (
+        Cylinder(r + t, w, align=up) - Cylinder(r, w, align=up)
     )
     wedge = revolve(
-        Plane.XZ * Pos(0, z - w / 2) * Rectangle(
-            r + t, w, align=(Align.MIN, Align.MIN)
-        ),
+        Plane.XZ * Pos(0, z) * Rectangle(r + t, w, align=(Align.MIN, Align.MIN)),
         axis=Axis.Z,
-        revolution_arc=180 - 2 * P.ml_path_phi,
+        revolution_arc=sweep,
     )
-    arc = Pos(0, P.ml_arch_cy, 0) * Rot(0, 0, P.ml_path_phi) * (band & wedge)
-    out.append(arc)
+    return Pos(cx, cy, 0) * Rot(0, 0, a0) * (ring & wedge)
+
+
+def strip_solids() -> list:
+    """The lightstrip as laid, one solid per segment: bottom, two corners,
+    two sides, arch. Sitting on the groove floors."""
+    w, t = P.ml_strip_w, P.ml_strip_t
+    z = P.ml_standoff - P.ml_groove_z0 - w / 2  # channel hangs off the glass
+    d = P.ml_groove_depth
+    out = [
+        Pos(0, P.ml_inset - d + t / 2, z) * Box(P.ml_bottom_run, t, w),
+    ]
+    for sign in (1, -1):
+        out.append(
+            Pos(
+                sign * (P.ml_path_x - d + t / 2),
+                P.ml_corner_cy + P.ml_side_run / 2,
+                z,
+            )
+            * Box(t, P.ml_side_run, w)
+        )
+        a0 = -90.0 if sign > 0 else 180.0
+        out.append(
+            _band(P.ml_corner_r - d, sign * P.ml_corner_cx, P.ml_corner_cy, a0, 90)
+        )
+    out.append(
+        _band(
+            P.ml_path_r - d, 0, P.ml_arch_cy, P.ml_path_phi, 180 - 2 * P.ml_path_phi
+        )
+    )
     return out
-
-
-def strip_slack_coil():
-    """The surplus strip, coiled on the spool: a ghost annulus of the
-    right cross-section and radial build, not a real helix."""
-    r0 = P.ml_spool_hub_d / 2
-    r1 = P.ml_spool_coil_od / 2
-    up = (Align.CENTER, Align.CENTER, Align.MIN)
-    z = P.ml_spool_base_t
-    return spool_pose() * Pos(0, 0, z) * (
-        Cylinder(r1, P.ml_strip_w, align=up) - Cylinder(r0, P.ml_strip_w, align=up)
-    )
 
 
 def assembly():
     """Everything, posed, as one compound — this is what goes to STEP."""
-    parts = posed_spacers() + [spool_pose() * slack_spool()]
-    parts += strip_solids() + [strip_slack_coil(), mirror_ghost()]
-    return Compound(children=parts)
+    return Compound(children=posed_spacers() + strip_solids() + [mirror_ghost()])
 
 
 # ---------------------------------------------------------------- scenes
 
 
 def scene() -> Scene:
-    """Full wall view: glass ghost, spacers, strip, slack spool."""
+    """Full wall view: glass ghost, every spacer, the closed strip loop."""
     s = Scene()
     s.add(mirror_ghost(), "mirror", "lightblue", 0.25)
     for i, sp in enumerate(posed_spacers()):
         s.add(sp, f"spacer{i:02d}", "orange")
     for i, st in enumerate(strip_solids()):
         s.add(st, f"strip{i}", "yellow")
-    s.add(spool_pose() * slack_spool(), "slack-spool", "orange")
-    s.add(strip_slack_coil(), "slack-coil", "yellow", 0.6)
     return s
 
 
 def spacer_scene() -> Scene:
-    """The two printable spacers side by side, strip ghost in the groove."""
+    """The three printable spacers in a row, strip ghost in each groove."""
     w, t = P.ml_strip_w, P.ml_strip_t
-    z = P.ml_groove_z0 + P.ml_groove_w / 2
+    z = P.ml_groove_z0 + w / 2
     strip = Pos(-P.ml_groove_depth + t / 2, 0, z) * Box(t, P.ml_spacer_len, w)
     s = Scene()
     s.add(spacer_straight(), "spacer-straight", "orange")
     s.add(strip, "strip-straight", "yellow", 0.6)
-    off = Pos(0, 2.2 * P.ml_spacer_len, 0)
-    s.add(off * spacer_arch(), "spacer-arch", "steelblue")
-    s.add(off * strip, "strip-arch", "yellow", 0.6)
+    for i, (part, name, colour) in enumerate(
+        ((spacer_arch(), "spacer-arch", "steelblue"),
+         (spacer_corner(), "spacer-corner", "seagreen")),
+        start=1,
+    ):
+        off = Pos(0, i * 2.2 * P.ml_spacer_len, 0)
+        s.add(off * part, name, colour)
+        s.add(off * strip, f"strip-{name}", "yellow", 0.6)
     return s
-
-
-def spool_scene() -> Scene:
-    return (
-        Scene()
-        .add(slack_spool(), "slack-spool", "orange")
-        .add(Pos(0, 0, 0) * (spool_pose().inverse() * strip_slack_coil()),
-             "slack-coil", "yellow", 0.5)
-    )
 
 
 # ---------------------------------------------------------------- report
@@ -329,33 +365,33 @@ def spool_scene() -> Scene:
 
 def report() -> list[str]:
     """The numbers worth reading before ordering screws or hanging glass."""
-    side, arch, _ = layout()
-    n = 2 * side.n + arch.n
-    lines = [
+    bottom, corner, side, arch, *_ = layout()
+    n = spacer_count()
+    return [
         f"arch: R {P.ml_arch_r:.1f}mm ({P.ml_arch_r / IN:.3f}in), centre "
         f"{P.ml_arch_cy:.1f}mm up ({P.ml_arch_cy / IN:.2f}in), "
         f"sweep {180 - 2 * P.ml_path_phi:.2f}deg",
         f"inset contour: sides x=+-{P.ml_path_x:.1f}mm, arch R "
-        f"{P.ml_path_r:.1f}mm, junction y {P.ml_path_junction_y:.1f}mm",
-        f"lit path: side {P.ml_side_run / IN:.1f}in x2 + arch "
-        f"{P.ml_arch_run / IN:.1f}in = {P.ml_path_len / IN:.1f}in "
+        f"{P.ml_path_r:.1f}mm, corners R {P.ml_corner_r:.1f}mm",
+        f"loop: bottom {P.ml_bottom_run / IN:.1f} + corners "
+        f"{P.ml_corner_run / IN:.1f}x2 + sides {P.ml_side_run / IN:.1f}x2 + "
+        f"arch {P.ml_arch_run / IN:.1f} = {P.ml_path_len / IN:.1f}in "
         f"({P.ml_path_len / IN / 12:.2f}ft)",
-        f"strip {P.ml_strip_len / IN / 12:.2f}ft -> slack "
-        f"{P.ml_slack / IN:.1f}in ({P.ml_slack / IN / 12:.2f}ft) on the spool "
-        f"({P.ml_slack / (math.pi * P.ml_spool_hub_d):.1f}+ turns, "
-        f"coil OD {P.ml_spool_coil_od:.0f}mm)",
-        f"spacers: {side.n} per side + {arch.n} arch = {n} total",
-        f"gaps: side {side.gap / IN:.2f}in, arch {arch.gap / IN:.2f}in, "
-        f"junction {(side.tail + arch.lead) / IN:.2f}in (target "
-        f"{P.ml_gap / IN:.2f}in)",
+        f"strip {P.ml_strip_len / IN / 12:.2f}ft -> {P.ml_slack / IN:.1f}in "
+        f"spare, tucks behind the glass at the bottom-centre seam",
+        f"  (cut marks are {330 / IN:.0f}in apart — too coarse to trim)",
+        f"spacers: {n['straight']} straight + {n['arch']} arch + "
+        f"{n['corner']} corner = {n['total']} total",
+        f"gaps: bottom {bottom.gap / IN:.2f}in, side {side.gap / IN:.2f}in, "
+        f"arch {arch.gap / IN:.2f}in, corner-to-side {side.lead / IN:.2f}in, "
+        f"arch junction {(0.5 * side.gap + arch.lead) / IN:.2f}in",
         f"groove: {P.ml_groove_w:.1f} x {P.ml_groove_depth:.1f}mm for a "
-        f"{P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}mm sleeve "
-        f"({P.ml_groove_over:.1f}mm shy of the mouth)",
-        f"screws: 2 x #8 per spacer, cbore {P.ml_screw_head_d:.1f} x "
-        f"{P.ml_cbore_depth:.1f} deep -> {P.ml_screw_meat:.1f}mm "
-        f"({P.ml_screw_meat / IN:.2f}in) under the head",
-        f"  into a stud through 1/2in drywall: {P.ml_screw_meat:.0f} + 12.7 "
-        f"+ 25 embed = {P.ml_screw_meat + 12.7 + 25:.0f}mm -> buy #8 x 2-1/2in",
-        f"  total screws: {2 * n} + 2 for the spool",
+        f"{P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}mm sleeve, plain rectangle",
+        f"  channel rides {P.ml_groove_wall:.1f}mm off the GLASS "
+        f"({P.ml_groove_wall_far:.1f}mm left wall-side) -> emitter stays "
+        f"hidden until {P.ml_emitter_hide_deg:.0f}deg off the wall plane",
+        f"no fasteners: {P.ml_spacer_len / IN:.0f}in x {P.ml_spacer_t:.0f}mm "
+        f"bond face per spacer glues to the frame back "
+        f"({n['total'] * P.ml_spacer_len * P.ml_spacer_t / 100:.0f}cm2 total)",
+        "  the mirror then rests on them against the wall",
     ]
-    return lines
