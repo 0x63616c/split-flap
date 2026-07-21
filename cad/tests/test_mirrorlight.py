@@ -167,24 +167,6 @@ def test_report_covers_the_numbers_worth_buying_from():
         assert want in text
 
 
-def test_jig_windows_land_the_spacers_where_the_layout_says():
-    """A jig is only useful if its windows agree with the layout: the
-    catch window over the spacer you just placed, the far window a whole
-    gap later, both clearing the part they capture."""
-    from splitflap_cad.mirrorjig import CLEAR, jig_side
-    from splitflap_cad.mirrorlight import spacer_straight
-
-    side = next(r for r in layout() if r.name == "side")
-    jig = jig_side()
-    spacer = spacer_straight()
-    for y in (-P.ml_spacer_len / 2, side.gap + P.ml_spacer_len / 2):
-        placed = Pos(P.ml_inset, y, 0) * Rot(0, 0, 180) * spacer
-        assert (jig & placed).volume == pytest.approx(0, abs=1e-6), (
-            "spacer fouls the jig window"
-        )
-    assert CLEAR <= 1.0, "window slop would blur the placement"
-
-
 def test_every_spacer_lands_behind_the_glass():
     """Catches a pose applied in the wrong frame: seating the parts on the
     left of a site transform mirrors the whole wall and drops every spacer

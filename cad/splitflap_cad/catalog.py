@@ -111,17 +111,13 @@ MODELS = {
         "poopbucket",
     ),
     "mirror-light": Model(
-        "SIDE QUEST arched-mirror LED halo: glass, 21 spacers, closed strip loop",
+        "SIDE QUEST arched-mirror LED halo: glass, spacers, closed strip loop",
         "mirrorlight",
     ),
     "mirror-spacer": Model(
         "mirror halo: the three printable spacers, strip ghost in the groove",
         "mirrorlight",
         "spacer_scene",
-    ),
-    "mirror-jigs": Model(
-        "mirror halo: the four placement jigs, as printed",
-        "mirrorjig",
     ),
 }
 
@@ -152,10 +148,6 @@ PRINTABLE = {
     "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
     "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
     "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
-    "mirror-jig-bottom": Printable("mirrorjig", "jig_bottom"),
-    "mirror-jig-side": Printable("mirrorjig", "jig_side"),
-    "mirror-jig-arch": Printable("mirrorjig", "jig_arch"),
-    "mirror-jig-corner": Printable("mirrorjig", "jig_corner"),
 }
 
 

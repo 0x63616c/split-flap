@@ -859,25 +859,18 @@ class Params:
     ml_spacer_len: float = 3 * IN     # length along the contour
     ml_gap: float = 6 * IN            # target gap between spacers
 
+    # finish: edge breaks and the part label. Every spacer prints
+    # mirror-face-down, so these are the only features on the wall face.
+    ml_break: float = 0.8             # edge break on the bed/wall faces
+    ml_mouth_flare: float = 0.6       # rebate mouth flare, per side
+    ml_part_text_h: float = 6.0       # engraved part label cap height
+    ml_part_text_depth: float = 0.6
+
     # No fasteners: the spacers glue to the back of the mirror frame and
     # the mirror rests against the wall on them, so there is nothing to
     # drive and nothing to counterbore. The mirror face (z=0) is the bond
     # face — flat, bed-finished, unbroken.
 
-    # placement jigs: flat plates that hook the mirror edge and land the next
-    # spacer at the right inset AND the right gap. Print flat, no supports.
-    ml_break: float = 0.8             # edge break on the bed/top faces
-    ml_mouth_flare: float = 0.6       # rebate mouth flare, per side
-    ml_part_text_h: float = 6.0       # engraved part label cap height
-    ml_part_text_depth: float = 0.6
-    ml_jig_t: float = 3.0             # plate thickness
-    ml_jig_lip: float = 4.0           # edge lip: thickness past the glass edge
-    ml_jig_lip_drop: float = 4.0      # how far it wraps the edge (< glass t)
-    ml_jig_fence_h: float = 12.0      # inset fence height over the plate
-    ml_jig_finger_w: float = 8.0      # gap finger thickness along the contour
-    ml_jig_finger_l: float = 16.0     # gap finger reach past the fence
-    ml_jig_text_h: float = 9.0        # engraved label cap height
-    ml_jig_text_depth: float = 0.6
 
     @property
     def unit_back_rise(self) -> float:

@@ -140,15 +140,6 @@ def _mirror_spacer_corner():
     return spacer_corner()
 
 
-def _mirror_jig(name):
-    def build():
-        import splitflap_cad.mirrorjig as m
-
-        return getattr(m, f"jig_{name}")()
-
-    return build
-
-
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -169,10 +160,6 @@ BREP_PARTS = {
     "mirror-spacer-straight": _mirror_spacer_straight,
     "mirror-spacer-arch": _mirror_spacer_arch,
     "mirror-spacer-corner": _mirror_spacer_corner,
-    "mirror-jig-bottom": _mirror_jig("bottom"),
-    "mirror-jig-side": _mirror_jig("side"),
-    "mirror-jig-arch": _mirror_jig("arch"),
-    "mirror-jig-corner": _mirror_jig("corner"),
     "unit-full": _full_unit,
     "unit-nema-full": _full_unit_nema,
 }

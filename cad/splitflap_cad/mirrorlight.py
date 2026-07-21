@@ -36,7 +36,7 @@ No fasteners anywhere: the z=0 face glues to the back of the mirror frame and
 the mirror rests on the spacers against the wall. That is why z=0 is the bed
 face — it is the bond face, and it stays unbroken.
 
-View: `just cad view mirror-light` (also mirror-spacer). Jigs: mirrorjig.py.
+View: `just cad view mirror-light` (also mirror-spacer).
 """
 
 import math
