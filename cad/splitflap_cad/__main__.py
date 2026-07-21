@@ -2,9 +2,9 @@
 
     python -m splitflap_cad list [--json]       # catalog: models + printables
     python -m splitflap_cad show NAME [--port]  # build + push one model to a viewer
-    python -m splitflap_cad export [NAME]       # write STL(s) + STEP(s); no
-                                                # NAME = all + flap 3MFs/Bambu
-                                                # plates; "flaps" = artwork only
+    python -m splitflap_cad export [NAME]       # write STL(s); no NAME = all
+                                                # + flap 3MFs/Bambu plates;
+                                                # NAME "flaps" = artwork only
     python -m splitflap_cad render [NAME]       # write drawing PNGs
 
 Driven by tools/ctl (Go): `just cad view [model]` runs a viewer + save
@@ -17,7 +17,7 @@ import sys
 import time
 from pathlib import Path
 
-from .catalog import MODELS, PRINTABLE, RENDERS, SRC_TO_MODEL, STEP
+from .catalog import MODELS, PRINTABLE, RENDERS, SRC_TO_MODEL
 
 FOCUS_PORT = 3940
 EXPORT_DIR = Path(__file__).parent.parent / "export"
@@ -58,11 +58,7 @@ def cmd_list(args):
         print(f"  {name:<12} {m.help}")
     print("printable (just cad export NAME):")
     for name in PRINTABLE:
-        print(f"  {name}{'  [+STEP]' if name in STEP else ''}")
-    print("STEP only:")
-    for name in STEP:
-        if name not in PRINTABLE:
-            print(f"  {name}")
+        print(f"  {name}")
     print("renders (python -m splitflap_cad render NAME):")
     for name in RENDERS:
         print(f"  {name}")
@@ -105,29 +101,24 @@ def _wrote(out: Path):
 
 
 def cmd_export(args):
-    from build123d import export_step, export_stl
+    from build123d import export_stl
 
     # "flaps" = the glyph card set (3MFs, not a PRINTABLE STL entry)
     flap_art = "flaps" in args.name
     names = [n for n in args.name if n != "flaps"] or (
-        [] if flap_art else list(PRINTABLE) + [n for n in STEP if n not in PRINTABLE]
+        [] if flap_art else list(PRINTABLE)
     )
     for name in names:
-        _check(name, {**PRINTABLE, **STEP})
+        _check(name, PRINTABLE)
     EXPORT_DIR.mkdir(exist_ok=True)
     timings = []
     if flap_art:
         timings += _export_flap_artwork()
     for name in names:
         t0 = time.perf_counter()
-        if name in PRINTABLE:
-            out = EXPORT_DIR / f"{name}.stl"
-            export_stl(PRINTABLE[name].build(), str(out))
-            _wrote(out)
-        if name in STEP:
-            out = EXPORT_DIR / f"{name}.step"
-            export_step(STEP[name].build(), str(out))
-            _wrote(out)
+        out = EXPORT_DIR / f"{name}.stl"
+        export_stl(PRINTABLE[name].build(), str(out))
+        _wrote(out)
         timings.append((name, time.perf_counter() - t0))
     if not args.name:  # bare `export` = everything, artwork included
         timings += _export_flap_artwork()

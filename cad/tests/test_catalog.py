@@ -3,7 +3,7 @@ geometry (builders are lazy; nothing here should touch build123d)."""
 
 from pathlib import Path
 
-from splitflap_cad.catalog import MODELS, PRINTABLE, RENDERS, SRC_TO_MODEL, STEP
+from splitflap_cad.catalog import MODELS, PRINTABLE, RENDERS, SRC_TO_MODEL
 
 SRC = Path(__file__).parent.parent / "splitflap_cad"
 
@@ -50,6 +50,6 @@ def test_printable_builders_exist():
     }
 
 
-def test_step_and_render_registries_point_at_real_modules():
-    for name, entry in {**STEP, **RENDERS}.items():
+def test_render_registry_points_at_real_modules():
+    for name, entry in RENDERS.items():
         assert (SRC / f"{entry.src}.py").exists(), f"{name}: no module {entry.src}.py"

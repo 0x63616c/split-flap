@@ -23,10 +23,9 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   slow` = XOR vs `cad/tests/golden/*.brep` + full catalog build. Intended
   shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
   Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
-- `export` writes STL for every `Printable` and STEP for every `STEP` entry
-  (assemblies are STEP-only). `render` writes the `Render` registry's PNG
-  drawings to `cad/export/renders/` (matplotlib, dev group — drawings only,
-  never geometry).
+- `export` writes STL for every `Printable`; `render` writes the `Render`
+  registry's PNG drawings to `cad/export/renders/` (matplotlib, dev group —
+  drawings only, never geometry). STL only: no STEP, by request.
 - No vendor geometry: every printable is ours. Motor = 28BYJ-48.
 
 ## Bench

@@ -159,19 +159,6 @@ PRINTABLE = {
 }
 
 
-# --- STEP exports (solid model, not a mesh) ---
-# STLs are for the slicer; STEP is what you hand to someone else's CAD or
-# open to measure. Printables listed here get both; entries that are not
-# printables (assemblies) get STEP only.
-
-STEP = {
-    "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
-    "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
-    "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
-    "mirror-light-assembly": Printable("mirrorlight", "assembly"),
-}
-
-
 # --- rendered drawings (PNG) ---
 # 2D deliverables: a render is a module attr taking an output Path.
 
