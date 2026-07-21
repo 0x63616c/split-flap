@@ -41,6 +41,7 @@ View: `just cad view mirror-light` (also mirror-spacer). Jigs: mirrorjig.py.
 
 import math
 from dataclasses import dataclass
+from pathlib import Path
 
 from build123d import (
     Align,
@@ -57,6 +58,8 @@ from build123d import (
     extrude,
     revolve,
 )
+
+from build123d import Text, TextAlign, chamfer
 
 from .params import IN, P
 from .viewer import Scene
@@ -134,21 +137,56 @@ def layout() -> list[Run]:
 
 
 def _groove_profile(r: float):
-    """Groove section in the XZ plane at radius r (r=0 for a straight
-    spacer): a plain rectangle. The channel's roof is a 4.6mm overhang when
-    printed mirror-face-down — short enough that FDM bridges it, and the
-    strip is held by its own adhesive anyway, so no chamfer, no fuss."""
-    d, z0 = P.ml_groove_depth, P.ml_groove_z0
-    return Plane.XZ * Rectangle(
-        d, P.ml_groove_w, align=(Align.MAX, Align.MIN)
-    ).moved(Pos(r, z0))
+    """Rebate section in the XZ plane at radius r (r=0 for a straight
+    spacer): a plain rectangle, only ml_groove_depth deep. It is a placement
+    guide, not a pocket — the strip sits proud and its own adhesive holds
+    it. Shallow also means the roof overhang is trivial to print."""
+    d, z0, f = P.ml_groove_depth, P.ml_groove_z0, P.ml_mouth_flare
+    z1 = z0 + P.ml_groove_w
+    # mouth flares both sides: no sharp lip to fight when laying the strip
+    return Plane.XZ * Polygon(
+        (r, z0 - f), (r - d, z0), (r - d, z1), (r, z1 + f), align=None
+    )
+
+
+def _finish(part, label: str, depth: float | None = None):
+    """House style for every spacer: break the bed and wall-face edges so
+    the first layer lays flat and nothing is sharp in the hand, then engrave
+    the part name on the WALL face — visible while you place them, hidden
+    once the mirror is up."""
+    # re-query between the two: chamfer returns a NEW shape, and edges from
+    # the old one no longer belong to it
+    part = chamfer(part.edges().group_by(Axis.Z)[0], P.ml_break)
+    part = chamfer(part.edges().group_by(Axis.Z)[-1], P.ml_break)
+    font = Path(__file__).resolve().parent.parent / "fonts" / P.glyph_font
+    glyphs = Text(
+        label,
+        font_size=P.ml_part_text_h / 0.7,
+        font_path=str(font),
+        align=(Align.CENTER, Align.CENTER),
+        text_align=(TextAlign.CENTER, TextAlign.CENTER),
+    )
+    # `depth` is how far in from the outer face the label sits — swept parts
+    # thin out toward their ends, so their label rides deeper to stay on
+    # material for its whole length
+    x = -(P.ml_spacer_t / 2 if depth is None else depth)
+    cut = Pos(x, 0, P.ml_standoff - P.ml_part_text_depth) * Rot(0, 0, 90) * extrude(
+        glyphs, amount=2 * P.ml_part_text_depth
+    )
+    return part - cut
 
 
 def spacer_straight():
     """Straight spacer — the sides and the bottom run."""
     t, L = P.ml_spacer_t, P.ml_spacer_len
     body = Pos(-t / 2, 0, P.ml_standoff / 2) * Box(t, L, P.ml_standoff)
-    return body - extrude(_groove_profile(0), amount=L, both=True)
+    body -= extrude(_groove_profile(0), amount=L, both=True)
+    return _finish(body, "STRAIGHT")
+
+
+def _chord_sag(r: float, sweep: float) -> float:
+    """How far the flat inner face sits behind the inner arc at mid-span."""
+    return (r - P.ml_spacer_t) * (1 - math.cos(math.radians(sweep / 2)))
 
 
 def _swept_spacer(r: float, sweep: float):
@@ -160,7 +198,7 @@ def _swept_spacer(r: float, sweep: float):
     curvature centre at (-r, 0)."""
     t = P.ml_spacer_t
     half = math.radians(sweep / 2)
-    sag = (r - t) * (1 - math.cos(half))  # chord depth past the inner arc
+    sag = _chord_sag(r, sweep)  # chord depth past the inner arc
     sec = Plane.XZ * Pos(r - t - sag, 0) * Rectangle(
         t + sag, P.ml_standoff, align=(Align.MIN, Align.MIN)
     )
@@ -177,13 +215,16 @@ def _swept_spacer(r: float, sweep: float):
 def spacer_arch():
     """Arch spacer. One part for the whole arch: it is a single circular
     arc, so every spacer on it is identical."""
-    return _swept_spacer(P.ml_path_r, P.ml_spacer_dphi)
+    r, sweep = P.ml_path_r, P.ml_spacer_dphi
+    depth = (P.ml_spacer_t + _chord_sag(r, sweep)) / 2
+    return _finish(_swept_spacer(r, sweep), "ARCH", depth)
 
 
 def spacer_corner():
     """Bottom-corner spacer: a quarter turn at ml_corner_r. The strip
     cannot turn square, so the corner is a part, not a mitre."""
-    return _swept_spacer(P.ml_corner_r, 90)
+    depth = (P.ml_spacer_t + _chord_sag(P.ml_corner_r, 90)) / 2
+    return _finish(_swept_spacer(P.ml_corner_r, 90), "CORNER", depth)
 
 
 # ------------------------------------------------------------- placement
@@ -201,7 +242,7 @@ def bottom_poses() -> list:
     """Bottom run: outer face down (-Y), length along X."""
     run = layout()[0]
     return [
-        _seat() * Pos(-P.ml_corner_cx + s, P.ml_inset, 0) * Rot(0, 0, -90)
+        Pos(-P.ml_corner_cx + s, P.ml_inset, 0) * Rot(0, 0, -90) * _seat()
         for s in run.at
     ]
 
@@ -212,10 +253,10 @@ def corner_poses() -> list:
     out = []
     for sign, mid in ((1, -45.0), (-1, 225.0)):
         out.append(
-            _seat()
-            * Pos(sign * P.ml_corner_cx, P.ml_corner_cy, 0)
+            Pos(sign * P.ml_corner_cx, P.ml_corner_cy, 0)
             * Rot(0, 0, mid)
             * Pos(P.ml_corner_r, 0, 0)
+            * _seat()
         )
     return out
 
@@ -226,7 +267,7 @@ def side_poses(sign: int) -> list:
     run = layout()[2]
     rot = Rot(0, 0, 0) if sign > 0 else Rot(0, 0, 180)
     return [
-        _seat() * Pos(sign * P.ml_path_x, P.ml_corner_cy + s, 0) * rot
+        Pos(sign * P.ml_path_x, P.ml_corner_cy + s, 0) * rot * _seat()
         for s in run.at
     ]
 
@@ -242,7 +283,7 @@ def arch_angles() -> list[float]:
 
 def arch_poses() -> list:
     return [
-        _seat() * Pos(0, P.ml_arch_cy, 0) * Rot(0, 0, a) * Pos(P.ml_path_r, 0, 0)
+        Pos(0, P.ml_arch_cy, 0) * Rot(0, 0, a) * Pos(P.ml_path_r, 0, 0) * _seat()
         for a in arch_angles()
     ]
 
@@ -267,13 +308,19 @@ def spacer_count() -> dict:
 # ------------------------------------------------------------- reference
 
 
-def mirror_ghost():
-    """The glass itself: tombstone outline, back face on the spacer tops."""
+def mirror_profile():
+    """The tombstone outline as a 2D face: rectangle up to the springline,
+    plus the arch circle's cap above it."""
     w, h = P.ml_mirror_w, P.ml_mirror_side_h
     face = Pos(0, h / 2) * Rectangle(w, h)
     cap = Pos(0, P.ml_arch_cy) * Circle(P.ml_arch_r)
     cap &= Pos(0, h + P.ml_arch_rise / 2) * Rectangle(w, P.ml_arch_rise)
-    return Pos(0, 0, P.ml_standoff) * extrude(face + cap, amount=P.ml_mirror_t)
+    return face + cap
+
+
+def mirror_ghost():
+    """The glass itself: tombstone outline, back face on the spacer tops."""
+    return Pos(0, 0, P.ml_standoff) * extrude(mirror_profile(), amount=P.ml_mirror_t)
 
 
 def _band(r: float, cx: float, cy: float, a0: float, sweep: float):
@@ -298,8 +345,10 @@ def strip_solids() -> list:
     w, t = P.ml_strip_w, P.ml_strip_t
     z = P.ml_standoff - P.ml_groove_z0 - w / 2  # channel hangs off the glass
     d = P.ml_groove_depth
+    # the rebate floor is INBOARD of the outer face, and the strip stands
+    # proud outward from it — outward is -Y along the bottom run
     out = [
-        Pos(0, P.ml_inset - d + t / 2, z) * Box(P.ml_bottom_run, t, w),
+        Pos(0, P.ml_inset + d - t / 2, z) * Box(P.ml_bottom_run, t, w),
     ]
     for sign in (1, -1):
         out.append(
@@ -385,8 +434,9 @@ def report() -> list[str]:
         f"gaps: bottom {bottom.gap / IN:.2f}in, side {side.gap / IN:.2f}in, "
         f"arch {arch.gap / IN:.2f}in, corner-to-side {side.lead / IN:.2f}in, "
         f"arch junction {(0.5 * side.gap + arch.lead) / IN:.2f}in",
-        f"groove: {P.ml_groove_w:.1f} x {P.ml_groove_depth:.1f}mm for a "
-        f"{P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}mm sleeve, plain rectangle",
+        f"rebate: {P.ml_groove_w:.1f} wide x {P.ml_groove_depth:.1f} deep — "
+        f"a {P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}mm sleeve sits in it "
+        f"{P.ml_strip_proud:.1f}mm proud, held by its own adhesive",
         f"  channel rides {P.ml_groove_wall:.1f}mm off the GLASS "
         f"({P.ml_groove_wall_far:.1f}mm left wall-side) -> emitter stays "
         f"hidden until {P.ml_emitter_hide_deg:.0f}deg off the wall plane",

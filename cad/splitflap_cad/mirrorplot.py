@@ -219,13 +219,13 @@ def render_section(out: Path) -> Path:
     ax.add_patch(Rectangle((gz, -gd), gw, gd, fc="white", ec=INK, lw=0.9, zorder=4))
     ax.add_patch(
         Rectangle(
-            (gz + P.ml_groove_clear, -gd + P.ml_groove_over),
+            (gz + P.ml_groove_clear, -gd),
             P.ml_strip_w, P.ml_strip_t, fc=STRIP, ec=INK, lw=0.8, zorder=5,
         )
     )
     ax.annotate(
         f"Hue Solo sleeve {P.ml_strip_w:.1f} x {P.ml_strip_t:.1f}\n"
-        f"emitting face {P.ml_groove_over:.1f} shy of the mouth",
+        f"stands {P.ml_strip_proud:.1f} proud of the rebate",
         xy=(gz + gw / 2, -gd / 2), xytext=(H + 46, 34), fontsize=7,
         color=INK, ha="center",
         arrowprops=dict(arrowstyle="->", lw=0.8, color=INK),
@@ -267,7 +267,7 @@ def render_section(out: Path) -> Path:
 
     _dim(ax, (0, -t - 14), (H, -t - 14), f'standoff {H:.1f} (1.5in)', offset=(0, -4.5))
     _dim(ax, (-34, -t), (-34, 0), f"{t:.0f} thick", rot=90)
-    _dim(ax, (gz, 8), (gz + gw, 8), f"channel {gw:.1f}", offset=(0, 3.6), fs=7)
+    _dim(ax, (gz, 8), (gz + gw, 8), f"rebate {gw:.1f}", offset=(0, 3.6), fs=7)
     _dim(ax, (gz - 7, -gd), (gz - 7, 0), f"{gd:.1f}", rot=90, fs=7)
     _dim(
         ax, (gz + gw, 20), (H, 20),

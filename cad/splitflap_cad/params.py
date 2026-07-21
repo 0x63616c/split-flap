@@ -840,8 +840,11 @@ class Params:
     ml_strip_t: float = 4.5           # sleeve height -> groove depth (radial)
     ml_strip_len: float = 5000.0      # 16.4 ft roll, uncut
     ml_groove_clear: float = 0.4      # per side, FDM slip fit
-    ml_groove_over: float = 0.1       # groove floor drop: emitting face sits
-                                      # 0.1 shy of the mouth, near flush
+    ml_groove_depth: float = 1.5      # LOCATING REBATE only, about a third
+                                      # of the sleeve: it says where the
+                                      # strip goes, it does not swallow it.
+                                      # The strip stands proud and the
+                                      # adhesive does the holding
     ml_groove_wall: float = 4.0       # material between the MIRROR face and
                                       # the channel — the groove rides tight
                                       # to the glass, not centred in the gap:
@@ -849,9 +852,10 @@ class Params:
                                       # edge and the wash leaves the wall
                                       # softer. 4mm keeps the bond face stiff
 
-    # spacer block: section is ml_spacer_t (radial) x ml_standoff (Z)
-    ml_spacer_t: float = 20.0         # radial thickness — set by the screw
-                                      # counterbore + walls, see ml_screw_r
+    # spacer block: section is ml_spacer_t (radial) x ml_standoff (Z).
+    # With the screws gone the only radial demand is the rebate plus a wall,
+    # so the block is half what it was — 20 spacers of solid plastic add up.
+    ml_spacer_t: float = 10.0         # radial thickness: rebate + backing
     ml_spacer_len: float = 3 * IN     # length along the contour
     ml_gap: float = 6 * IN            # target gap between spacers
 
@@ -862,6 +866,10 @@ class Params:
 
     # placement jigs: flat plates that hook the mirror edge and land the next
     # spacer at the right inset AND the right gap. Print flat, no supports.
+    ml_break: float = 0.8             # edge break on the bed/top faces
+    ml_mouth_flare: float = 0.6       # rebate mouth flare, per side
+    ml_part_text_h: float = 6.0       # engraved part label cap height
+    ml_part_text_depth: float = 0.6
     ml_jig_t: float = 3.0             # plate thickness
     ml_jig_lip: float = 4.0           # edge lip: thickness past the glass edge
     ml_jig_lip_drop: float = 4.0      # how far it wraps the edge (< glass t)
@@ -988,9 +996,9 @@ class Params:
         return self.ml_strip_w + 2 * self.ml_groove_clear
 
     @property
-    def ml_groove_depth(self) -> float:
-        """Groove depth: emitting face lands ml_groove_over shy of the mouth."""
-        return self.ml_strip_t + self.ml_groove_over
+    def ml_strip_proud(self) -> float:
+        """How far the sleeve stands out of the rebate."""
+        return self.ml_strip_t - self.ml_groove_depth
 
     @property
     def ml_groove_z0(self) -> float:

@@ -106,6 +106,18 @@ def test_curved_spacers_have_a_flat_inner_face():
     )
 
 
+def test_spacers_carry_their_own_name():
+    """20 near-identical blocks in a bag is a sorting problem; the label is
+    cut into the WALL face, which nobody sees once the mirror is up."""
+    plain = spacer_straight().volume
+    assert plain < P.ml_spacer_t * P.ml_spacer_len * P.ml_standoff, (
+        "no material removed at all — rebate, breaks and label all missing"
+    )
+    for part in (spacer_straight(), spacer_corner()):
+        top = [f for f in part.faces() if abs(f.center().Z - P.ml_standoff) < 1e-6]
+        assert len(top) > 1, "engraved label missing from the wall face"
+
+
 def test_every_part_prints_off_the_mirror_face():
     """z=0 is the bond face and the bed; nothing may hang below it."""
     for part in (spacer_straight(), spacer_corner()):
@@ -122,10 +134,12 @@ def test_arch_spacers_are_inside_the_arch_and_symmetric():
     assert all(m == pytest.approx(180) for m in mid), "arch layout not symmetric"
 
 
-def test_groove_holds_the_strip_with_clearance_and_sits_near_flush():
+def test_rebate_locates_the_strip_without_swallowing_it():
+    """It is a placement guide: deep enough to register the sleeve, shallow
+    enough that the strip is never buried in it."""
     assert P.ml_groove_w - P.ml_strip_w == pytest.approx(2 * P.ml_groove_clear)
-    proud = P.ml_groove_depth - P.ml_groove_over - P.ml_strip_t
-    assert -0.5 <= proud <= 0.0, "emitting face should sit ~flush with the mouth"
+    assert 0.2 < P.ml_groove_depth / P.ml_strip_t < 0.45, "not a rebate"
+    assert P.ml_strip_proud > 2.0, "strip sits too deep in the channel"
     assert P.ml_groove_z0 >= 3.0, "too little plastic between channel and glass"
     assert P.ml_groove_wall_far >= 6.0, "channel too close to the wall face"
     assert P.ml_groove_z0 < (P.ml_standoff - P.ml_groove_w) / 2, (
@@ -139,16 +153,17 @@ def test_bond_face_is_unbroken_and_the_channel_clears_it():
     must not eat into it."""
     part = spacer_straight()
     bond = [f for f in part.faces() if abs(f.center().Z) < 1e-6]
-    area = sum(f.area for f in bond)
-    assert area == pytest.approx(P.ml_spacer_t * P.ml_spacer_len, rel=1e-9), (
-        "something is cutting into the glue face"
+    assert len(bond) == 1, "the glue face should be one unbroken face"
+    nominal = (P.ml_spacer_t - 2 * P.ml_break) * (P.ml_spacer_len - 2 * P.ml_break)
+    assert bond[0].area == pytest.approx(nominal, rel=1e-6), (
+        "something other than the edge break is eating the glue face"
     )
-    assert P.ml_groove_z0 > 0, "channel opens onto the bond face"
+    assert P.ml_groove_z0 > P.ml_break, "rebate opens onto the bond face"
 
 
 def test_report_covers_the_numbers_worth_buying_from():
     text = "\n".join(report())
-    for want in ("loop", "spare", "spacers", "gaps", "groove", "no fasteners"):
+    for want in ("loop", "spare", "spacers", "gaps", "rebate", "no fasteners"):
         assert want in text
 
 
@@ -168,6 +183,20 @@ def test_jig_windows_land_the_spacers_where_the_layout_says():
             "spacer fouls the jig window"
         )
     assert CLEAR <= 1.0, "window slop would blur the placement"
+
+
+def test_every_spacer_lands_behind_the_glass():
+    """Catches a pose applied in the wrong frame: seating the parts on the
+    left of a site transform mirrors the whole wall and drops every spacer
+    off the mirror entirely, which still passes a bounding-box check."""
+    from build123d import extrude
+    from splitflap_cad.mirrorlight import mirror_profile, posed_spacers
+
+    behind = extrude(mirror_profile(), amount=P.ml_standoff)
+    for part in posed_spacers():
+        assert (part - behind).volume == pytest.approx(0, abs=1e-3), (
+            "spacer sticks out past the glass outline"
+        )
 
 
 def test_posed_spacers_put_the_channel_against_the_glass():
