@@ -11,7 +11,7 @@ func runCad(args []string) error {
 		return runCadMenu()
 	}
 	switch args[0] {
-	case "list", "export":
+	case "list", "export", "render":
 		root, err := repoRoot()
 		if err != nil {
 			return err
@@ -26,6 +26,6 @@ func runCad(args []string) error {
 		}
 		return runView(model)
 	default:
-		return fmt.Errorf("unknown cad command %q (have: view, export, list)", args[0])
+		return fmt.Errorf("unknown cad command %q (have: view, export, render, list)", args[0])
 	}
 }

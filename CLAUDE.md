@@ -7,7 +7,8 @@ Auto-commit each coherent step, silently. Good trace > big commits.
 - `just ctl` = tooling TUI (namespaces: cad, pcb, bench). `just cad` = cad menu.
   Direct: `just cad view [model]` (live viewer in CURRENT cmux pane — tab 1
   logs, tab 2 viewer; no model = follow last-saved; Ctrl-C = full teardown),
-  `just cad export [part]`, `just cad list`, `just cad test|install`.
+  `just cad export [part]`, `just cad render [drawing]`, `just cad list`,
+  `just cad test|install`.
 - Views are self-contained: own port (3939+), own watcher; any .py save in
   cad/splitflap_cad/ re-renders every open view (params.py included). Build
   fail → in-pane log + cmux notify, viewer keeps last good. Assembly is just
@@ -22,6 +23,10 @@ Auto-commit each coherent step, silently. Good trace > big commits.
   slow` = XOR vs `cad/tests/golden/*.brep` + full catalog build. Intended
   shape change ⇒ `uv run python tests/regen_goldens.py` in the SAME commit.
   Exports are byte-deterministic — a dirty `cad/export/` means geometry moved.
+- `export` writes STL for every `Printable` and STEP for every `STEP` entry
+  (assemblies are STEP-only). `render` writes the `Render` registry's PNG
+  drawings to `cad/export/renders/` (matplotlib, dev group — drawings only,
+  never geometry).
 - No vendor geometry: every printable is ours. Motor = 28BYJ-48.
 
 ## Bench

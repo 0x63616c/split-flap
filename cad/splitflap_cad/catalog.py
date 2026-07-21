@@ -40,6 +40,17 @@ class Printable:
         return _attr(self.src, self.part)()
 
 
+@dataclass(frozen=True)
+class Render:
+    """A 2D drawing: a module attr that writes a PNG to the path given."""
+
+    src: str  # module stem
+    fn: str  # module attr taking one Path
+
+    def draw(self, out):
+        return _attr(self.src, self.fn)(out)
+
+
 MODELS = {
     "assembly": Model(
         "full unit: plate + motor + hall PCB + drum",
@@ -99,6 +110,20 @@ MODELS = {
         "SIDE QUEST Bambu P2S waste-chute bucket XL, vase mode",
         "poopbucket",
     ),
+    "mirror-light": Model(
+        "SIDE QUEST arched-mirror LED halo: glass ghost, spacers, strip, spool",
+        "mirrorlight",
+    ),
+    "mirror-spacer": Model(
+        "mirror halo: the two printable spacers, strip ghost in the groove",
+        "mirrorlight",
+        "spacer_scene",
+    ),
+    "mirror-spool": Model(
+        "mirror halo: slack spool with the coiled surplus strip",
+        "mirrorlight",
+        "spool_scene",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -125,4 +150,29 @@ PRINTABLE = {
     "grommet-usb": Printable("grommet", "grommet_usb"),
     "grommet-bathroom": Printable("grommet", "grommet_bathroom"),
     "poop-bucket": Printable("poopbucket", "poop_bucket"),
+    "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
+    "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
+    "mirror-slack-spool": Printable("mirrorlight", "slack_spool"),
+}
+
+
+# --- STEP exports (solid model, not a mesh) ---
+# STLs are for the slicer; STEP is what you hand to someone else's CAD or
+# open to measure. Printables listed here get both; entries that are not
+# printables (assemblies) get STEP only.
+
+STEP = {
+    "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
+    "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
+    "mirror-slack-spool": Printable("mirrorlight", "slack_spool"),
+    "mirror-light-assembly": Printable("mirrorlight", "assembly"),
+}
+
+
+# --- rendered drawings (PNG) ---
+# 2D deliverables: a render is a module attr taking an output Path.
+
+RENDERS = {
+    "mirror-light-layout": Render("mirrorplot", "render_layout"),
+    "mirror-light-section": Render("mirrorplot", "render_section"),
 }

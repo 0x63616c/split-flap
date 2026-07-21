@@ -2,9 +2,10 @@
 
     python -m splitflap_cad list [--json]       # catalog: models + printables
     python -m splitflap_cad show NAME [--port]  # build + push one model to a viewer
-    python -m splitflap_cad export [NAME]       # write STL(s); no NAME = all
-                                                # + flap 3MFs/Bambu plates;
-                                                # NAME "flaps" = artwork only
+    python -m splitflap_cad export [NAME]       # write STL(s) + STEP(s); no
+                                                # NAME = all + flap 3MFs/Bambu
+                                                # plates; "flaps" = artwork only
+    python -m splitflap_cad render [NAME]       # write drawing PNGs
 
 Driven by tools/ctl (Go): `just cad view [model]` runs a viewer + save
 watcher in the current pane and calls `show` on every source change.
@@ -16,10 +17,11 @@ import sys
 import time
 from pathlib import Path
 
-from .catalog import MODELS, PRINTABLE, SRC_TO_MODEL
+from .catalog import MODELS, PRINTABLE, RENDERS, SRC_TO_MODEL, STEP
 
 FOCUS_PORT = 3940
 EXPORT_DIR = Path(__file__).parent.parent / "export"
+RENDER_DIR = EXPORT_DIR / "renders"
 
 
 def _push(name, port):
@@ -56,6 +58,13 @@ def cmd_list(args):
         print(f"  {name:<12} {m.help}")
     print("printable (just cad export NAME):")
     for name in PRINTABLE:
+        print(f"  {name}{'  [+STEP]' if name in STEP else ''}")
+    print("STEP only:")
+    for name in STEP:
+        if name not in PRINTABLE:
+            print(f"  {name}")
+    print("renders (python -m splitflap_cad render NAME):")
+    for name in RENDERS:
         print(f"  {name}")
 
 
@@ -91,28 +100,50 @@ def _print_timings(timings):
         print(f"  {'total':<12} {sum(t for _, t in timings):6.1f}s")
 
 
+def _wrote(out: Path):
+    print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+
+
 def cmd_export(args):
-    from build123d import export_stl
+    from build123d import export_step, export_stl
 
     # "flaps" = the glyph card set (3MFs, not a PRINTABLE STL entry)
     flap_art = "flaps" in args.name
     names = [n for n in args.name if n != "flaps"] or (
-        [] if flap_art else list(PRINTABLE)
+        [] if flap_art else list(PRINTABLE) + [n for n in STEP if n not in PRINTABLE]
     )
     for name in names:
-        _check(name, PRINTABLE)
+        _check(name, {**PRINTABLE, **STEP})
     EXPORT_DIR.mkdir(exist_ok=True)
     timings = []
     if flap_art:
         timings += _export_flap_artwork()
     for name in names:
         t0 = time.perf_counter()
-        out = EXPORT_DIR / f"{name}.stl"
-        export_stl(PRINTABLE[name].build(), str(out))
-        print(f"wrote {out} ({out.stat().st_size / 1024:.0f} KiB)")
+        if name in PRINTABLE:
+            out = EXPORT_DIR / f"{name}.stl"
+            export_stl(PRINTABLE[name].build(), str(out))
+            _wrote(out)
+        if name in STEP:
+            out = EXPORT_DIR / f"{name}.step"
+            export_step(STEP[name].build(), str(out))
+            _wrote(out)
         timings.append((name, time.perf_counter() - t0))
     if not args.name:  # bare `export` = everything, artwork included
         timings += _export_flap_artwork()
+    _print_timings(timings)
+
+
+def cmd_render(args):
+    names = args.name or list(RENDERS)
+    for name in names:
+        _check(name, RENDERS)
+    RENDER_DIR.mkdir(parents=True, exist_ok=True)
+    timings = []
+    for name in names:
+        t0 = time.perf_counter()
+        _wrote(RENDERS[name].draw(RENDER_DIR / f"{name}.png"))
+        timings.append((name, time.perf_counter() - t0))
     _print_timings(timings)
 
 
@@ -133,11 +164,15 @@ def main():
     )
     s.add_argument("name", nargs="*")
 
+    s = sub.add_parser("render", help="write drawing PNGs to cad/export/renders/")
+    s.add_argument("name", nargs="*")
+
     args = p.parse_args()
     {
         "list": cmd_list,
         "show": cmd_show,
         "export": cmd_export,
+        "render": cmd_render,
     }[args.cmd](args)
 
 

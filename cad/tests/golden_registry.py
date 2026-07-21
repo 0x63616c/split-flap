@@ -122,6 +122,24 @@ def _poop_bucket():
     return poop_bucket()
 
 
+def _mirror_spacer_straight():
+    from splitflap_cad.mirrorlight import spacer_straight
+
+    return spacer_straight()
+
+
+def _mirror_spacer_arch():
+    from splitflap_cad.mirrorlight import spacer_arch
+
+    return spacer_arch()
+
+
+def _mirror_slack_spool():
+    from splitflap_cad.mirrorlight import slack_spool
+
+    return slack_spool()
+
+
 # name -> builder. All in their own local frames.
 BREP_PARTS = {
     "flap": _flap,
@@ -139,6 +157,9 @@ BREP_PARTS = {
     "grommet-usb": _grommet_usb,
     "grommet-bathroom": _grommet_bathroom,
     "poop-bucket": _poop_bucket,
+    "mirror-spacer-straight": _mirror_spacer_straight,
+    "mirror-spacer-arch": _mirror_spacer_arch,
+    "mirror-slack-spool": _mirror_slack_spool,
     "unit-full": _full_unit,
     "unit-nema-full": _full_unit_nema,
 }
