@@ -42,13 +42,11 @@ def _clip_raw():
     then the cap. z=0 is the leg tips."""
     m, b, top = _profile_halves()
     w, h, s = P.lclip_wall, P.lclip_h, P.lclip_skirt
-    # Outer follows the channel's taper up to the cap, then runs
-    # straight — the legs are `wall` thick all the way down.
-    outer = Polygon(
-        (-m - w, 0), (m + w, 0), (m + w, s), (b + w, s + top), (b + w, s + h),
-        (-b - w, s + h), (-b - w, s + top), (-m - w, s),
-        align=None,
-    )
+    # Outer is a plain rectangle at the widest section, run all the way
+    # down: the silhouette stays a clean block and the arms thicken
+    # toward the mouth, where the channel narrows away from it.
+    x, z = b + w, s + h
+    outer = Polygon((-x, 0), (x, 0), (x, z), (-x, z), align=None)
     channel = Polygon(
         (-m, 0), (m, 0), (m, s), (b, s + top), (-b, s + top), (-m, s),
         align=None,
