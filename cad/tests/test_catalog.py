@@ -45,6 +45,7 @@ def test_printable_builders_exist():
         "mirror-spacer-corner",
         "lid-clip",
         "lid-clip-post",
+        "box-corner",
     }
 
 

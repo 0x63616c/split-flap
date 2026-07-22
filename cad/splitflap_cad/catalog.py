@@ -123,6 +123,10 @@ MODELS = {
         "SIDE QUEST storage-box lid clip: bare coupon + stack post",
         "lidclip",
     ),
+    "box-corner": Model(
+        "SIDE QUEST storage-box corner brace: 30mm three-plate corner",
+        "boxcorner",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -154,6 +158,7 @@ PRINTABLE = {
     "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
     "lid-clip": Printable("lidclip", "lid_clip"),
     "lid-clip-post": Printable("lidclip", "lid_clip_post"),
+    "box-corner": Printable("boxcorner", "box_corner"),
 }
 
 

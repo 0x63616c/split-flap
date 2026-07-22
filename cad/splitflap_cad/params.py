@@ -892,6 +892,14 @@ class Params:
     # dropped, the load path wants the full section.
     lclip_post_h: float = 27.5     # inner cap face -> top of the post
 
+    # --- storage-box corner brace (side quest, same boxes) ---
+    # Three square plates meeting at one vertex — the bottom, back and
+    # left faces of a cube with the rest thrown away. Wraps a box corner
+    # so the walls can't splay. Local frame: the corner sits at the
+    # origin, plates run +X/+Y/+Z.
+    bcnr_size: float = 30.0        # leg reach along each axis
+    bcnr_t: float = 2.0            # plate thickness
+
 
     @property
     def unit_back_rise(self) -> float:
