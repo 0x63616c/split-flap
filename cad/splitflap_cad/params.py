@@ -883,6 +883,10 @@ class Params:
     lclip_h: float = 14.0          # overall height, closed end to tips
                                    # (v1 10.0 — arms too short to hold)
     lclip_wall: float = 2.0        # leg thickness (and the cap's)
+    lclip_skirt: float = 30.0      # parallel run below the taper: legs
+                                   # carry on straight at the mouth
+                                   # width, gripping further down the
+                                   # lid wall without pinching harder
     lclip_len: float = 50.0        # coupon run along the lid edge
 
     # Stack post: a column standing on the closed end, so the box above
@@ -892,6 +896,9 @@ class Params:
     # Post runs the clip's own footprint: a slim rib was tried and
     # dropped, the load path wants the full section.
     lclip_post_h: float = 27.5     # inner cap face -> top of the post
+    # Post stays solid: coring it out saved ~40% of the plastic but the
+    # slicer already does that job on a part this size, and the pockets
+    # only made it fussier to print. Let infill settings decide.
 
     # --- storage-box corner brace (side quest, same boxes) ---
     # Three square plates meeting at one vertex — the bottom, back and

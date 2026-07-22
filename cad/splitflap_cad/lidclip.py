@@ -36,16 +36,23 @@ def _break_edges(part):
 
 
 def _clip_raw():
-    """The channel section, sharp — the base for every variant."""
+    """The channel section, sharp — the base for every variant.
+
+    Bottom up: a parallel skirt at the mouth width, then the tapering U,
+    then the cap. z=0 is the leg tips."""
     m, b, top = _profile_halves()
-    w, h = P.lclip_wall, P.lclip_h
+    w, h, s = P.lclip_wall, P.lclip_h, P.lclip_skirt
     # Outer follows the channel's taper up to the cap, then runs
     # straight — the legs are `wall` thick all the way down.
     outer = Polygon(
-        (-m - w, 0), (m + w, 0), (b + w, top), (b + w, h), (-b - w, h), (-b - w, top),
+        (-m - w, 0), (m + w, 0), (m + w, s), (b + w, s + top), (b + w, s + h),
+        (-b - w, s + h), (-b - w, s + top), (-m - w, s),
         align=None,
     )
-    channel = Polygon((-m, 0), (m, 0), (b, top), (-b, top), align=None)
+    channel = Polygon(
+        (-m, 0), (m, 0), (m, s), (b, s + top), (-b, s + top), (-m, s),
+        align=None,
+    )
     plane = Plane.XZ
     return extrude(plane * outer, P.lclip_len) - extrude(plane * channel, P.lclip_len)
 
@@ -61,7 +68,7 @@ def lid_clip_post():
     the stand-off above the clip is that minus the cap). The box above
     lands on these instead of on the lid."""
     proud = P.lclip_post_h - P.lclip_wall
-    post = Pos(0, -P.lclip_len / 2, P.lclip_h + proud / 2) * Box(
+    post = Pos(0, -P.lclip_len / 2, P.lclip_skirt + P.lclip_h + proud / 2) * Box(
         P.lclip_ch_base + 2 * P.lclip_wall, P.lclip_len, proud
     )
     return _break_edges(_clip_raw() + post)
