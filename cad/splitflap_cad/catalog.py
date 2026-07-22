@@ -120,7 +120,7 @@ MODELS = {
         "spacer_scene",
     ),
     "lid-clip": Model(
-        "SIDE QUEST storage-box lid stiffener clip, test coupon",
+        "SIDE QUEST storage-box lid clip: bare coupon + both stack posts",
         "lidclip",
     ),
 }
@@ -153,6 +153,8 @@ PRINTABLE = {
     "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
     "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
     "lid-clip": Printable("lidclip", "lid_clip"),
+    "lid-clip-post-block": Printable("lidclip", "lid_clip_post_block"),
+    "lid-clip-post-rib": Printable("lidclip", "lid_clip_post_rib"),
 }
 
 

@@ -17,7 +17,7 @@ cutting the full lid length.
 View: `just cad view lid-clip`.
 """
 
-from build123d import Plane, Polygon, extrude
+from build123d import Box, Plane, Polygon, Pos, extrude
 
 from .params import P
 from .viewer import Scene
@@ -43,5 +43,32 @@ def lid_clip():
     return extrude(plane * outer, P.lclip_len) - extrude(plane * channel, P.lclip_len)
 
 
+def _post(width: float):
+    """Column standing on the clip's closed end, `lclip_post_h` tall
+    measured from the inner cap face (so the visible stand-off above the
+    clip is that minus the cap)."""
+    proud = P.lclip_post_h - P.lclip_wall
+    return Pos(0, -P.lclip_len / 2, P.lclip_h + proud / 2) * Box(
+        width, P.lclip_len, proud
+    )
+
+
+def lid_clip_post_block():
+    """Clip + full-footprint post — the strong one."""
+    return lid_clip() + _post(P.lclip_ch_base + 2 * P.lclip_wall)
+
+
+def lid_clip_post_rib():
+    """Clip + slim post — half the plastic, softer sideways."""
+    return lid_clip() + _post(P.lclip_post_rib_w)
+
+
 def scene() -> Scene:
-    return Scene().add(lid_clip(), "lid-clip")
+    """All three side by side: bare coupon, block post, rib post."""
+    pitch = 2 * (P.lclip_ch_base + 2 * P.lclip_wall)
+    return (
+        Scene()
+        .add(lid_clip(), "clip-only", loc=Pos(-pitch, 0, 0))
+        .add(lid_clip_post_block(), "post-block")
+        .add(lid_clip_post_rib(), "post-rib", loc=Pos(pitch, 0, 0))
+    )

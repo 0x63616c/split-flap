@@ -884,6 +884,14 @@ class Params:
     lclip_wall: float = 2.0        # leg thickness (and the cap's)
     lclip_len: float = 10.0        # coupon run along the lid edge
 
+    # Stack post: a column standing on the closed end, so the box above
+    # lands on the posts instead of on the flexy lid. Height is measured
+    # from the INNER cap face — the face the lid wall's top edge butts
+    # against — so it's the real clearance over the lid, cap included.
+    # Two widths to test: the full clip footprint, or a slim rib.
+    lclip_post_h: float = 27.5     # inner cap face -> top of the post
+    lclip_post_rib_w: float = 4.0  # slim variant's width across X
+
 
     @property
     def unit_back_rise(self) -> float:
