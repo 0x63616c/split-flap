@@ -880,7 +880,8 @@ class Params:
     lclip_ch_base: float = 4.0     # channel width at the closed end
     lclip_ch_mouth: float = 2.5    # channel width at the mouth — under
                                    # the 3mm wall, that's the grip
-    lclip_h: float = 10.0          # overall height, closed end to tips
+    lclip_h: float = 14.0          # overall height, closed end to tips
+                                   # (v1 10.0 — arms too short to hold)
     lclip_wall: float = 2.0        # leg thickness (and the cap's)
     lclip_len: float = 50.0        # coupon run along the lid edge
 
