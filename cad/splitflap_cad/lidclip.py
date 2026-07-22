@@ -43,32 +43,23 @@ def lid_clip():
     return extrude(plane * outer, P.lclip_len) - extrude(plane * channel, P.lclip_len)
 
 
-def _post(width: float):
-    """Column standing on the clip's closed end, `lclip_post_h` tall
-    measured from the inner cap face (so the visible stand-off above the
-    clip is that minus the cap)."""
+def lid_clip_post():
+    """Clip + stack post: a column on the closed end at the clip's own
+    footprint, `lclip_post_h` tall measured from the inner cap face (so
+    the stand-off above the clip is that minus the cap). The box above
+    lands on these instead of on the lid."""
     proud = P.lclip_post_h - P.lclip_wall
-    return Pos(0, -P.lclip_len / 2, P.lclip_h + proud / 2) * Box(
-        width, P.lclip_len, proud
+    post = Pos(0, -P.lclip_len / 2, P.lclip_h + proud / 2) * Box(
+        P.lclip_ch_base + 2 * P.lclip_wall, P.lclip_len, proud
     )
-
-
-def lid_clip_post_block():
-    """Clip + full-footprint post — the strong one."""
-    return lid_clip() + _post(P.lclip_ch_base + 2 * P.lclip_wall)
-
-
-def lid_clip_post_rib():
-    """Clip + slim post — half the plastic, softer sideways."""
-    return lid_clip() + _post(P.lclip_post_rib_w)
+    return lid_clip() + post
 
 
 def scene() -> Scene:
-    """All three side by side: bare coupon, block post, rib post."""
+    """Bare coupon beside the posted one."""
     pitch = 2 * (P.lclip_ch_base + 2 * P.lclip_wall)
     return (
         Scene()
         .add(lid_clip(), "clip-only", loc=Pos(-pitch, 0, 0))
-        .add(lid_clip_post_block(), "post-block")
-        .add(lid_clip_post_rib(), "post-rib", loc=Pos(pitch, 0, 0))
+        .add(lid_clip_post(), "clip-post")
     )

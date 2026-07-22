@@ -888,9 +888,9 @@ class Params:
     # lands on the posts instead of on the flexy lid. Height is measured
     # from the INNER cap face — the face the lid wall's top edge butts
     # against — so it's the real clearance over the lid, cap included.
-    # Two widths to test: the full clip footprint, or a slim rib.
+    # Post runs the clip's own footprint: a slim rib was tried and
+    # dropped, the load path wants the full section.
     lclip_post_h: float = 27.5     # inner cap face -> top of the post
-    lclip_post_rib_w: float = 4.0  # slim variant's width across X
 
 
     @property
