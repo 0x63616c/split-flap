@@ -119,6 +119,10 @@ MODELS = {
         "mirrorlight",
         "spacer_scene",
     ),
+    "lid-clip": Model(
+        "SIDE QUEST storage-box lid stiffener clip, test coupon",
+        "lidclip",
+    ),
 }
 
 # saved file stem -> model name, for ctl's save auto-focus.
@@ -148,6 +152,7 @@ PRINTABLE = {
     "mirror-spacer-straight": Printable("mirrorlight", "spacer_straight"),
     "mirror-spacer-arch": Printable("mirrorlight", "spacer_arch"),
     "mirror-spacer-corner": Printable("mirrorlight", "spacer_corner"),
+    "lid-clip": Printable("lidclip", "lid_clip"),
 }
 
 

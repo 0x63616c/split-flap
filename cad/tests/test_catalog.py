@@ -43,6 +43,7 @@ def test_printable_builders_exist():
         "mirror-spacer-straight",
         "mirror-spacer-arch",
         "mirror-spacer-corner",
+        "lid-clip",
     }
 
 

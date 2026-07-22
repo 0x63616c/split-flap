@@ -871,6 +871,19 @@ class Params:
     # drive and nothing to counterbore. The mirror face (z=0) is the bond
     # face — flat, bed-finished, unbroken.
 
+    # --- storage-box lid clip (side quest — stiffens a flimsy lid) ---
+    # Inverted-U that springs onto the lid's 3mm side wall. The channel
+    # is wider at the closed end than at the mouth, so the two legs
+    # splay open going on and pinch the wall as they relax. Test coupon
+    # first: a short section to check the grip before running the full
+    # lid length.
+    lclip_ch_base: float = 4.0     # channel width at the closed end
+    lclip_ch_mouth: float = 2.5    # channel width at the mouth — under
+                                   # the 3mm wall, that's the grip
+    lclip_h: float = 10.0          # overall height, closed end to tips
+    lclip_wall: float = 2.0        # leg thickness (and the cap's)
+    lclip_len: float = 20.0        # coupon run along the lid edge
+
 
     @property
     def unit_back_rise(self) -> float:
