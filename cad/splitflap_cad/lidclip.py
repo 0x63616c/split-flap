@@ -17,7 +17,7 @@ cutting the full lid length.
 View: `just cad view lid-clip`.
 """
 
-from build123d import Box, Plane, Polygon, Pos, extrude
+from build123d import Axis, Box, Plane, Polygon, Pos, extrude, fillet
 
 from .params import P
 from .viewer import Scene
@@ -28,8 +28,15 @@ def _profile_halves():
     return P.lclip_ch_mouth / 2, P.lclip_ch_base / 2, P.lclip_h - P.lclip_wall
 
 
-def lid_clip():
-    """The clip: channel-shaped extrusion, mouth down."""
+def _break_edges(part):
+    """Break every corner of the profile (its edges run along Y): kinder
+    to print, and the rounded tips lead the clip onto the wall. Always
+    the LAST step — filleting a fillet fails."""
+    return fillet(part.edges().filter_by(Axis.Y), 0.5)
+
+
+def _clip_raw():
+    """The channel section, sharp — the base for every variant."""
     m, b, top = _profile_halves()
     w, h = P.lclip_wall, P.lclip_h
     # Outer follows the channel's taper up to the cap, then runs
@@ -43,6 +50,11 @@ def lid_clip():
     return extrude(plane * outer, P.lclip_len) - extrude(plane * channel, P.lclip_len)
 
 
+def lid_clip():
+    """The clip alone: channel-shaped extrusion, mouth down."""
+    return _break_edges(_clip_raw())
+
+
 def lid_clip_post():
     """Clip + stack post: a column on the closed end at the clip's own
     footprint, `lclip_post_h` tall measured from the inner cap face (so
@@ -52,7 +64,7 @@ def lid_clip_post():
     post = Pos(0, -P.lclip_len / 2, P.lclip_h + proud / 2) * Box(
         P.lclip_ch_base + 2 * P.lclip_wall, P.lclip_len, proud
     )
-    return lid_clip() + post
+    return _break_edges(_clip_raw() + post)
 
 
 def scene() -> Scene:

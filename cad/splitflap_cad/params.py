@@ -882,7 +882,7 @@ class Params:
                                    # the 3mm wall, that's the grip
     lclip_h: float = 10.0          # overall height, closed end to tips
     lclip_wall: float = 2.0        # leg thickness (and the cap's)
-    lclip_len: float = 10.0        # coupon run along the lid edge
+    lclip_len: float = 50.0        # coupon run along the lid edge
 
     # Stack post: a column standing on the closed end, so the box above
     # lands on the posts instead of on the flexy lid. Height is measured
