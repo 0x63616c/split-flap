@@ -1,4 +1,9 @@
-# split-flap
+# benchtop
+
+Umbrella repo for physical-computing builds (CAD, PCB, firmware, shared tooling).
+First project: **split-flap** (modular display). Next: **retro-mac** (Macintosh
+case, Polar Retro Platinum PLA). Every project shares the cad/pcb/bench tooling
+documented below.
 
 Auto-commit each coherent step, silently. Good trace > big commits.
 

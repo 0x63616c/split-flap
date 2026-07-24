@@ -1,4 +1,4 @@
-module github.com/0x63616c/split-flap/tools/ctl
+module github.com/0x63616c/benchtop/tools/ctl
 
 go 1.26.5
 
